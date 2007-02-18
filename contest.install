@@ -1,0 +1,33 @@
+<?php
+/* $Id$ */
+
+/**
+ * Implementation of hook_install().
+ */
+function contest_install() {
+  switch ($GLOBALS['db_type']) {
+    case 'mysql':
+    case 'mysqli':
+      db_query("CREATE TABLE IF NOT EXISTS {nodecontest} (
+        nid int(10) unsigned NOT NULL default '0',
+        omitted_types text NOT NULL,
+        counting_type text NOT NULL,
+        start int(11) unsigned NOT NULL default '0',
+        end int(11) unsigned NOT NULL default '0',
+        publishing_action text NOT NULL,
+        promote_action text NOT NULL,
+        omitted_roles text NOT NULL,
+        contest_status int(1) NOT NULL,
+        contest_maxnodes int(11) NOT NULL,
+        incall_vid text NOT NULL,
+        contest_winners int(11) NOT NULL,
+        vids text NOT NULL
+        ) /*!40100 DEFAULT CHARACTER SET utf8 */;");
+      db_query("CREATE TABLE IF NOT EXISTS {nodecontest_winners} (
+        nid int(9) NOT NULL,
+        winners text NOT NULL,
+        votes text NOT NULL
+        ) /*!40100 DEFAULT CHARACTER SET utf8 */;");
+      break;
+  }
+}
