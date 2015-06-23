@@ -1,1 +1,7 @@
-<?php
+name = "Contest"
+description = Allows your site to host contests, (leagally I think they're actually Sweepstakes but I'm no lawyer).
+project = "contest"
+version = "7.x-1.x"
+package = Other
+core = "7.x"
+configure = admin/config/contest

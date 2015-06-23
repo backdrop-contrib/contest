@@ -1,1 +1,323 @@
 <?php
+
+/**
+ * Implementation of hook_install().
+ */
+function contest_install() {
+  variable_set('contest_export_dir', 'contest_export'); // The contest results export directory.
+  variable_set('contest_hog_days', 89);                 // The number of days between a persons eligibility to win another contest.
+  variable_get('contest_host_county', 'US');            // The country the contest is running, (for legal reasons I don't anticipate supporting non-US contests but...).
+  variable_set('contest_host_uid', 1);                  // The contest host's user id. We'll set it to the admin's to start.
+
+// We'll use the admin's name as the default host's title.
+
+  $user = user_load(array('uid' => 1));
+  variable_set('contest_host_title', $user->name);
+
+// The time period between a user's contest entries, (default is daily).
+
+  $periods = array(
+    2147483646    => 'once',
+    86400         => 'daily',
+    (7 * 86400)   => 'weekly',
+    (30 * 86400)  => 'monthly',
+    (365 * 86400) => 'yearly',
+  );
+  variable_set('contest_period', $periods);
+
+// Create the profile fields.
+
+  _contest_install_profile_fields();
+
+// Create the export directory.
+
+  _contest_install_create_export_directory(variable_get('contest_export_dir', 'contest_export'));
+}
+/**
+ * Implementation of hook_requirements().
+ */
+function contest_core_requirements($phase) {
+  $reqs = array();
+
+  switch ($phase) {
+    case 'install':
+/*
+      if (module_exists('features')) {
+        $reqs['features'] = array(
+          'value'       => t('Module exits.'),
+          'severity'    => REQUIREMENT_INFO,
+          'description' => t("The features module exist. If it's not enabled now it will be enabled during install. It's not set as a dependency so it can be removed later if desired."),
+        );
+      }
+      else {
+        $reqs['features'] = array(
+          'value'       => t('Module does not exits.'),
+          'severity'    => REQUIREMENT_ERROR,
+          'description' => t("Aborting! The features module must exist to enable the weymouth_core module. It's not set as a dependency so it can be removed later if desired."),
+        );
+      }
+*/
+      break;
+
+    case 'runtime':
+      break;
+
+    case 'update':
+      break;
+  }
+  return $reqs;
+}
+/**
+ * Implementation of hook_schema().
+ */
+function contest_schema() {
+  $schema['contest'] = array(
+    'description' => 'Stores poll-specific information for contest nodes.',
+    'fields' => array(
+      'nid' => array(
+        'description' => "The contest's {node}.nid.",
+        'type'        => 'int',
+        'unsigned'    => TRUE,
+        'not null'    => TRUE,
+        'default'     => 0,
+      ),
+      'vid' => array(
+        'description' => "The contest's {node}.vid.",
+        'type'        => 'int',
+        'unsigned'    => TRUE,
+        'not null'    => TRUE,
+        'default'     => 0,
+      ),
+      'sponsor_uid' => array(
+        'description' => "The sponsor's {user}.uid.",
+        'type'        => 'int',
+        'unsigned'    => TRUE,
+        'not null'    => TRUE,
+        'default'     => 0,
+      ),
+      'sponsor_url' => array(
+        'description' => '',
+        'type'        => 'varchar',
+        'length'      => 100,
+        'not null'    => TRUE,
+        'default'     => '',
+      ),
+      'start' => array(
+        'description' => 'The contest start date.',
+        'type'        => 'int',
+        'unsigned'    => TRUE,
+        'not null'    => TRUE,
+        'default'     => 0,
+      ),
+      'end' => array(
+        'description' => 'The contest end date.',
+        'type'        => 'int',
+        'unsigned'    => TRUE,
+        'not null'    => TRUE,
+        'default'     => 0,
+      ),
+      'places' => array(
+        'description' => 'The number of places in the contest.',
+        'type'        => 'int',
+        'size'        => 'tiny',
+        'unsigned'    => TRUE,
+        'not null'    => TRUE,
+        'default'     => 0,
+      ),
+      'period' => array(
+        'description' => 'The length of time the contest will run.',
+        'type'        => 'int',
+        'unsigned'    => TRUE,
+        'not null'    => TRUE,
+        'default'     => 0,
+      ),
+      'publish_winners' => array(
+        'description' => 'A flag to determine if the winners should be displayed.',
+        'type'        => 'int',
+        'size'        => 'tiny',
+        'unsigned'    => TRUE,
+        'not null'    => TRUE,
+        'default'     => 0,
+      ),
+    ),
+    'indexes' => array(
+      'start' => array('start'),
+      'end'   => array('end'),
+    ),
+    'primary key' => array('nid'),
+  );
+  $schema['contest_entry'] = array(
+    'description' => 'Stores contest entries.',
+    'fields' => array(
+      'nid' => array(
+        'description' => "The contest's {node}.nid.",
+        'type'        => 'int',
+        'unsigned'    => TRUE,
+        'not null'    => TRUE,
+        'default'     => 0,
+      ),
+      'uid' => array(
+        'description' => "The entrants's {user}.uid.",
+        'type'        => 'int',
+        'unsigned'    => TRUE,
+        'not null'    => TRUE,
+        'default'     => 0,
+      ),
+      'created' => array(
+        'description' => 'The date of the contest entry.',
+        'type'        => 'int',
+        'unsigned'    => TRUE,
+        'not null'    => TRUE,
+        'default'     => 0,
+      ),
+      'ip' => array(
+        'description' => "The entrant's IP address.",
+        'type'        => 'varchar',
+        'length'      => 16,
+        'not null'    => TRUE,
+        'default'     => '',
+      ),
+      'winner' => array(
+        'description' => 'A flag to determine if the winners should be displayed.',
+        'type'        => 'int',
+        'size'        => 'tiny',
+        'unsigned'    => TRUE,
+        'not null'    => TRUE,
+        'default'     => 0,
+      ),
+    ),
+    'indexes' => array(
+      'nid' => array('nid'),
+      'uid' => array('uid'),
+    ),
+    'primary key' => array('nid', 'uid', 'created'),
+  );
+  return $schema;
+}
+/**
+ * Implementation of hook_uninstall()
+ */
+function contest_uninstall () {
+  $rows = db_query("SELECT name FROM {variable} WHERE name LIKE :name", array(':name' => 'contest\_%'))->fetchAll();
+  foreach ($rows as $row) {
+    variable_del($row->name);
+  }
+}
+/**
+ * Process the path into a OS safe string.
+ *
+ * @param $path (string) A directory name.
+ *
+ * @return (string) An OS safe string.
+ */
+function _contest_install_clean_path($path) {
+  $regx = array(
+    '/[[:^print:]]/s' => '',
+    '/\W+/s'          => '_',
+    '/__+/'           => '_',
+    '/^_+|_+$/'       => '',
+  );
+  return preg_replace(array_keys($regx), array_values($regx), strtolower($path));
+}
+/**
+ * Create the export directory.
+ *
+ * @param $path (string) The export directory name.
+ *
+ * @return (bool) True if the directory exists, otherwise false.
+ */
+function _contest_install_create_export_directory($path) {
+return TRUE;
+  $path = _contest_install_clean_path($path);
+
+  if (!$path) {
+    return FALSE;
+  }
+  $export_dir = /* No longer exitst. file_directory_path() .*/ "/$path";
+
+  if (!is_dir($export_dir)) {
+    mkdir($export_dir);
+    chmod($export_dir, 0777);
+  }
+  return is_dir($export_dir);
+}
+/**
+ * Create the profile fields used by a contest.
+ */
+function _contest_install_profile_fields() {
+  $field_prefix = 'contest';
+  $fields = array(
+    (object) array(
+      'title' => 'Name',
+      'name'  => 'name',
+      'desc'  => 'Your real name.',
+      'type'  => 'textfield',
+    ),
+    (object) array(
+      'title' => 'Business',
+      'name'  => 'business',
+      'desc'  => '',
+      'type'  => 'textfield',
+    ),
+    (object) array(
+      'title' => 'Address',
+      'name'  => 'address',
+      'desc'  => '',
+      'type'  => 'textfield',
+    ),
+    (object) array(
+      'title' => 'City',
+      'name'  => 'city',
+      'desc'  => '',
+      'type'  => 'textfield',
+    ),
+    (object) array(
+      'title' => 'State',
+      'name'  => 'state',
+      'desc'  => '',
+      'type'  => 'textfield',
+    ),
+    (object) array(
+      'title' => 'Zip',
+      'name'  => 'zip',
+      'desc'  => '',
+      'type'  => 'textfield',
+    ),
+    (object) array(
+      'title' => 'Country',
+      'name'  => 'country',
+      'desc'  => '',
+      'type'  => 'textfield',
+    ),
+    (object) array(
+      'title' => 'Phone',
+      'name'  => 'phone',
+      'desc'  => '',
+      'type'  => 'textfield',
+    ),
+    (object) array(
+      'title' => 'Opt In',
+      'name'  => 'optin',
+      'desc'  => 'I would like to receive promotional efforts from the contest sponsors and promoters.',
+      'type'  => 'checkbox',
+    ),
+  );
+  foreach ($fields as $weight => $field) {
+    $element = array(
+      'values' => array(
+        'title'        => $field->title,
+        'name'         => "{$field_prefix}_{$field->name}",
+        'explanation'  => $field->desc,
+        'category'     => 'Contest',
+        'type'         => $field->type,
+        'weight'       => $weight * 10,
+        'required'     => 0,
+        'register'     => 0,
+        'visibility'   => 2,
+        'autocomplete' => 0,
+        'page'         => '',
+      ),
+    );
+    #profile_field_form_submit(array(), $element);
+  }
+}

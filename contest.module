@@ -1,1 +1,206 @@
 <?php
+
+/**
+ * @file
+ * The contest module file.
+ */
+
+/**
+ * Implementation of hook_block_info().
+ */
+function contest_block_info() {
+  return array(
+    'contest_featured' => array(
+      'info'       => t('Contest Featured'),
+      'cache'      => DRUPAL_CACHE_PER_ROLE,
+      'pages'      => '<front>',
+      'region'     => 'content',
+      'status'     => 1,
+      'visibility' => BLOCK_VISIBILITY_LISTED,
+      'weight'     => 0,
+    ),
+  );
+}
+/**
+ * Implementation of hook_block_view().
+ */
+function contest_block_view($delta = '') {
+  switch ($delta) {
+    case 'contest_featured':
+      return array(
+        'content' => theme('contest_contest_featured_block', _contest_get_contest_featured_block_data()),
+      );
+  }
+  return array();
+}
+/**
+ * Implimentation of hook_cron().
+ * Rebuild the custom taxonomy paths.
+ */
+function contest_cron() {
+  _contest_rebuild_paths();
+}
+/**
+ * Implementation of hook_entity_info_alter().
+ */
+function contest_entity_info_alter(&$entity_info) {
+  $entity_info['node']['view modes']['block'] = array(
+    'label'           => t('Block View'),
+    'custom settings' => TRUE,
+  );
+}
+/**
+ * Implementation of hook_menu().
+ */
+function contest_menu() {
+  $items['admin/config/contest'] = array(
+    'title'            => 'Contest Settings',
+    'description'      => 'Custom settings for the Contest site.',
+    'page callback'    => 'drupal_get_form',
+    'page arguments'   => array('contest_settings_form'),
+    'access arguments' => array('administer contest'),
+    'file'             => 'contest.admin.inc',
+    'type'             => MENU_NORMAL_ITEM,
+  );
+  return $items;
+}
+/**
+ * Implementation of hook_permission().
+ */
+function contest_permission() {
+  return array(
+    'administer contest' => array(
+      'title'       => t('Administer the Contest Module'),
+      'description' => t('Perform administration tasks for the contest core module.'),
+    ),
+  );
+}
+/**
+ * Implimentation of hook_theme().
+ */
+function contest_theme() {
+  return array(
+    'contest_contest_featured_block' => array(
+      'path'     => _contest_get_template_path('contest', 'contest-core-contest-featured-block'),
+      'template' => 'contest-core-contest-featured-block',
+    ),
+  );
+}
+/**
+ * Build and return a cache ID and resoectuve cached data.
+ *
+ * @param $seeds (string|mixed) Data used to build a unique cache ID.
+ *
+ * @return (array) A two element ordered array of: cache ID, cached data.
+ */
+function _contest_cache_get($seeds = array()) {
+  global $conf;
+  $cid = FALSE;
+  $seeds = (array) $seeds;
+
+  if (empty($conf['core_devel'])) {
+    $cid = _contest_cid($seeds);
+
+    $cache = $cid? cache_get($cid): FALSE;
+
+    if ($cache !== FALSE) {
+      return array($cid, $cache->data);
+    }
+  }
+  return array($cid, FALSE);
+}
+/**
+ * Set the cache and return the data.
+ *
+ * @param $cid (string) The cache ID.
+ * @param $data (mixed) The cached data.
+ *
+ * @return $data (mixed) The submitted, (and cached) data.
+ */
+function _contest_cache_set($cid, $data) {
+  global $conf;
+
+  if (empty($conf['core_devel']) && !empty($cid)) {
+    cache_set($cid, $data, 'cache', CACHE_TEMPORARY);
+  }
+  return $data;
+}
+/**
+ * Generate a cache ID.
+ *
+ * @param $args (string|array) The string(s) to build the cache ID from.
+ *
+ * @return $cid (string) A unique cache ID.
+ */
+function _contest_cid($args = '') {
+  $args = (array) $args;
+  $cid = '';
+
+  foreach ($args as $arg) {
+    $cid .= (is_array($arg) || is_object($arg))? _contest_cid($arg): "-$arg";
+  }
+  return ($cid && strlen($cid) < 255)? _contest_stroked($cid): 'contest-core-' . md5($cid);
+}
+/**
+ * Build the data needed to display the blog block.
+ *
+ * @return $data (object) An object with the data to display a client page.
+ */
+function _contest_get_contest_featured_block_data() {
+  $data = array();
+  list($cid, $cache) = _contest_cache_get(__FUNCTION__);
+
+  if ($cache !== FALSE) {
+    return $cache;
+  }
+  return _contest_cache_set($cid, array('data' => $data));
+}
+/**
+ * Scan the theme and module directories in that order for the template and return the path to the template's directory.
+ *
+ * @param $module (string) The module name, (without the suffix).
+ * @param $template (string) The template name, (without the suffixes).
+ *
+ * @return (string) A Drupal path to the template's directory, (defaults to .../module/templates).
+ */
+function _contest_get_template_path($module, $template = '') {
+  $theme_path = drupal_get_path('theme', variable_get('theme_default', 'garland'));
+
+  $scan = file_scan_directory($theme_path, "/^$template\.tpl\.php$/", array('recurse' => TRUE, 'filename' => TRUE));
+
+  if (!count($scan)) {
+    $scan = file_scan_directory(drupal_get_path('module', $module), "/^$template\.tpl\.php$/", array('recurse' => TRUE, 'filename' => TRUE));
+  }
+  return count($scan)? preg_replace('/(\/[^\/]+)$/', '', key($scan)):  drupal_get_path('module', $module) . '/templates';
+}
+/**
+ * Convert the provided string to a lowercase stroke delimited string, (uppercase converted to lower, consequitive non alpha-numeric characters converted to a stroke).
+ *
+ * @param $txt (string) The string to convert.
+ *
+ * @return (string) A lowercase stroke delimited string.
+ */
+function _contest_stroked($txt) {
+  return preg_replace(array('/[^a-z0-9]+/', '/^-+|-+$/'), array('-', ''), strtolower($txt));
+}
+/**
+ * Create a summary from the provided text.
+ *
+ * @param $string (string) The string to trim.
+ * @param $max (int) The target length of the string.
+ *
+ * @return $txt (string) The provided text truncated to the requested length.
+ */
+function _contest_trim($string, $max = 150) {
+  $chars = 0;
+  $txt = '';
+
+  foreach (preg_split('/\s+/', $string) as $atom) {
+    $length = strlen($atom);
+    if (($length + strlen($txt) + 1) > $max) {
+      return preg_match('/<\/p>$/', $txt)? preg_replace('/<\/p>$/', '&hellip;</p>', $txt): "$txt&hellip;</p>";
+    }
+    $txt .= $txt? " $atom": $atom;
+  }
+  return $txt;
+}
