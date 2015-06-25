@@ -50,6 +50,17 @@ function contest_entity_info_alter(&$entity_info) {
   );
 }
 /**
+ * Implementation of hook_form().
+ */
+function contest_form($node, $form_state) {
+  return node_content_form($node, $form_state);
+}
+/**
+ * .
+ */
+function contest_form_user_form_alter() {
+}
+/**
  * Implementation of hook_menu().
  */
 function contest_menu() {
@@ -65,13 +76,26 @@ function contest_menu() {
   return $items;
 }
 /**
+ * Implementation of hook_node_info().
+ */
+function contest_node_info() {
+  return array(
+    'contest' => array(
+      'name'        => t('Contest'),
+      'base'        => 'contest',
+      'description' => t('A <em>contest</em> is a content type that allows a user to enter to win prizes via a random selection.'),
+      'title_label' => t('Title'),
+    ),
+  );
+}
+/**
  * Implementation of hook_permission().
  */
 function contest_permission() {
   return array(
     'administer contest' => array(
       'title'       => t('Administer the Contest Module'),
-      'description' => t('Perform administration tasks for the contest core module.'),
+      'description' => t('Perform administration tasks for the contest module.'),
     ),
   );
 }
@@ -80,9 +104,9 @@ function contest_permission() {
  */
 function contest_theme() {
   return array(
-    'contest_contest_featured_block' => array(
-      'path'     => _contest_get_template_path('contest', 'contest-core-contest-featured-block'),
-      'template' => 'contest-core-contest-featured-block',
+    'contest_featured_block' => array(
+      'path'     => _contest_get_template_path('contest', 'contest-featured-block'),
+      'template' => 'contest-featured-block',
     ),
   );
 }
@@ -139,7 +163,45 @@ function _contest_cid($args = '') {
   foreach ($args as $arg) {
     $cid .= (is_array($arg) || is_object($arg))? _contest_cid($arg): "-$arg";
   }
-  return ($cid && strlen($cid) < 255)? _contest_stroked($cid): 'contest-core-' . md5($cid);
+  return ($cid && strlen($cid) < 255)? _contest_stroked($cid): 'contest-' . md5($cid);
+}
+/**
+ * Process the path into a OS safe string.
+ *
+ * @param $path (string) A directory name.
+ *
+ * @return (string) An OS safe string.
+ */
+function _contest_clean_path($path) {
+  $regx = array(
+    '/[[:^print:]]/s' => '',
+    '/\W+/s'          => '_',
+    '/__+/'           => '_',
+    '/^_+|_+$/'       => '',
+  );
+  return preg_replace(array_keys($regx), array_values($regx), strtolower($path));
+}
+/**
+ * Create the export directory.
+ *
+ * @param $path (string) The export directory name.
+ *
+ * @return (bool) True if the directory exists, otherwise false.
+ */
+function _contest_create_export_directory($path) {
+  $path = _contest_clean_path($path);
+  $wrapper = file_stream_wrapper_get_instance_by_uri('private://');
+  
+  if (!$path || !$wrapper) {
+    return FALSE;
+  }
+  $export_dir = $wrapper->getDirectoryPath() . "/$path";
+
+  if (!is_dir($export_dir)) {
+    mkdir($export_dir);
+    chmod($export_dir, 0777);
+  }
+  return is_dir($export_dir);
 }
 /**
  * Build the data needed to display the blog block.
@@ -154,6 +216,13 @@ function _contest_get_contest_featured_block_data() {
     return $cache;
   }
   return _contest_cache_set($cid, array('data' => $data));
+}
+/**
+ * .
+ */
+function _contest_get_countries() {
+  include_once DRUPAL_ROOT . '/includes/iso.inc';
+  return _country_get_predefined_list();
 }
 /**
  * Scan the theme and module directories in that order for the template and return the path to the template's directory.
@@ -172,6 +241,45 @@ function _contest_get_template_path($module, $template = '') {
     $scan = file_scan_directory(drupal_get_path('module', $module), "/^$template\.tpl\.php$/", array('recurse' => TRUE, 'filename' => TRUE));
   }
   return count($scan)? preg_replace('/(\/[^\/]+)$/', '', key($scan)):  drupal_get_path('module', $module) . '/templates';
+}
+/**
+ * Delete the requested files.
+ *
+ * @param $file_regx (string) A posix regex.
+ * @param $age (int) The age of the files in seconds.
+ *
+ * @return (int) The number of files deleted.
+ */
+function _contest_purge_dir($file_regx, $age) {
+  $count = 0;
+  $files = glob($file_regx);
+  $now = time();
+
+  foreach ($files as $file) {
+    if (is_file($file) && ($now - filemtime($file)) >= $age) {
+      chmod($file, 0777);
+      unlink($file);
+      $count++;
+    }
+  }
+  return $count;
+}
+/**
+ * Remove old contest export files.
+ *
+ * @return (int|bool) The number of files deleted.
+ */
+function _contest_purge_exports() {
+  $max_age = 3600;
+  $sub_dir = variable_get('contest_export_dir', '');
+  $wrapper = file_stream_wrapper_get_instance_by_uri('private://');
+
+  if (!$sub_dir || !$wrapper) {
+    return FALSE;
+  }
+  $file_regx = $wrapper->getDirectoryPath() . "/$sub_dir/*.csv";
+  
+  return _contest_purge_dir($file_regx, $max_age);
 }
 /**
  * Convert the provided string to a lowercase stroke delimited string, (uppercase converted to lower, consequitive non alpha-numeric characters converted to a stroke).

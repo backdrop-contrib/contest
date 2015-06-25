@@ -63,7 +63,7 @@ function contest_settings_form() {
     '#title'         =>  t('Host Country'),
     '#description'   => t("I'm not sure this will work in countries besides the US."),
     '#type'          => 'select',
-    '#options'       => array(),//_contest_get_countries(),
+    '#options'       => _contest_get_countries(),
     '#default_value' => variable_get('contest_host_county', 'US'),
     '#required'      => TRUE,
     '#weight'        => 50,
@@ -74,16 +74,31 @@ function contest_settings_form() {
  * Custom validation function for the contest setting form.
  */
 function contest_settings_form_validate($form, &$form_state) {
+  
+// Directory name doesn't match requirements.
+
   if (!preg_match('/^\w[\w\/]*\w$/', $form_state['values']['contest_export_dir'])) {
     form_set_error('contest_export_dir', t('The export directory can contain alpha-numeric characters, hyphens and slashes and must start and end with a alpha-numeric character.'));
   }
   if ($form_state['values']['contest_export_dir'] !== variable_get('contest_export_dir', '')) {
-    $path = file_directory_path() . '/' . _contest_clean_path($form_state['values']['contest_export_dir']);
+    $wrapper = file_stream_wrapper_get_instance_by_uri('private://');
+
+// Private system path not configured.
+    
+    if (!$wrapper) {
+      form_set_error('contest_export_dir', t("Drupal's file system path needs to be configured. Please go to !link to configure.", array('!link' => l('File System', 'admin/config/media/file-system', array('target' => '_blank')))));
+    }
+    $path = $wrapper->getDirectoryPath() . '/' . _contest_clean_path($form_state['values']['contest_export_dir']);
+
+// Directory already in use.
+    
     if (is_dir($path) || is_file($path)) {
       form_set_error('contest_export_dir', t('That export directory is already in use.'));
     }
   }
-  if (!db_result(db_query('SELECT 1 FROM {users} WHERE uid = %d', $form_state['values']['contest_host_uid']))) {
+// Non-existent host.
+
+  if (!db_query_range("SELECT 1 FROM {users} WHERE uid = :uid", 0, 1, array(':uid' => $form_state['values']['contest_host_uid']))->fetchField()) {
     form_set_error('contest_host_uid', t('No user with ID: @uid.', array('@uid' => $form_state['values']['contest_host_uid'])));
   }
 }
@@ -94,11 +109,15 @@ function contest_settings_form_validate($form, &$form_state) {
 function contest_settings_form_submit($form, &$form_state) {
   $now = time();
   $path = _contest_clean_path($form_state['values']['contest_export_dir']);
-
+  $wrapper = file_stream_wrapper_get_instance_by_uri('private://');
+  
   if ($path && $path === variable_get('contest_export_dir', '')) {
     return;
   }
-  $old_dir = file_directory_path() . '/' . variable_get('contest_export_dir', '');
+  if (!$wrapper) {
+    drupal_set_message("Drupal's file system path needs to be configured. Please go to !link to configure.", array('!link' => l('File System', 'admin/config/media/file-system', array('target' => '_blank'))));
+  }
+  $old_dir = $wrapper->getDirectoryPath() . '/' . variable_get('contest_export_dir', '');
   _contest_purge_dir("$old_dir/*", 0);
   chmod($old_dir, 0777);
   rmdir($old_dir);

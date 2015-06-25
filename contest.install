@@ -1,6 +1,19 @@
 <?php
 
 /**
+ * @file
+ * The installation file for the contest module.
+ */
+
+/**
+ * Implementation of hook_enable().
+ * Create the profile fields and export directory. 
+ */
+function contest_enable() {
+  _contest_install_profile_fields();
+  _contest_create_export_directory(variable_get('contest_export_dir', 'contest_export'));
+}
+/**
  * Implementation of hook_install().
  */
 function contest_install() {
@@ -11,7 +24,7 @@ function contest_install() {
 
 // We'll use the admin's name as the default host's title.
 
-  $user = user_load(array('uid' => 1));
+  $user = user_load(1);
   variable_set('contest_host_title', $user->name);
 
 // The time period between a user's contest entries, (default is daily).
@@ -24,45 +37,23 @@ function contest_install() {
     (365 * 86400) => 'yearly',
   );
   variable_set('contest_period', $periods);
-
-// Create the profile fields.
-
-  _contest_install_profile_fields();
-
-// Create the export directory.
-
-  _contest_install_create_export_directory(variable_get('contest_export_dir', 'contest_export'));
 }
 /**
  * Implementation of hook_requirements().
  */
-function contest_core_requirements($phase) {
+function contest_requirements($phase) {
   $reqs = array();
 
   switch ($phase) {
     case 'install':
-/*
-      if (module_exists('features')) {
-        $reqs['features'] = array(
-          'value'       => t('Module exits.'),
-          'severity'    => REQUIREMENT_INFO,
-          'description' => t("The features module exist. If it's not enabled now it will be enabled during install. It's not set as a dependency so it can be removed later if desired."),
-        );
-      }
-      else {
-        $reqs['features'] = array(
-          'value'       => t('Module does not exits.'),
+      if (!file_stream_wrapper_get_instance_by_uri('private://')) {
+        $reqs['system'] = array(
+          'title'       => 'File System',
+          'value'       => t("Private file system path isn't configured."),
           'severity'    => REQUIREMENT_ERROR,
-          'description' => t("Aborting! The features module must exist to enable the weymouth_core module. It's not set as a dependency so it can be removed later if desired."),
+          'description' => t("Aborting! Drupal's file system path needs to be configured. Please go to !link to configure.<br />\n", array('!link' => l('File System', 'admin/config/media/file-system', array('target' => '_blank')))),
         );
       }
-*/
-      break;
-
-    case 'runtime':
-      break;
-
-    case 'update':
       break;
   }
   return $reqs;
@@ -72,7 +63,7 @@ function contest_core_requirements($phase) {
  */
 function contest_schema() {
   $schema['contest'] = array(
-    'description' => 'Stores poll-specific information for contest nodes.',
+    'description' => 'Stores contest-specific information for contest nodes.',
     'fields' => array(
       'nid' => array(
         'description' => "The contest's {node}.nid.",
@@ -202,44 +193,6 @@ function contest_uninstall () {
   foreach ($rows as $row) {
     variable_del($row->name);
   }
-}
-/**
- * Process the path into a OS safe string.
- *
- * @param $path (string) A directory name.
- *
- * @return (string) An OS safe string.
- */
-function _contest_install_clean_path($path) {
-  $regx = array(
-    '/[[:^print:]]/s' => '',
-    '/\W+/s'          => '_',
-    '/__+/'           => '_',
-    '/^_+|_+$/'       => '',
-  );
-  return preg_replace(array_keys($regx), array_values($regx), strtolower($path));
-}
-/**
- * Create the export directory.
- *
- * @param $path (string) The export directory name.
- *
- * @return (bool) True if the directory exists, otherwise false.
- */
-function _contest_install_create_export_directory($path) {
-return TRUE;
-  $path = _contest_install_clean_path($path);
-
-  if (!$path) {
-    return FALSE;
-  }
-  $export_dir = /* No longer exitst. file_directory_path() .*/ "/$path";
-
-  if (!is_dir($export_dir)) {
-    mkdir($export_dir);
-    chmod($export_dir, 0777);
-  }
-  return is_dir($export_dir);
 }
 /**
  * Create the profile fields used by a contest.
