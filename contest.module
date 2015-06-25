@@ -207,6 +207,17 @@ function _contest_create_export_directory($path) {
   return is_dir($export_dir);
 }
 /**
+ * Send the feedback to the appropriate place.
+ */
+function _contest_feedback($txt) {
+  if (defined('STDIN')) {
+    print "$txt\n";
+  }
+  else {
+    drupal_set_message($txt);
+  }
+}
+/**
  * Build the data needed to display the blog block.
  *
  * @return $data (object) An object with the data to display a client page.

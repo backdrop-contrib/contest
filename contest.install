@@ -10,7 +10,16 @@
  * Create the profile fields and export directory. 
  */
 function contest_enable() {
+  
+// Enable the field_ui module, (we don't have it as a dependency so we can remove it later if we so choose).
+
+  if (!module_exists('field_ui')) {
+    if (!module_enable(array('field_ui'))) {
+      return _contest_feedback('Aborting! The field_ui module must exist to enable the contest module. It\'s not set as a dependency so it can be disabled later if desired.');
+    }
+  }
   _contest_install_profile_fields();
+  
   _contest_create_export_directory(variable_get('contest_export_dir', 'contest_export'));
 }
 /**
@@ -53,10 +62,9 @@ function contest_requirements($phase) {
           'title'       => 'File System',
           'value'       => t("Private file system path isn't configured."),
           'severity'    => REQUIREMENT_ERROR,
-          'description' => t("Aborting! Drupal's file system path needs to be configured. Please go to !link to configure.<br />\n", array('!link' => l('File System', 'admin/config/media/file-system', array('target' => '_blank')))),
+          'description' => t("Aborting! Drupal's file system path needs to be configured. Please go to !link to configure.<br />\n", array('!link' => l('File System', 'admin/config/media/file-system', array('attributes' => array('target' => '_blank'))))),
         );
       }
-      # field_ui.
       break;
   }
   return $reqs;
@@ -192,15 +200,23 @@ function contest_schema() {
  * Implementation of hook_uninstall()
  */
 function contest_uninstall () {
+  $export_dir = variable_get('contest_export_dir', 'contest_export');
+  $wrapper = file_stream_wrapper_get_instance_by_uri('private://');
   
+// Remove the export directory.
+
+  if ($wrapper) {
+    $export_dir = $wrapper->getDirectoryPath() . "/$export_dir";
+    _contest_install_purge_dir("$export_dir/*", 0);
+    chmod($export_dir, 0777);
+    rmdir($export_dir);
+  }  
 // Delete the variables.
 
   $rows = db_query("SELECT name FROM {variable} WHERE name LIKE :name", array(':name' => 'contest\_%'))->fetchAll();
   foreach ($rows as $row) {
     variable_del($row->name);
   }
-// Remove the export directory.
-  
 }
 /**
  * Create the profile fields used by a contest.
@@ -209,61 +225,79 @@ function _contest_install_profile_fields() {
   $field_prefix = 'field_contest';
   $fields = array(
     (object) array(
-      'label' => 'Name',
-      'name'  => 'name',
-      'desc'  => 'Your real name.',
-      'type'  => 'textfield',
+      'label'  => 'Real Name',
+      'name'   => 'name',
+      'desc'   => 'Your real name for contact/legal reasons.',
+      'type'   => 'text',
+      'widget' => 'textfield',
+      'length' => 50,
     ),
     (object) array(
-      'label' => 'Business',
-      'name'  => 'business',
-      'desc'  => '',
-      'type'  => 'textfield',
+      'label'  => 'Business',
+      'name'   => 'business',
+      'desc'   => '',
+      'type'   => 'text',
+      'widget' => 'textfield',
+      'length' => 50,
     ),
     (object) array(
-      'label' => 'Address',
-      'name'  => 'address',
-      'desc'  => '',
-      'type'  => 'textfield',
+      'label'  => 'Address',
+      'name'   => 'address',
+      'desc'   => '',
+      'type'   => 'text',
+      'widget' => 'textfield',
+      'length' => 50,
     ),
     (object) array(
-      'label' => 'City',
-      'name'  => 'city',
-      'desc'  => '',
-      'type'  => 'textfield',
+      'label'  => 'City',
+      'name'   => 'city',
+      'desc'   => '',
+      'type'   => 'text',
+      'widget' => 'textfield',
+      'length' => 50,
     ),
     (object) array(
-      'label' => 'State',
-      'name'  => 'state',
-      'desc'  => '',
-      'type'  => 'textfield',
+      'label'  => 'State',
+      'name'   => 'state',
+      'desc'   => '',
+      'type'   => 'text',
+      'widget' => 'textfield',
+      'length' => 50,
     ),
     (object) array(
-      'label' => 'Zip',
-      'name'  => 'zip',
-      'desc'  => '',
-      'type'  => 'textfield',
+      'label'  => 'Zip',
+      'name'   => 'zip',
+      'desc'   => '',
+      'type'   => 'text',
+      'widget' => 'textfield',
+      'length' => 10,
     ),
     (object) array(
-      'label' => 'Country',
-      'name'  => 'country',
-      'desc'  => '',
-      'type'  => 'textfield',
+      'label'  => 'Country',
+      'name'   => 'country',
+      'desc'   => '',
+      'type'   => 'text',
+      'widget' => 'textfield',
+      'length' => 50,
     ),
     (object) array(
-      'label' => 'Phone',
-      'name'  => 'phone',
-      'desc'  => '',
-      'type'  => 'textfield',
+      'label'  => 'Phone',
+      'name'   => 'phone',
+      'desc'   => '',
+      'type'   => 'text',
+      'widget' => 'textfield',
+      'length' => 20,
     ),
     (object) array(
-      'label' => 'Opt In',
-      'name'  => 'optin',
-      'desc'  => 'I would like to receive promotional efforts from the contest sponsors and promoters.',
-      'type'  => 'checkbox',
+      'label'  => 'Opt In',
+      'name'   => 'optin',
+      'desc'   => 'I would like to receive promotional efforts from the contest sponsors and promoters.',
+      'type'   => 'list_boolean',
+      'widget' => 'options_onoff',
+      'length' => 1,
     ),
   );
-  $weight = count($fields) * -10;
+  $weight = (count($fields) + 1) * -10;
   
   foreach ($fields as $index => $field) {
     if (field_info_field("{$field_prefix}_{$field->name}")) {
@@ -271,8 +305,12 @@ function _contest_install_profile_fields() {
     }
     $prototype = array(
       'field_name' => "{$field_prefix}_{$field->name}", 
-      'type'       => 'text', 
+      'type'       => $field->type, 
+      'settings'   => array('max_length' => $field->length),
     );
+    if ($field->type == 'options_onoff') {
+      unset($prototype['settings']['max_length']);
+    }
     field_create_field($prototype);
     
     $instance = array(
@@ -283,10 +321,39 @@ function _contest_install_profile_fields() {
       'required'    => FALSE,
       'settings'    => array('user_register_form' => 0),
       'widget'      => array(
-        'type'   => $field->type,
-        'weight' => $weight + ($index * 10),
+        'type'       => $field->widget,
+        'weight'     => $weight + ($index * 10),
       ), 
     );
+    if ($field->type == 'options_onoff') {
+      $instance['settings']['allowed_values'] = array(
+        '0' => 'No',
+        '1' => 'Yes',
+      );
+      $instance['widget']['display_label'] = 1;
+    }
     field_create_instance($instance);
   }
+}
+/**
+ * Delete the requested files.
+ *
+ * @param $file_regx (string) A posix regex.
+ * @param $age (int) The age of the files in seconds.
+ *
+ * @return (int) The number of files deleted.
+ */
+function _contest_install_purge_dir($file_regx, $age) {
+  $count = 0;
+  $files = glob($file_regx);
+  $now = time();
+
+  foreach ($files as $file) {
+    if (is_file($file) && ($now - filemtime($file)) >= $age) {
+      chmod($file, 0777);
+      unlink($file);
+      $count++;
+    }
+  }
+  return $count;
 }
