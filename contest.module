@@ -82,9 +82,12 @@ function contest_node_info() {
   return array(
     'contest' => array(
       'name'        => t('Contest'),
-      'base'        => 'contest',
       'description' => t('A <em>contest</em> is a content type that allows a user to enter to win prizes via a random selection.'),
+      'base'        => 'contest',
+      'has_title'   => TRUE,
       'title_label' => t('Title'),
+      'help'        => '',
+      'locked'      => TRUE,
     ),
   );
 }

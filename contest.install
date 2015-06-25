@@ -17,6 +17,8 @@ function contest_enable() {
  * Implementation of hook_install().
  */
 function contest_install() {
+  $day = 86400;
+  
   variable_set('contest_export_dir', 'contest_export'); // The contest results export directory.
   variable_set('contest_hog_days', 89);                 // The number of days between a persons eligibility to win another contest.
   variable_get('contest_host_county', 'US');            // The country the contest is running, (for legal reasons I don't anticipate supporting non-US contests but...).
@@ -30,11 +32,11 @@ function contest_install() {
 // The time period between a user's contest entries, (default is daily).
 
   $periods = array(
-    2147483646    => 'once',
-    86400         => 'daily',
-    (7 * 86400)   => 'weekly',
-    (30 * 86400)  => 'monthly',
-    (365 * 86400) => 'yearly',
+    2147483646   => 'once',
+    $day         => 'daily',
+    (7 * $day)   => 'weekly',
+    (30 * $day)  => 'monthly',
+    (365 * $day) => 'yearly',
   );
   variable_set('contest_period', $periods);
 }
@@ -54,6 +56,7 @@ function contest_requirements($phase) {
           'description' => t("Aborting! Drupal's file system path needs to be configured. Please go to !link to configure.<br />\n", array('!link' => l('File System', 'admin/config/media/file-system', array('target' => '_blank')))),
         );
       }
+      # field_ui.
       break;
   }
   return $reqs;
@@ -189,88 +192,101 @@ function contest_schema() {
  * Implementation of hook_uninstall()
  */
 function contest_uninstall () {
+  
+// Delete the variables.
+
   $rows = db_query("SELECT name FROM {variable} WHERE name LIKE :name", array(':name' => 'contest\_%'))->fetchAll();
   foreach ($rows as $row) {
     variable_del($row->name);
   }
+// Remove the export directory.
+  
 }
 /**
  * Create the profile fields used by a contest.
  */
 function _contest_install_profile_fields() {
-  $field_prefix = 'contest';
+  $field_prefix = 'field_contest';
   $fields = array(
     (object) array(
-      'title' => 'Name',
+      'label' => 'Name',
       'name'  => 'name',
       'desc'  => 'Your real name.',
       'type'  => 'textfield',
     ),
     (object) array(
-      'title' => 'Business',
+      'label' => 'Business',
       'name'  => 'business',
       'desc'  => '',
       'type'  => 'textfield',
     ),
     (object) array(
-      'title' => 'Address',
+      'label' => 'Address',
       'name'  => 'address',
       'desc'  => '',
       'type'  => 'textfield',
     ),
     (object) array(
-      'title' => 'City',
+      'label' => 'City',
       'name'  => 'city',
       'desc'  => '',
       'type'  => 'textfield',
     ),
     (object) array(
-      'title' => 'State',
+      'label' => 'State',
       'name'  => 'state',
       'desc'  => '',
       'type'  => 'textfield',
     ),
     (object) array(
-      'title' => 'Zip',
+      'label' => 'Zip',
       'name'  => 'zip',
       'desc'  => '',
       'type'  => 'textfield',
     ),
     (object) array(
-      'title' => 'Country',
+      'label' => 'Country',
       'name'  => 'country',
       'desc'  => '',
       'type'  => 'textfield',
     ),
     (object) array(
-      'title' => 'Phone',
+      'label' => 'Phone',
       'name'  => 'phone',
       'desc'  => '',
       'type'  => 'textfield',
     ),
     (object) array(
-      'title' => 'Opt In',
+      'label' => 'Opt In',
       'name'  => 'optin',
       'desc'  => 'I would like to receive promotional efforts from the contest sponsors and promoters.',
       'type'  => 'checkbox',
     ),
   );
-  foreach ($fields as $weight => $field) {
-    $element = array(
-      'values' => array(
-        'title'        => $field->title,
-        'name'         => "{$field_prefix}_{$field->name}",
-        'explanation'  => $field->desc,
-        'category'     => 'Contest',
-        'type'         => $field->type,
-        'weight'       => $weight * 10,
-        'required'     => 0,
-        'register'     => 0,
-        'visibility'   => 2,
-        'autocomplete' => 0,
-        'page'         => '',
-      ),
+  $weight = count($fields) * -10;
+  
+  foreach ($fields as $index => $field) {
+    if (field_info_field("{$field_prefix}_{$field->name}")) {
+      continue;
+    }
+    $prototype = array(
+      'field_name' => "{$field_prefix}_{$field->name}", 
+      'type'       => 'text', 
     );
-    #profile_field_form_submit(array(), $element);
+    field_create_field($prototype);
+    
+    $instance = array(
+      'field_name'  => "{$field_prefix}_{$field->name}", 
+      'entity_type' => 'user', 
+      'label'       => $field->label, 
+      'bundle'      => 'user', 
+      'required'    => FALSE,
+      'settings'    => array('user_register_form' => 0),
+      'widget'      => array(
+        'type'   => $field->type,
+        'weight' => $weight + ($index * 10),
+      ), 
+    );
+    field_create_instance($instance);
   }
 }

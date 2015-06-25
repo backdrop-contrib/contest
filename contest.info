@@ -5,3 +5,10 @@ version = "7.x-1.x"
 package = Other
 core = "7.x"
 configure = admin/config/contest
+
+dependencies[] = field
+dependencies[] = field_sql_storage
+dependencies[] = list
+dependencies[] = path
+dependencies[] = text
+dependencies[] = user

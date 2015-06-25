@@ -96,7 +96,7 @@ function contest_settings_form_validate($form, &$form_state) {
       form_set_error('contest_export_dir', t('That export directory is already in use.'));
     }
   }
-// Non-existent host.
+// Non-existent contest host.
 
   if (!db_query_range("SELECT 1 FROM {users} WHERE uid = :uid", 0, 1, array(':uid' => $form_state['values']['contest_host_uid']))->fetchField()) {
     form_set_error('contest_host_uid', t('No user with ID: @uid.', array('@uid' => $form_state['values']['contest_host_uid'])));
