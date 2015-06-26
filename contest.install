@@ -24,7 +24,7 @@ function contest_enable() {
   }
 // Create the profile fields.
   
-  _contest_install_profile_fields();
+  _contest_install_user_fields();
 
 // If we enabled the field_ui module disable it so we leave the site in the same state as we found it.
   
@@ -233,13 +233,51 @@ function contest_uninstall () {
   foreach ($rows as $row) {
     variable_del($row->name);
   }
+// Delete the contest nodes and their body field.
+
+  $rows = db_query("SELECT nid FROM {node} n WHERE n.type = :type", array(':type' => 'contest'));
+  
+  foreach ($rows as $row) {
+    node_delete($row->nid);
+  }
+  $instance = array(
+    'field_name'  => 'body',
+    'bundle'      => 'contest',
+    'entity_type' => 'node',
+  );
+  field_delete_instance($instance);
+
 // Delete menu links.
 
   db_delete('menu_links')->condition('module', 'contest')->execute();
   
   menu_cache_clear_all();
-
 }
+/**
+ * Delete the requested files.
+ *
+ * @param $file_regx (string) A posix regex.
+ * @param $age (int) The age of the files in seconds.
+ *
+ * @return (int) The number of files deleted.
+ */
+function _contest_install_purge_dir($file_regx, $age) {
+  $count = 0;
+  $files = glob($file_regx);
+  $now = time();
+
+  foreach ($files as $file) {
+    if (is_file($file) && ($now - filemtime($file)) >= $age) {
+      chmod($file, 0777);
+      unlink($file);
+      $count++;
+    }
+  }
+  return $count;
+}
+/**
+ * Create the contest content type.
+ */
 function _contest_install_type_create() {
   $contest_node_type = array(
     'type'        => 'contest',
@@ -261,9 +299,9 @@ function _contest_install_type_create() {
   variable_set('node_submitted_contest', 0);
 }
 /**
- * Create the profile fields used by a contest.
+ * Create the user fields used by a contest.
  */
-function _contest_install_profile_fields() {
+function _contest_install_user_fields() {
   $field_prefix = 'field_contest';
   $fields = array(
     (object) array(
@@ -381,26 +419,4 @@ function _contest_install_profile_fields() {
     }
     field_create_instance($instance);
   }
-}
-/**
- * Delete the requested files.
- *
- * @param $file_regx (string) A posix regex.
- * @param $age (int) The age of the files in seconds.
- *
- * @return (int) The number of files deleted.
- */
-function _contest_install_purge_dir($file_regx, $age) {
-  $count = 0;
-  $files = glob($file_regx);
-  $now = time();
-
-  foreach ($files as $file) {
-    if (is_file($file) && ($now - filemtime($file)) >= $age) {
-      chmod($file, 0777);
-      unlink($file);
-      $count++;
-    }
-  }
-  return $count;
 }

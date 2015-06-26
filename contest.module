@@ -53,7 +53,84 @@ function contest_entity_info_alter(&$entity_info) {
  * Implementation of hook_form().
  */
 function contest_form($node, $form_state) {
-  return node_content_form($node, $form_state);
+  $end = !empty($node->end)? $node->end: time();
+  $start = !empty($node->start)? $node->start: time();
+  $type = node_type_get_type($node);
+
+  $form['#submit'][] = 'contest_form_submit';
+  $form['#validate'][] = 'contest_form_validate';
+
+  $form['title'] = array(
+    '#title'         => check_plain($type->title_label),
+    '#type'          => 'textfield',
+    '#default_value' => !empty($node->title)? $node->title: '',
+    '#required'      => TRUE,
+    '#weight'        => 0,
+  );
+  #$form['body_field'] = array(
+  #  '#weight'        => 10,
+  #);
+  $form['sponsor'] = array(
+    '#title'         => t('Contest Sponsor'),
+    '#type'          => 'textfield',
+    '#default_value' => !empty($node->sponsor)? $node->sponsor: '',
+    '#required'      => FALSE,
+    '#weight'        => 20,
+  );
+  $form['sponsor_email'] = array(
+    '#title'         => t('Sponsor Email'),
+    '#type'          => 'textfield',
+    '#default_value' => !empty($node->sponsor_email)? $node->sponsor_email: '',
+    '#required'      => FALSE,
+    '#weight'        => 30,
+  );
+  $form['sponsor_url'] = array(
+    '#title'         => t('Sponsor Url'),
+    '#type'          => 'textfield',
+    '#default_value' => !empty($node->sponsor_url)? $node->sponsor_url: '',
+    '#required'      => FALSE,
+    '#weight'        => 40,
+  );
+  $form['places'] = array(
+    '#title'         => t('Winning Places'),
+    '#type'          => 'select',
+    '#options'       => drupal_map_assoc(range(1, 10)),
+    '#default_value' => !empty($node->places)? $node->places: 1,
+    '#required'      => TRUE,
+    '#weight'        => 50,
+  );
+  $form['period'] = array(
+    '#title'         => t('User Can Enter'),
+    '#type'          => 'select',
+    '#options'       => variable_get('contest_period', array(86400 => 'Daily')),
+    '#default_value' => !empty($node->period)? $node->period: 86400,
+    '#required'      => TRUE,
+    '#weight'        => 60,
+  );
+  $form['start'] = array(
+    '#title'         => t('Start Contest'),
+    '#type'          => 'date',
+    '#default_value' => array(
+      'month' => format_date($start, 'custom', 'n'),
+      'day'   => format_date($start, 'custom', 'j'),
+      'year'  => format_date($start, 'custom', 'Y'),
+    ),
+    '#required'      => TRUE,
+    '#weight'        => 70,
+  );
+  $form['end'] = array(
+    '#title'         => t('End Contest'),
+    '#type'          => 'date',
+    '#default_value' => array(
+      'month' => format_date($end, 'custom', 'n'),
+      'day'   => format_date($end, 'custom', 'j'),
+      'year'  => format_date($end, 'custom', 'Y'),
+    ),
+    '#required'      => TRUE,
+    '#weight'        => 80,
+  );
+dpm(array($node, $form, $form_state));
+  return $form;
 }
 /**
  * .
@@ -84,6 +161,7 @@ function contest_node_info() {
       'name'        => t('Contest'),
       'description' => t('A <em>contest</em> is a content type that allows a user to enter to win prizes via a random selection.'),
       'base'        => 'contest',
+      'has_body'    => TRUE,
       'has_title'   => TRUE,
       'title_label' => t('Title'),
       'help'        => '',
