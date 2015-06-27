@@ -50,6 +50,154 @@ function contest_entity_info_alter(&$entity_info) {
   );
 }
 /**
+ * Contest entry form.
+ *
+ * @return $form (array) A Drupal form array.
+ */
+function contest_entry_form() {
+  global $user;
+  $now = time();
+
+// Load the user information.
+
+  $usr = user_load($user->uid);
+
+// Add the javascript validation and associated css to the head.
+
+  drupal_add_css(drupal_get_path('module', 'contest') . '/css/contest.css', 'module', 'screen', FALSE);
+
+  #drupal_set_html_head('<style type="text/css">input.invalid { background:#ffaaaa; }</style>');
+
+  drupal_add_js(drupal_get_path('module', 'contest') . '/js/validate.js', 'module');
+
+  $form['#id'] = 'contest-entry-form';
+  $form['#theme'] = 'contest_entry';
+  #$form['#submit'][] = 'contest_entry_form_submit';
+  #$form['#validate'][] = 'contest_entry_form_validate';
+
+  $form['uid'] = array(
+    '#type'   => 'hidden',
+    '#value'  =>  $usr->uid,
+    '#weight' => -10,
+  );
+  $form['nid'] = array(
+    '#type'   => 'hidden',
+    '#value'  =>  intval(arg(1)),
+    '#weight' => -10,
+  );
+  $form['heading2'] = array(
+    '#type'   => 'markup',
+    '#value'  => $usr->uid? '': '<b>' . t('Please fill in and submit the form below; all fields are required.') . '</b><p>' . t('If you already have an account click <a href="/user/login">here</a> to log in and skip filling in the form.' . '</p>'),
+    '#weight' => -1,
+  );
+  $form['contest_name'] = array(
+    '#title'         => t('Name'),
+    '#type'          => 'textfield',
+    '#attributes'    => array('pattern' => '^\s*[\s\w\-\.]+\s*$'),
+    '#default_value' => !empty($usr->contest_name)? $usr->contest_name: '',
+    '#size'          => 30,
+    '#maxlength'     => 100,
+    '#required'      => TRUE,
+    '#weight'        => 0,
+  );
+  $form['contest_address'] = array(
+    '#title'         => t('Address'),
+    '#type'          => 'textfield',
+    '#attributes'    => array('pattern' => '^\s*[\s\w\-\.\,#]+\s*$'),
+    '#default_value' => !empty($usr->contest_address)? $usr->contest_address: '',
+    '#size'          => 30,
+    '#maxlength'     => 100,
+    '#required'      => TRUE,
+    '#weight'        => 1,
+  );
+  $form['contest_city'] = array(
+    '#title'         => t('City'),
+    '#type'          => 'textfield',
+    '#attributes'    => array('pattern' => '^\s*[\s\w\-\.]+\s*$'),
+    '#default_value' => !empty($usr->contest_city)? $usr->contest_city: '',
+    '#size'          => 30,
+    '#maxlength'     => 50,
+    '#required'      => TRUE,
+    '#weight'        => 2,
+  );
+  if (variable_get('contest_host_county', '') === 'US') {
+    $form['contest_state'] = array(
+      '#title'         => t('State'),
+      '#type'          => 'select',
+      '#attributes'    => array('pattern' => '^.+$'),
+      '#options'       => _contest_get_states(variable_get('contest_host_county', 'US')),
+      '#default_value' => !empty($usr->contest_state)? $usr->contest_state: '',
+      '#required'      => TRUE,
+      '#weight'        => 3,
+    );
+  }
+  else {
+    $form['contest_state'] = array(
+      '#title'         => t('Province'),
+      '#type'          => 'textfield',
+      '#attributes'    => array('pattern' => '^.+$'),
+      '#default_value' => !empty($usr->contest_state)? $usr->contest_state: '',
+      '#size'          => 30,
+      '#maxlength'     => 50,
+      '#required'      => FALSE,
+      '#weight'        => 3,
+    );
+  }
+  $form['contest_zip'] = array(
+    '#title'         => t('Zip'),
+    '#type'          => 'textfield',
+    '#attributes'    => array('pattern' => '^\s*\d+\s*$'),
+    '#default_value' => !empty($usr->contest_zip)? $usr->contest_zip: '',
+    '#size'          => 30,
+    '#maxlength'     => 5,
+    '#required'      => TRUE,
+    '#weight'        => 4,
+  );
+  $form['mail'] = array(
+    '#title'         => t('Email'),
+    '#type'          => 'textfield',
+    '#attributes'    => array('pattern' => '^\s*[\w\-\.]+@[\w\-\.]+\.\w+\s*$'),
+    '#default_value' => !empty($usr->mail)? $usr->mail: '',
+    '#size'          => 30,
+    '#maxlength'     => 100,
+    '#required'      => TRUE,
+    '#weight'        => 5,
+  );
+  $form['contest_phone'] = array(
+    '#title'         => t('Phone'),
+    '#type'          => 'textfield',
+    '#default_value' => !empty($usr->contest_phone)? $usr->contest_phone: '',
+    '#size'          => 30,
+    '#maxlength'     => 20,
+    '#required'      => FALSE,
+    '#weight'        => 6,
+  );
+  $form['contest_optin'] = array(
+    '#title'         => t('Opt In'),
+    '#type'          => 'checkbox',
+    '#description'   => 'I\'d like to receive information about contests and special offers from the sponsor and promoter.',
+    '#attributes'    => array('pattern' => '^\d$'),
+    '#prefix'        => '<div id="contest-optin">',
+    '#suffix'        => '</div>',
+    '#default_value' => 1,
+    '#required'      => FALSE,
+    '#weight'        => 7,
+  );
+  $form['clear_both'] = array(
+    '#prefix' => '<div class="clr">',
+    '#suffix' => '</div>',
+    '#type'   => 'markup',
+    '#value'  => '&nbsp;',
+    '#weight' => 9,
+  );
+  $form['submit'] = array(
+    '#type'   => 'submit',
+    '#value'  => t('Enter Contest'),
+    '#weight' => 10,
+  );
+  return $form;
+}
+/**
  * Implementation of hook_form().
  */
 function contest_form($node, $form_state) {
@@ -300,6 +448,18 @@ function contest_update($node) {
     'period'      => $node->contest->period,
   );
   return db_update('contest')->fields($fields)->condition('vid', $node->vid)->execute()? TRUE: FALSE;
+}
+/**
+ * Implements hook_view().
+ */
+function contest_view($node, $view_mode) {
+  if ($node->contest->start < REQUEST_TIME && REQUEST_TIME < $node->contest->end) {
+    $node->content['contest_entry_form'] = drupal_get_form('contest_entry_form', $node);
+  }
+  else {
+    #$node->content['contest_results'] = array('#markup' => theme('contest_results', $node, $view_mode));
+  }
+  return $node;
 }
 /**
  * Build and return a cache ID and resoectuve cached data.
