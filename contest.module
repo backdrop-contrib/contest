@@ -53,8 +53,8 @@ function contest_entity_info_alter(&$entity_info) {
  * Implementation of hook_form().
  */
 function contest_form($node, $form_state) {
-  $end = !empty($node->end)? $node->end: time();
-  $start = !empty($node->start)? $node->start: time();
+  $end = !empty($node->contest->end)? $node->contest->end: time();
+  $start = !empty($node->contest->start)? $node->contest->start: time();
   $type = node_type_get_type($node);
 
   $form['#submit'][] = 'contest_form_submit';
@@ -70,21 +70,21 @@ function contest_form($node, $form_state) {
   $form['sponsor'] = array(
     '#title'         => t('Contest Sponsor'),
     '#type'          => 'textfield',
-    '#default_value' => !empty($node->sponsor)? $node->sponsor: '',
+    '#default_value' => !empty($node->contest->sponsor)? $node->contest->sponsor: '',
     '#required'      => FALSE,
     '#weight'        => 20,
   );
   $form['sponsor_email'] = array(
     '#title'         => t('Sponsor Email'),
     '#type'          => 'textfield',
-    '#default_value' => !empty($node->sponsor_email)? $node->sponsor_email: '',
+    '#default_value' => !empty($node->contest->sponsor_email)? $node->contest->sponsor_email: '',
     '#required'      => FALSE,
     '#weight'        => 30,
   );
   $form['sponsor_url'] = array(
     '#title'         => t('Sponsor Url'),
     '#type'          => 'textfield',
-    '#default_value' => !empty($node->sponsor_url)? $node->sponsor_url: '',
+    '#default_value' => !empty($node->contest->sponsor_url)? $node->contest->sponsor_url: '',
     '#required'      => FALSE,
     '#weight'        => 40,
   );
@@ -92,7 +92,7 @@ function contest_form($node, $form_state) {
     '#title'         => t('Winning Places'),
     '#type'          => 'select',
     '#options'       => drupal_map_assoc(range(1, 10)),
-    '#default_value' => !empty($node->places)? $node->places: 1,
+    '#default_value' => !empty($node->contest->places)? $node->contest->places: 1,
     '#required'      => TRUE,
     '#weight'        => 50,
   );
@@ -100,7 +100,7 @@ function contest_form($node, $form_state) {
     '#title'         => t('User Can Enter'),
     '#type'          => 'select',
     '#options'       => variable_get('contest_period', array(86400 => 'Daily')),
-    '#default_value' => !empty($node->period)? $node->period: 86400,
+    '#default_value' => !empty($node->contest->period)? $node->contest->period: 86400,
     '#required'      => TRUE,
     '#weight'        => 60,
   );
@@ -126,25 +126,106 @@ function contest_form($node, $form_state) {
     '#required'      => TRUE,
     '#weight'        => 80,
   );
-#dpm(array($node, $form, $form_state));
   return $form;
 }
+/**
+ * Custom submit function.
+ */
 function contest_form_submit($form, &$form_state) {
-dpm(array($form, &$form_state));
+  $node = $form_state['node'];
+  $fields = array(
+    'period',
+    'places',
+    'sponsor',
+    'sponsor_email',
+    'sponsor_url',
+  );
+  $node->contest->start = mktime(0, 0, 0, intval($form_state['values']['start']['month']), intval($form_state['values']['start']['day']), intval($form_state['values']['start']['year']));
+  unset($form_state['values']['start']);
+
+  $node->contest->end = mktime(0, 0, 0, intval($form_state['values']['end']['month']), intval($form_state['values']['end']['day']), intval($form_state['values']['end']['year']));
+  unset($form_state['values']['end']);
+
+  foreach ($fields as $field) {
+    if (!empty($form_state['values'][$field])) {
+      $node->contest->$field = $form_state['values'][$field];
+      unset($form_state['values'][$field]);
+    }
+  }
 }
+/**
+ * Custom validation function.
+ */
 function contest_form_validate($form, &$form_state) {
-dpm(array($form, &$form_state));
+  $start = mktime(0, 0, 0, $form_state['values']['start']['month'], $form_state['values']['start']['day'], $form_state['values']['start']['year']);
+  $end = mktime(0, 0, 0, $form_state['values']['end']['month'], $form_state['values']['end']['day'], $form_state['values']['end']['year']);
+  $day = 86400;
+
+// If the end date is before the start date set an error.
+
+  if ($end < $start) {
+    form_set_error('end', 'Contest cannot end before it starts.');
+  }
+// If the end date is the same as the start date set an error.
+
+  if (($end - $start) < $day) {
+    form_set_error('start', 'Contest must run for at least one day.');
+  }
 }
 /**
  * Implimentation of hook_form_FORM_ID_alter().
  */
 function contest_form_contest_node_form_alter(&$form, &$form_state, $form_id) {
-#dpm(array($form_id, $form, &$form_state));
 }
 /**
  * .
  */
 function contest_form_user_form_alter() {
+}
+/**
+ * Implementation of hook_insert().
+ */
+function contest_insert($node) {
+  $sponsor_uid = 1;//_contest_add_usr($node->contest->sponsor, $node->contest->sponsor_email);
+
+  if (!db_query_range("SELECT 1 FROM {contest} WHERE nid = :nid", 0, 1, array(':nid' => $node->nid))->fetchField()) {
+    return contest_update($node)? TRUE: FALSE;
+  }
+  $fields = array(
+    'nid'         => $node->nid,
+    'vid'         => $node->vid,
+    'sponsor_uid' => $sponsor_uid,
+    'sponsor_url' => $node->contest->sponsor_url,
+    'start'       => $node->contest->start,
+    'end'         => $node->contest->end,
+    'places'      => $node->contest->places,
+    'period'      => $node->contest->period,
+  );
+  return db_insert('contest')->fields($fields)->execute()? TRUE: FALSE;
+}
+/**
+ * Implementation of hook_load().
+ */
+function contest_load(&$nodes) {
+  $stmt = "
+    SELECT
+      u.name AS 'sponsor',
+      u.mail AS 'sponsor_email',
+      c.sponsor_url,
+      c.start,
+      c.end,
+      c.places,
+      c.period,
+      c.publish_winners
+    FROM
+      {contest} c
+      LEFT JOIN {users} u ON u.uid =  c.sponsor_uid
+    WHERE
+      c.nid = :nid
+  ";
+  foreach ($nodes as $nid => $node) {
+    $node->contest = db_query_range($stmt, 0, 1, array(':nid' => $nid))->fetchObject();
+  }
 }
 /**
  * Implementation of hook_menu().
@@ -199,6 +280,26 @@ function contest_theme() {
       'template' => 'contest-featured-block',
     ),
   );
+}
+/**
+ * Implementation of hook_update().
+ */
+function contest_update($node) {
+  $sponsor_uid = 1;//_contest_add_usr($node->contest->sponsor, $node->contest->sponsor_email);
+
+  if (!db_query_range("SELECT 1 FROM {contest} WHERE nid = :nid", 0, 1, array(':nid' => $node->nid))->fetchField()) {
+    return contest_insert($node)? TRUE: FALSE;
+  }
+  $fields = array(
+    'nid'         => $node->nid,
+    'sponsor_uid' => $sponsor_uid,
+    'sponsor_url' => $node->contest->sponsor_url,
+    'start'       => $node->contest->start,
+    'end'         => $node->contest->end,
+    'places'      => $node->contest->places,
+    'period'      => $node->contest->period,
+  );
+  return db_update('contest')->fields($fields)->condition('vid', $node->vid)->execute()? TRUE: FALSE;
 }
 /**
  * Build and return a cache ID and resoectuve cached data.
