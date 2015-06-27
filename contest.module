@@ -67,9 +67,6 @@ function contest_form($node, $form_state) {
     '#required'      => TRUE,
     '#weight'        => 0,
   );
-  #$form['body_field'] = array(
-  #  '#weight'        => 10,
-  #);
   $form['sponsor'] = array(
     '#title'         => t('Contest Sponsor'),
     '#type'          => 'textfield',
@@ -129,8 +126,20 @@ function contest_form($node, $form_state) {
     '#required'      => TRUE,
     '#weight'        => 80,
   );
-dpm(array($node, $form, $form_state));
+#dpm(array($node, $form, $form_state));
   return $form;
+}
+function contest_form_submit($form, &$form_state) {
+dpm(array($form, &$form_state));
+}
+function contest_form_validate($form, &$form_state) {
+dpm(array($form, &$form_state));
+}
+/**
+ * Implimentation of hook_form_FORM_ID_alter().
+ */
+function contest_form_contest_node_form_alter(&$form, &$form_state, $form_id) {
+#dpm(array($form_id, $form, &$form_state));
 }
 /**
  * .
@@ -272,7 +281,7 @@ function _contest_clean_path($path) {
 function _contest_create_export_directory($path) {
   $path = _contest_clean_path($path);
   $wrapper = file_stream_wrapper_get_instance_by_uri('private://');
-  
+
   if (!$path || !$wrapper) {
     return FALSE;
   }
@@ -370,7 +379,7 @@ function _contest_purge_exports() {
     return FALSE;
   }
   $file_regx = $wrapper->getDirectoryPath() . "/$sub_dir/*.csv";
-  
+
   return _contest_purge_dir($file_regx, $max_age);
 }
 /**
