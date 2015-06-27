@@ -61,12 +61,10 @@ function contest_entry_form() {
 // Load the user information.
 
   $usr = user_load($user->uid);
-
+dpm($usr);
 // Add the javascript validation and associated css to the head.
 
   drupal_add_css(drupal_get_path('module', 'contest') . '/css/contest.css', 'module', 'screen', FALSE);
-
-  #drupal_set_html_head('<style type="text/css">input.invalid { background:#ffaaaa; }</style>');
 
   drupal_add_js(drupal_get_path('module', 'contest') . '/js/validate.js', 'module');
 
@@ -94,7 +92,7 @@ function contest_entry_form() {
     '#title'         => t('Name'),
     '#type'          => 'textfield',
     '#attributes'    => array('pattern' => '^\s*[\s\w\-\.]+\s*$'),
-    '#default_value' => !empty($usr->contest_name)? $usr->contest_name: '',
+    '#default_value' => _contest_get_usr_val($usr, 'field_contest_name'),
     '#size'          => 30,
     '#maxlength'     => 100,
     '#required'      => TRUE,
@@ -104,7 +102,7 @@ function contest_entry_form() {
     '#title'         => t('Address'),
     '#type'          => 'textfield',
     '#attributes'    => array('pattern' => '^\s*[\s\w\-\.\,#]+\s*$'),
-    '#default_value' => !empty($usr->contest_address)? $usr->contest_address: '',
+    '#default_value' => _contest_get_usr_val($usr, 'field_contest_address'),
     '#size'          => 30,
     '#maxlength'     => 100,
     '#required'      => TRUE,
@@ -114,7 +112,7 @@ function contest_entry_form() {
     '#title'         => t('City'),
     '#type'          => 'textfield',
     '#attributes'    => array('pattern' => '^\s*[\s\w\-\.]+\s*$'),
-    '#default_value' => !empty($usr->contest_city)? $usr->contest_city: '',
+    '#default_value' => _contest_get_usr_val($usr, 'field_contest_city'),
     '#size'          => 30,
     '#maxlength'     => 50,
     '#required'      => TRUE,
@@ -126,7 +124,7 @@ function contest_entry_form() {
       '#type'          => 'select',
       '#attributes'    => array('pattern' => '^.+$'),
       '#options'       => _contest_get_states(variable_get('contest_host_county', 'US')),
-      '#default_value' => !empty($usr->contest_state)? $usr->contest_state: '',
+      '#default_value' => _contest_get_usr_val($usr, 'field_contest_state'),
       '#required'      => TRUE,
       '#weight'        => 3,
     );
@@ -136,7 +134,7 @@ function contest_entry_form() {
       '#title'         => t('Province'),
       '#type'          => 'textfield',
       '#attributes'    => array('pattern' => '^.+$'),
-      '#default_value' => !empty($usr->contest_state)? $usr->contest_state: '',
+      '#default_value' => _contest_get_usr_val($usr, 'field_contest_state'),
       '#size'          => 30,
       '#maxlength'     => 50,
       '#required'      => FALSE,
@@ -147,7 +145,7 @@ function contest_entry_form() {
     '#title'         => t('Zip'),
     '#type'          => 'textfield',
     '#attributes'    => array('pattern' => '^\s*\d+\s*$'),
-    '#default_value' => !empty($usr->contest_zip)? $usr->contest_zip: '',
+    '#default_value' => _contest_get_usr_val($usr, 'field_contest_zip'),
     '#size'          => 30,
     '#maxlength'     => 5,
     '#required'      => TRUE,
@@ -166,7 +164,7 @@ function contest_entry_form() {
   $form['contest_phone'] = array(
     '#title'         => t('Phone'),
     '#type'          => 'textfield',
-    '#default_value' => !empty($usr->contest_phone)? $usr->contest_phone: '',
+    '#default_value' => _contest_get_usr_val($usr, 'field_contest_phone'),
     '#size'          => 30,
     '#maxlength'     => 20,
     '#required'      => FALSE,
@@ -603,6 +601,12 @@ function _contest_get_template_path($module, $template = '') {
     $scan = file_scan_directory(drupal_get_path('module', $module), "/^$template\.tpl\.php$/", array('recurse' => TRUE, 'filename' => TRUE));
   }
   return count($scan)? preg_replace('/(\/[^\/]+)$/', '', key($scan)):  drupal_get_path('module', $module) . '/templates';
+}
+/**
+ * .
+ */
+function _contest_get_usr_val($usr = NULL, $field = '') {
+  return !empty($usr->{$field}[LANGUAGE_NONE][0]['safe_value'])? $usr->{$field}[LANGUAGE_NONE][0]['safe_value']: '';
 }
 /**
  * Delete the requested files.
