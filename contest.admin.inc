@@ -41,18 +41,16 @@ function contest_settings_form() {
     '#required'      => TRUE,
     '#weight'        => 20,
   );
-  $form['contest_host_uid'] = array(
-    '#title'         =>  t('Host User ID'),
-    '#type'          => 'textfield',
-    '#default_value' => variable_get('contest_host_uid', 1),
-    '#size'          => 30,
-    '#maxlength'     => 6,
-    '#required'      => TRUE,
-    '#weight'        => 30,
+  $form['host'] = array(
+    '#type'              => 'textfield',
+    '#title'             => t('Host'),
+    '#autocomplete_path' => 'contest/usr-autocomplete',
+    '#default_value'     => db_query_range("SELECT name FROM {users} WHERE uid = :uid", 0, 1, array(':uid' => variable_get('contest_host_uid', 1)))->fetchField(),
   );
   $form['contest_host_title'] = array(
     '#title'         =>  t('Host Title'),
     '#type'          => 'textfield',
+    '#description'   => t("The host's display title."),
     '#default_value' => variable_get('contest_host_title', 'Contest Host'),
     '#size'          => 30,
     '#maxlength'     => 60,
@@ -74,7 +72,7 @@ function contest_settings_form() {
  * Custom validation function for the contest setting form.
  */
 function contest_settings_form_validate($form, &$form_state) {
-  
+
 // Directory name doesn't match requirements.
 
   if (!preg_match('/^\w[\w\/]*\w$/', $form_state['values']['contest_export_dir'])) {
@@ -84,22 +82,22 @@ function contest_settings_form_validate($form, &$form_state) {
     $wrapper = file_stream_wrapper_get_instance_by_uri('private://');
 
 // Private system path not configured.
-    
+
     if (!$wrapper) {
       form_set_error('contest_export_dir', t("Drupal's file system path needs to be configured. Please go to !link to configure.", array('!link' => l('File System', 'admin/config/media/file-system', array('target' => '_blank')))));
     }
     $path = $wrapper->getDirectoryPath() . '/' . _contest_clean_path($form_state['values']['contest_export_dir']);
 
 // Directory already in use.
-    
+
     if (is_dir($path) || is_file($path)) {
       form_set_error('contest_export_dir', t('That export directory is already in use.'));
     }
   }
 // Non-existent contest host.
 
-  if (!db_query_range("SELECT 1 FROM {users} WHERE uid = :uid", 0, 1, array(':uid' => $form_state['values']['contest_host_uid']))->fetchField()) {
-    form_set_error('contest_host_uid', t('No user with ID: @uid.', array('@uid' => $form_state['values']['contest_host_uid'])));
+  if (!db_query_range("SELECT 1 FROM {users} WHERE name = :name", 0, 1, array(':name' => $form_state['values']['host']))->fetchField()) {
+    form_set_error('host', t('No user with that name: @name.', array('@name' => $form_state['values']['host'])));
   }
 }
 /**
@@ -110,7 +108,20 @@ function contest_settings_form_submit($form, &$form_state) {
   $now = time();
   $path = _contest_clean_path($form_state['values']['contest_export_dir']);
   $wrapper = file_stream_wrapper_get_instance_by_uri('private://');
-  
+
+// .
+
+  $uid = db_query_range("SELECT uid FROM {users} WHERE name = :name", 0, 1, array(':name' => $form_state['values']['host']))->fetchField();
+
+  variable_set('contest_host_uid', $uid);
+
+  unset($form_state['input']['contest_export_dir']);
+  unset($form_state['input']['host']);
+  unset($form_state['values']['contest_export_dir']);
+  unset($form_state['values']['host']);
+
+// .
+
   if ($path && $path === variable_get('contest_export_dir', '')) {
     return;
   }
