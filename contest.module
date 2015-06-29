@@ -118,7 +118,7 @@ function contest_entry_form() {
       '#title'         => t('State'),
       '#type'          => 'select',
       '#attributes'    => array('pattern' => '^.+$'),
-      '#options'       => _contest_get_states(variable_get('contest_host_county', 'US')),
+      '#options'       => array_merge(array('' => ' -Select- '), _contest_get_states(variable_get('contest_host_county', 'US'))),
       '#default_value' => _contest_get_usr_val($usr, 'field_contest_state'),
       '#required'      => TRUE,
       '#weight'        => 3,
@@ -202,7 +202,7 @@ function contest_entry_form_submit($form, &$form_state) {
   $form_state['values']['uid'] = 1;//_contest_contestant($form_state);
 
   $usr = user_load($form_state['values']['uid']);
-dpm(array($form, &$form_state, $usr));
+
 // If they're not logged in, are already a user and have an incomplete profile give them the explanation and redirect them to the login page.
 
   if ($user->uid != $usr->uid && (empty($usr->field_contest_name) || empty($usr->field_contest_address) || empty($usr->field_contest_city) || empty($usr->field_contest_state) || empty($usr->field_contest_zip))) {
@@ -368,6 +368,25 @@ function contest_form_submit($form, &$form_state) {
   }
 }
 /**
+ * Implementation of hook_form_alter().
+ */
+function contest_form_user_profile_form_alter(&$form, &$form_state) {
+  if (variable_get('contest_host_county', '') === 'US') {
+    $form['field_contest_state'][LANGUAGE_NONE][0]['value']['#type'] = 'select';
+    $form['field_contest_state'][LANGUAGE_NONE][0]['value']['#options'] = array_merge(array('' => ' -Select- '), _contest_get_states('US'));
+    $form['field_contest_state'][LANGUAGE_NONE][0]['value']['#size'] = 1;
+
+    $form['field_contest_country'][LANGUAGE_NONE][0]['value']['#type'] = 'select';
+    $form['field_contest_country'][LANGUAGE_NONE][0]['value']['#options'] =  array_merge(array('' => ' -Select- '), _contest_get_countries());
+    $form['field_contest_country'][LANGUAGE_NONE][0]['value']['#default_value'] =  !empty($form['Contest']['contest_country']['#default_value'])? $form['Contest']['contest_country']['#default_value']: 'US';
+    $form['field_contest_country'][LANGUAGE_NONE][0]['value']['#size'] = 1;
+  }
+  else {
+    $form['field_contest_state'][LANGUAGE_NONE][0]['value']['#access'] = FALSE;
+    $form['field_contest_state'][LANGUAGE_NONE][0]['value']['#required'] = FALSE;
+  }
+}
+/**
  * Custom validation function.
  */
 function contest_form_validate($form, &$form_state) {
@@ -385,16 +404,6 @@ function contest_form_validate($form, &$form_state) {
   if (($end - $start) < $day) {
     form_set_error('start', 'Contest must run for at least one day.');
   }
-}
-/**
- * Implimentation of hook_form_FORM_ID_alter().
- */
-function contest_form_contest_node_form_alter(&$form, &$form_state, $form_id) {
-}
-/**
- * .
- */
-function contest_form_user_form_alter() {
 }
 /**
  * Implementation of hook_insert().
@@ -456,9 +465,9 @@ function contest_menu() {
   );
   $items['contest/usr-autocomplete'] = array(
     'page callback'     => 'contest_usr_autocomplete',
+    'delivery callback' => 'ajax_callback',
     'access arguments'  => array('access content'),
     'type'              => MENU_CALLBACK,
-    'delivery callback' => 'ajax_callback',
   );
   return $items;
 }
@@ -665,6 +674,69 @@ function _contest_get_countries() {
   return _country_get_predefined_list();
 }
 /**
+ * .
+ */
+function _contest_get_states($country = 'US') {
+  switch ($country) {
+    case 'US':
+      return array(
+        'AL' => 'Alabama',
+        'AK' => 'Alaska',
+        'AZ' => 'Arizona',
+        'AR' => 'Arkansas',
+        'CA' => 'California',
+        'CO' => 'Colorado',
+        'CT' => 'Connecticut',
+        'DE' => 'Delaware',
+        'DC' => 'District Of Columbia',
+        'FL' => 'Florida',
+        'GA' => 'Georgia',
+        'HI' => 'Hawaii',
+        'ID' => 'Idaho',
+        'IL' => 'Illinois',
+        'IN' => 'Indiana',
+        'IA' => 'Iowa',
+        'KS' => 'Kansas',
+        'KY' => 'Kentucky',
+        'LA' => 'Louisiana',
+        'ME' => 'Maine',
+        'MD' => 'Maryland',
+        'MA' => 'Massachusetts',
+        'MI' => 'Michigan',
+        'MN' => 'Minnesota',
+        'MS' => 'Mississippi',
+        'MO' => 'Missouri',
+        'MT' => 'Montana',
+        'NE' => 'Nebraska',
+        'NV' => 'Nevada',
+        'NH' => 'New Hampshire',
+        'NJ' => 'New Jersey',
+        'NM' => 'New Mexico',
+        'NY' => 'New York',
+        'NC' => 'North Carolina',
+        'ND' => 'North Dakota',
+        'OH' => 'Ohio',
+        'OK' => 'Oklahoma',
+        'OR' => 'Oregon',
+        'PA' => 'Pennsylvania',
+        'RI' => 'Rhode Island',
+        'SC' => 'South Carolina',
+        'SD' => 'South Dakota',
+        'TN' => 'Tennessee',
+        'TX' => 'Texas',
+        'UT' => 'Utah',
+        'VT' => 'Vermont',
+        'VI' => 'Virgin Islands',
+        'VA' => 'Virginia',
+        'WA' => 'Washington',
+        'WV' => 'West Virginia',
+        'WI' => 'Wisconsin',
+        'WY' => 'Wyoming',
+      );
+  }
+  return array();
+}
+/**
  * Scan the theme and module directories in that order for the template and return the path to the template's directory.
  *
  * @param $module (string) The module name, (without the suffix).
@@ -683,13 +755,41 @@ function _contest_get_template_path($module, $template = '') {
   return count($scan)? preg_replace('/(\/[^\/]+)$/', '', key($scan)):  drupal_get_path('module', $module) . '/templates';
 }
 /**
- * .
+ * Extract the contest profile value from the user object.
+ *
+ * @param $usr (object) A Drupal user object.
+ * @param $field (string) The field name.
+ *
+ * @return (string) The safe_value if set.
  */
 function _contest_get_usr_val($usr = NULL, $field = '') {
   if (!is_object($usr) || empty($field)) {
     return '';
   }
   return !empty($usr->{$field}[LANGUAGE_NONE][0]['safe_value'])? $usr->{$field}[LANGUAGE_NONE][0]['safe_value']: '';
+}
+/**
+ * Determine if the profile is complete.
+ *
+ * @param $usr (object) A Drupal user object.
+ * @param $role (string) The role to test.
+ *
+ * @return (bool) True if the user has a completed profile.
+ */
+function _contest_has_complete_profile($usr, $role = 'entrant') {
+  $status = (_contest_get_usr_val($usr, 'field_contest_name') && _contest_get_usr_val($usr, 'field_contest_address') && _contest_get_usr_val($usr, 'field_contest_city') && _contest_get_usr_val($usr, 'field_contest_state') && _contest_get_usr_val($usr, 'field_contest_zip') && _contest_get_usr_val($usr, 'field_contest_phone'))? TRUE: FALSE;
+
+  switch ($role) {
+    case 'entrant':
+      return $status;
+
+    case 'host':
+      return ($status && _contest_get_usr_val($usr, 'field_contest_business') && _contest_get_usr_val($usr, 'field_contest_country'))? TRUE: FALSE;
+
+    case 'sponsor':
+      return ($status && _contest_get_usr_val($usr, 'field_contest_business'))? TRUE: FALSE;
+  }
+  return FALSE;
 }
 /**
  * Delete the requested files.
