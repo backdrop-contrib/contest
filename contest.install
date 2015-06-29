@@ -7,11 +7,11 @@
 
 /**
  * Implementation of hook_enable().
- * Create the profile fields and export directory. 
+ * Create the profile fields and export directory.
  */
 function contest_enable() {
   $enabled = FALSE;
-  
+
 // Enable the field_ui module, (we don't have it as a dependency so we can remove it later if we so choose).
 
   if (!module_exists('field_ui')) {
@@ -23,11 +23,11 @@ function contest_enable() {
     }
   }
 // Create the profile fields.
-  
+
   _contest_install_user_fields();
 
 // If we enabled the field_ui module disable it so we leave the site in the same state as we found it.
-  
+
   if ($enabled) {
     module_disable(array('field_ui'));
   }
@@ -40,10 +40,9 @@ function contest_enable() {
  */
 function contest_install() {
   $day = 86400;
-  
+
   variable_set('contest_export_dir', 'contest_export'); // The contest results export directory.
   variable_set('contest_hog_days', 89);                 // The number of days between a persons eligibility to win another contest.
-  variable_get('contest_host_county', 'US');            // The country the contest is running, (for legal reasons I don't anticipate supporting non-US contests but...).
   variable_set('contest_host_uid', 1);                  // The contest host's user id. We'll set it to the admin's to start.
 
 // We'll use the admin's name as the default host's title.
@@ -61,7 +60,7 @@ function contest_install() {
     2147483646   => 'once',
   );
   variable_set('contest_period', $periods);
-  
+
   _contest_install_type_create();
 }
 /**
@@ -217,7 +216,7 @@ function contest_schema() {
 function contest_uninstall () {
   $export_dir = variable_get('contest_export_dir', 'contest_export');
   $wrapper = file_stream_wrapper_get_instance_by_uri('private://');
-  
+
 // Remove the export directory.
 
   if ($wrapper) {
@@ -225,18 +224,18 @@ function contest_uninstall () {
     _contest_install_purge_dir("$export_dir/*", 0);
     chmod($export_dir, 0777);
     rmdir($export_dir);
-  }  
+  }
 // Delete the variables.
 
   $rows = db_query("SELECT name FROM {variable} WHERE name LIKE :name", array(':name' => 'contest\_%'))->fetchAll();
-  
+
   foreach ($rows as $row) {
     variable_del($row->name);
   }
 // Delete the contest nodes and their body field.
 
   $rows = db_query("SELECT nid FROM {node} n WHERE n.type = :type", array(':type' => 'contest'));
-  
+
   foreach ($rows as $row) {
     node_delete($row->nid);
   }
@@ -250,7 +249,7 @@ function contest_uninstall () {
 // Delete menu links.
 
   db_delete('menu_links')->condition('module', 'contest')->execute();
-  
+
   menu_cache_clear_all();
 }
 /**
@@ -289,11 +288,11 @@ function _contest_install_type_create() {
     'locked'      => TRUE,
   );
   $contest_node_type = node_type_set_defaults($contest_node_type);
-  
+
   node_add_body_field($contest_node_type);
 
   node_type_save($contest_node_type);
-  
+
   variable_set('node_options_contest', array('status'));
   variable_set('node_preview_contest', '1');
   variable_set('node_submitted_contest', 0);
@@ -353,14 +352,6 @@ function _contest_install_user_fields() {
       'length' => 10,
     ),
     (object) array(
-      'label'  => 'Country',
-      'name'   => 'country',
-      'desc'   => '',
-      'type'   => 'text',
-      'widget' => 'textfield',
-      'length' => 50,
-    ),
-    (object) array(
       'label'  => 'Phone',
       'name'   => 'phone',
       'desc'   => '',
@@ -378,14 +369,14 @@ function _contest_install_user_fields() {
     ),
   );
   $weight = (count($fields) + 1) * -10;
-  
+
   foreach ($fields as $index => $field) {
     if (field_info_field("{$field_prefix}_{$field->name}")) {
       continue;
     }
     $prototype = array(
-      'field_name' => "{$field_prefix}_{$field->name}", 
-      'type'       => $field->type, 
+      'field_name' => "{$field_prefix}_{$field->name}",
+      'type'       => $field->type,
       'settings'   => array('max_length' => $field->length),
     );
     if ($field->widget == 'options_onoff') {
@@ -396,18 +387,18 @@ function _contest_install_user_fields() {
       );
     }
     field_create_field($prototype);
-    
+
     $instance = array(
-      'field_name'  => "{$field_prefix}_{$field->name}", 
-      'entity_type' => 'user', 
-      'label'       => $field->label, 
-      'bundle'      => 'user', 
+      'field_name'  => "{$field_prefix}_{$field->name}",
+      'entity_type' => 'user',
+      'label'       => $field->label,
+      'bundle'      => 'user',
       'required'    => FALSE,
       'settings'    => array('user_register_form' => 0),
       'widget'      => array(
         'type'   => $field->widget,
         'weight' => $weight + ($index * 10),
-      ), 
+      ),
     );
     if ($field->type == 'options_onoff') {
       $instance['settings']['allowed_values'] = array(

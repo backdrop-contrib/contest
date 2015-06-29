@@ -58,15 +58,6 @@ function contest_settings_form() {
     '#required'      => TRUE,
     '#weight'        => 40,
   );
-  $form['contest_host_county'] = array(
-    '#title'         =>  t('Host Country'),
-    '#description'   => t("I'm not sure this will work in countries besides the US."),
-    '#type'          => 'select',
-    '#options'       => _contest_get_countries(),
-    '#default_value' => variable_get('contest_host_county', 'US'),
-    '#required'      => TRUE,
-    '#weight'        => 50,
-  );
   return system_settings_form($form);
 }
 /**
@@ -113,7 +104,6 @@ function contest_settings_form_validate($form, &$form_state) {
  * Create the export directory.
  */
 function contest_settings_form_submit($form, &$form_state) {
-  $now = time();
   $path = _contest_clean_path($form_state['values']['contest_export_dir']);
   $wrapper = file_stream_wrapper_get_instance_by_uri('private://');
 

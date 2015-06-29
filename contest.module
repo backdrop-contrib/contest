@@ -56,12 +56,17 @@ function contest_entity_info_alter(&$entity_info) {
  */
 function contest_entry_form() {
   global $user;
-  $now = time();
+
+// Add the JavaScrit and CSS.
 
   drupal_add_css(drupal_get_path('module', 'contest') . '/css/contest.css', 'module', 'screen', FALSE);
   drupal_add_js(drupal_get_path('module', 'contest') . '/js/validate.js', 'module');
 
+// Load the full user object.
+
   $usr = user_load($user->uid);
+
+// Build the form.
 
   $form['#id'] = 'contest-entry-form';
   $form['#theme'] = 'contest_entry';
@@ -113,12 +118,12 @@ function contest_entry_form() {
     '#required'      => TRUE,
     '#weight'        => 2,
   );
-  if (variable_get('contest_host_county', '') === 'US') {
+  if (variable_get('site_default_country', '') === 'US') {
     $form['contest_state'] = array(
       '#title'         => t('State'),
       '#type'          => 'select',
       '#attributes'    => array('pattern' => '^.+$'),
-      '#options'       => array_merge(array('' => ' -Select- '), _contest_get_states(variable_get('contest_host_county', 'US'))),
+      '#options'       => array_merge(array('' => ' -Select- '), _contest_get_states(variable_get('site_default_country', 'US'))),
       '#default_value' => _contest_get_usr_val($usr, 'field_contest_state'),
       '#required'      => TRUE,
       '#weight'        => 3,
@@ -267,8 +272,8 @@ function contest_entry_form_validate($form, &$form_state) {
  * Implementation of hook_form().
  */
 function contest_form($node, $form_state) {
-  $end = !empty($node->contest->end)? $node->contest->end: time();
-  $start = !empty($node->contest->start)? $node->contest->start: time();
+  $end = !empty($node->contest->end)? $node->contest->end: REQUEST_TIME;
+  $start = !empty($node->contest->start)? $node->contest->start: REQUEST_TIME;
   $type = node_type_get_type($node);
 
   $form['#submit'][] = 'contest_form_submit';
@@ -371,15 +376,10 @@ function contest_form_submit($form, &$form_state) {
  * Implementation of hook_form_alter().
  */
 function contest_form_user_profile_form_alter(&$form, &$form_state) {
-  if (variable_get('contest_host_county', '') === 'US') {
+  if (variable_get('site_default_country', '') === 'US') {
     $form['field_contest_state'][LANGUAGE_NONE][0]['value']['#type'] = 'select';
     $form['field_contest_state'][LANGUAGE_NONE][0]['value']['#options'] = array_merge(array('' => ' -Select- '), _contest_get_states('US'));
     $form['field_contest_state'][LANGUAGE_NONE][0]['value']['#size'] = 1;
-
-    $form['field_contest_country'][LANGUAGE_NONE][0]['value']['#type'] = 'select';
-    $form['field_contest_country'][LANGUAGE_NONE][0]['value']['#options'] =  array_merge(array('' => ' -Select- '), _contest_get_countries());
-    $form['field_contest_country'][LANGUAGE_NONE][0]['value']['#default_value'] =  !empty($form['Contest']['contest_country']['#default_value'])? $form['Contest']['contest_country']['#default_value']: 'US';
-    $form['field_contest_country'][LANGUAGE_NONE][0]['value']['#size'] = 1;
   }
   else {
     $form['field_contest_state'][LANGUAGE_NONE][0]['value']['#access'] = FALSE;
@@ -643,6 +643,8 @@ function _contest_create_export_directory($path) {
 }
 /**
  * Send the feedback to the appropriate place.
+ *
+ * @param $txt (string) The string to print.
  */
 function _contest_feedback($txt) {
   if (defined('STDIN')) {
@@ -667,14 +669,11 @@ function _contest_get_contest_featured_block_data() {
   return _contest_cache_set($cid, array('data' => $data));
 }
 /**
- * .
- */
-function _contest_get_countries() {
-  include_once DRUPAL_ROOT . '/includes/iso.inc';
-  return _country_get_predefined_list();
-}
-/**
- * .
+ * Gets the states for the selected country.
+ *
+ * @param $country (string) The ISO country code.
+ *
+ * @return (array) An ISO code to country name hash.
  */
 function _contest_get_states($country = 'US') {
   switch ($country) {
@@ -784,9 +783,6 @@ function _contest_has_complete_profile($usr, $role = 'entrant') {
       return $status;
 
     case 'host':
-      return ($status && _contest_get_usr_val($usr, 'field_contest_business') && _contest_get_usr_val($usr, 'field_contest_country'))? TRUE: FALSE;
-
-    case 'sponsor':
       return ($status && _contest_get_usr_val($usr, 'field_contest_business'))? TRUE: FALSE;
   }
   return FALSE;
@@ -802,10 +798,9 @@ function _contest_has_complete_profile($usr, $role = 'entrant') {
 function _contest_purge_dir($file_regx, $age) {
   $count = 0;
   $files = glob($file_regx);
-  $now = time();
 
   foreach ($files as $file) {
-    if (is_file($file) && ($now - filemtime($file)) >= $age) {
+    if (is_file($file) && (REQUEST_TIME - filemtime($file)) >= $age) {
       chmod($file, 0777);
       unlink($file);
       $count++;
