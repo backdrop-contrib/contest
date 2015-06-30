@@ -393,7 +393,7 @@ function contest_form_submit($form, &$form_state) {
  */
 function contest_form_user_profile_form_alter(&$form, &$form_state) {
   $states = _contest_get_states(variable_get('site_default_country', ''));
-  
+
   if (!empty($states)) {
     $form['field_contest_state'][LANGUAGE_NONE][0]['value']['#type'] = 'select';
     $form['field_contest_state'][LANGUAGE_NONE][0]['value']['#options'] = array_merge(array('' => t(' -Select- ')), $states);
@@ -533,7 +533,7 @@ function contest_theme() {
  */
 function contest_update($node) {
   $sponsor_uid = 1;//_contest_add_usr($node->contest->sponsor, $node->contest->sponsor_email);
-  
+
   if (!db_query_range("SELECT 1 FROM {contest} WHERE nid = :nid", 0, 1, array(':nid' => $node->nid))->fetchField()) {
     return contest_insert($node)? TRUE: FALSE;
   }
@@ -695,6 +695,22 @@ function _contest_get_contest_featured_block_data() {
  */
 function _contest_get_states($country = 'US') {
   switch ($country) {
+    case 'CA':
+      return array(
+        'AB' => 'Alberta',
+        'BC' => 'British Columbia',
+        'MB' => 'Manitoba',
+        'NB' => 'New Brunswick',
+        'NL' => 'Newfoundland and Labrador',
+        'NS' => 'Nova Scotia',
+        'ON' => 'Ontario',
+        'PE' => 'Prince Edward Island',
+        'QC' => 'Quebec',
+        'SK' => 'Saskatchewan',
+        'NT' => 'Northwest Territories',
+        'NU' => 'Nunavut',
+        'YT' => 'Yukon',
+      );
     case 'US':
       return array(
         'AL' => 'Alabama',
@@ -750,22 +766,6 @@ function _contest_get_states($country = 'US') {
         'WI' => 'Wisconsin',
         'WY' => 'Wyoming',
       );
-    case 'CA':
-      return array(
-        'AB' => 'Alberta',
-        'BC' => 'British Columbia',
-        'MB' => 'Manitoba',
-        'NB' => 'New Brunswick',
-        'NL' => 'Newfoundland and Labrador',
-        'NS' => 'Nova Scotia',
-        'ON' => 'Ontario',
-        'PE' => 'Prince Edward Island',
-        'QC' => 'Quebec',
-        'SK' => 'Saskatchewan',
-        'NT' => 'Northwest Territories',
-        'NU' => 'Nunavut',
-        'YT' => 'Yukon',
-      );      
   }
   return array();
 }
@@ -835,7 +835,7 @@ function _contest_has_complete_profile($usr, $role = 'entrant') {
  * @return (bool) True if the minimum age requirement is met, otherwise false.
  */
 function _contest_min_age($age = NULL) {
-  $min_date = mktime(0, 0, 0, intval(date('n')), intval(date('j')), (intval(date('Y')) - variable_get('contest_min_age', 18))); 
+  $min_date = mktime(0, 0, 0, intval(date('n')), intval(date('j')), (intval(date('Y')) - variable_get('contest_min_age', 18)));
 
   if (is_int($age)) {
     $birthday = $age;

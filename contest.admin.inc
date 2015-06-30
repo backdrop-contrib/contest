@@ -120,13 +120,11 @@ function contest_settings_form_submit($form, &$form_state) {
 
   $uid = db_query_range("SELECT uid FROM {users} WHERE name = :name", 0, 1, array(':name' => $form_state['values']['host']))->fetchField();
 
+  unset($form_state['input']['host']);
+  unset($form_state['values']['host']);
+
   if ($uid) {
     variable_set('contest_host_uid', $uid);
-
-    unset($form_state['input']['contest_export_dir']);
-    unset($form_state['input']['host']);
-    unset($form_state['values']['contest_export_dir']);
-    unset($form_state['values']['host']);
   }
 // Change the export directory if we need to.
 
@@ -143,5 +141,6 @@ function contest_settings_form_submit($form, &$form_state) {
 
   _contest_create_export_directory($path);
 
+  $form_state['input']['contest_export_dir'] = $path;
   $form_state['values']['contest_export_dir'] = $path;
 }
