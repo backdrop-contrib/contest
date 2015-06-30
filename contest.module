@@ -51,7 +51,7 @@ function contest_entry_form() {
 
   $usr = user_load($user->uid);
 
-  $birthday = _contest_get_usr_val($usr, 'field_contest_birthday');
+  $birthday = _contest_get_usr_val($usr, 'field_contest_birthdate');
 
 // Build the form.
 
@@ -157,7 +157,7 @@ function contest_entry_form() {
     '#required'      => FALSE,
     '#weight'        => 6,
   );
-  $form['contest_birthday'] = array(
+  $form['contest_birthdate'] = array(
     '#title'         => t('Birthday'),
     '#type'          => 'date',
     '#default_value' => array(
@@ -262,8 +262,8 @@ function contest_entry_form_submit($form, &$form_state) {
  * Check for the opt in.
  */
 function contest_entry_form_validate($form, &$form_state) {
-  if (!_contest_min_age($form_state['values']['contest_birthday'])) {
-    form_set_error('contest_birthday', t("You must be at least @age years old to enter.", array('@age' => variable_get('contest_min_age', 18))));
+  if (!_contest_min_age($form_state['values']['contest_birthdate'])) {
+    form_set_error('contest_birthdate', t("You must be at least @age years old to enter.", array('@age' => variable_get('contest_min_age', 18))));
   }
   if ($form_state['values']['contest_optin'] != 1) {
     form_set_error('contest_optin', t("You must agree to be contacted by the contest's sponsors and host to enter."));

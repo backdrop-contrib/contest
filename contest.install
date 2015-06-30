@@ -362,7 +362,7 @@ function _contest_install_user_fields() {
     ),
     (object) array(
       'label'  => 'Birthday',
-      'name'   => 'birthday',
+      'name'   => 'birthdate',
       'desc'   => '',
       'type'   => 'datestamp',
       'widget' => 'select',
