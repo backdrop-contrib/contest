@@ -360,6 +360,14 @@ function _contest_install_user_fields() {
       'length' => 10,
     ),
     (object) array(
+      'label'  => 'Birthday',
+      'name'   => 'birthday',
+      'desc'   => '',
+      'type'   => 'datestamp',
+      'widget' => 'select',
+      'length' => 1,
+    ),
+    (object) array(
       'label'  => 'Phone',
       'name'   => 'phone',
       'desc'   => '',
@@ -387,11 +395,21 @@ function _contest_install_user_fields() {
       'type'       => $field->type,
       'settings'   => array('max_length' => $field->length),
     );
-    if ($field->widget == 'options_onoff') {
+    if ($field->type == 'list_boolean') {
       $prototype['settings']['display_label'] = 1;
       $prototype['settings']['allowed_values'] = array(
         '0' => 'No',
         '1' => $field->label,
+      );
+    }
+    elseif ($field->type == 'datestamp') {
+      $prototype['settings']['granularity'] = array(
+        'month'  => 'month',
+        'day'    => 'day',
+        'year'   => 'year',
+        'hour'   => 0,
+        'minute' => 0,
+        'second' => 0,
       );
     }
     field_create_field($prototype);
@@ -408,7 +426,7 @@ function _contest_install_user_fields() {
         'weight' => $weight + ($index * 10),
       ),
     );
-    if ($field->type == 'options_onoff') {
+    if ($field->type == 'list_boolean') {
       $instance['settings']['allowed_values'] = array(
         '0' => 'No',
         '1' => $field->label,

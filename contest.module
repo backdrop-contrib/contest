@@ -34,13 +34,6 @@ function contest_block_view($delta = '') {
   return array();
 }
 /**
- * Implimentation of hook_cron().
- * Rebuild the custom taxonomy paths.
- */
-function contest_cron() {
-  _contest_rebuild_paths();
-}
-/**
  * Contest entry form.
  *
  * @return $form (array) A Drupal form array.

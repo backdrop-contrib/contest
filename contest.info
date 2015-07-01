@@ -6,6 +6,8 @@ package = Other
 core = "7.x"
 configure = admin/config/contest
 
+dependencies[] = date
+dependencies[] = date_api
 dependencies[] = field
 dependencies[] = field_sql_storage
 dependencies[] = list
