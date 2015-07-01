@@ -249,7 +249,7 @@ function contest_entry_form_submit($form, &$form_state) {
     'nid'     => $form_state['values']['nid'],
     'uid'     => $usr->uid,
     'created' => REQUEST_TIME,
-    'ip'      => !empty($_SERVER['REMOTE_ADDR'])? $_SERVER['REMOTE_ADDR']: '',
+    'ip'      => ip_address(),
   );
   return db_insert('contest_entry')->fields($fields)->execute();
 
@@ -267,6 +267,21 @@ function contest_entry_form_validate($form, &$form_state) {
   if ($form_state['values']['contest_optin'] != 1) {
     form_set_error('contest_optin', t("You must agree to be contacted by the contest's sponsors and host to enter."));
   }
+}
+/**
+ * Implements hook_field_extra_fields().
+ */
+function contest_field_extra_fields() {
+  $extra['node']['contest'] = array(
+    'display' => array(
+      'contest_entry_form' => array(
+        'label'       => t('Contest Entry Form'),
+        'description' => t('Allows a user to enter a contest.'),
+        'weight'      => 1,
+      ),
+    ),
+  );
+  return $extra;
 }
 /**
  * Implementation of hook_form().
@@ -515,7 +530,7 @@ function contest_theme() {
  */
 function contest_update($node) {
   $sponsor_uid = 1;//_contest_add_usr($node->contest->sponsor, $node->contest->sponsor_email);
-
+  
   if (!db_query_range("SELECT 1 FROM {contest} WHERE nid = :nid", 0, 1, array(':nid' => $node->nid))->fetchField()) {
     return contest_insert($node)? TRUE: FALSE;
   }

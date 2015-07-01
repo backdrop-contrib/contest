@@ -69,7 +69,7 @@ function contest_install() {
 function contest_requirements($phase) {
   $reqs = array();
 
-  switch ($phase) {site_default_country
+  switch ($phase) {
     case 'install':
       if (!file_stream_wrapper_get_instance_by_uri('private://')) {
         $reqs['system'] = array(
