@@ -44,8 +44,8 @@ function contest_entry_form() {
 
 // Add the JavaScrit and CSS.
 
-  drupal_add_css(drupal_get_path('module', 'contest') . '/css/contest.css', 'module', 'screen', FALSE);
-  drupal_add_js(drupal_get_path('module', 'contest') . '/js/validate.js', 'module');
+  drupal_add_css(drupal_get_path('module', 'contest') . '/css/contest.css');
+  drupal_add_js(drupal_get_path('module', 'contest') . '/js/contest.js');
 
 // Load the full user object.
 
