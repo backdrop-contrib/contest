@@ -41,21 +41,13 @@ function contest_cron() {
   _contest_rebuild_paths();
 }
 /**
- * Implementation of hook_entity_info_alter().
- */
-function contest_entity_info_alter(&$entity_info) {
-  $entity_info['node']['view modes']['block'] = array(
-    'label'           => t('Block View'),
-    'custom settings' => TRUE,
-  );
-}
-/**
  * Contest entry form.
  *
  * @return $form (array) A Drupal form array.
  */
 function contest_entry_form() {
   global $user;
+  $states = _contest_get_states(variable_get('site_default_country', ''));
 
 // Add the JavaScrit and CSS.
 
@@ -68,11 +60,11 @@ function contest_entry_form() {
 
 // Build the form.
 
-  $form['#id'] = 'contest-entry-form';
-  $form['#theme'] = 'contest_entry';
-  $form['#submit'][] = 'contest_entry_form_submit';
-  $form['#validate'][] = 'contest_entry_form_validate';
-
+  $form = array(
+    '#id'       => 'contest-entry-form',
+    '#submit'   => array('contest_entry_form_submit'),
+    '#validate' => array('contest_entry_form_validate'),
+  );
   $form['uid'] = array(
     '#type'   => 'hidden',
     '#value'  =>  $usr->uid,
@@ -118,12 +110,12 @@ function contest_entry_form() {
     '#required'      => TRUE,
     '#weight'        => 2,
   );
-  if (variable_get('site_default_country', '') === 'US') {
+  if (!empty($states)) {
     $form['contest_state'] = array(
       '#title'         => t('State'),
       '#type'          => 'select',
       '#attributes'    => array('pattern' => '^.+$'),
-      '#options'       => array_merge(array('' => ' -Select- '), _contest_get_states(variable_get('site_default_country', 'US'))),
+      '#options'       => array_merge(array('' => t(' -Select- ')), $states),
       '#default_value' => _contest_get_usr_val($usr, 'field_contest_state'),
       '#required'      => TRUE,
       '#weight'        => 3,
@@ -391,9 +383,11 @@ function contest_form_submit($form, &$form_state) {
  * Implementation of hook_form_alter().
  */
 function contest_form_user_profile_form_alter(&$form, &$form_state) {
-  if (variable_get('site_default_country', '') === 'US') {
+  $states = _contest_get_states(variable_get('site_default_country', ''));
+  
+  if (!empty($states)) {
     $form['field_contest_state'][LANGUAGE_NONE][0]['value']['#type'] = 'select';
-    $form['field_contest_state'][LANGUAGE_NONE][0]['value']['#options'] = array_merge(array('' => ' -Select- '), _contest_get_states('US'));
+    $form['field_contest_state'][LANGUAGE_NONE][0]['value']['#options'] = array_merge(array('' => t(' -Select- ')), $states);
     $form['field_contest_state'][LANGUAGE_NONE][0]['value']['#size'] = 1;
   }
   else {
