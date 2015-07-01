@@ -50,13 +50,22 @@ function contest_settings_form() {
   );
   $form['contest_host_title'] = array(
     '#title'         =>  t('Host Title'),
-    '#type'          => 'textfield',
     '#description'   => t("The host's display title."),
+    '#type'          => 'textfield',
     '#default_value' => variable_get('contest_host_title', 'Contest Host'),
     '#size'          => 30,
     '#maxlength'     => 60,
     '#required'      => TRUE,
     '#weight'        => 40,
+  );
+  $form['contest_min_age'] = array(
+    '#title'         =>  t('Minumum Age'),
+    '#description'   => t("The minimum age required to enter a contest."),
+    '#type'          => 'select',
+    '#options'       => array_combine(range(1, 100), range(1, 100)),
+    '#default_value' => variable_get('contest_min_age', 18),
+    '#required'      => TRUE,
+    '#weight'        => 50,
   );
   return system_settings_form($form);
 }

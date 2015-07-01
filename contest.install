@@ -44,6 +44,7 @@ function contest_install() {
   variable_set('contest_export_dir', 'contest_export'); // The contest results export directory.
   variable_set('contest_hog_days', 89);                 // The number of days between a persons eligibility to win another contest.
   variable_set('contest_host_uid', 1);                  // The contest host's user id. We'll set it to the admin's to start.
+  variable_set('contest_min_age', 18);                  // The minimum age to enter the contest.
 
 // We'll use the admin's name as the default host's title.
 
