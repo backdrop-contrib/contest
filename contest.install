@@ -69,14 +69,22 @@ function contest_install() {
 function contest_requirements($phase) {
   $reqs = array();
 
-  switch ($phase) {
+  switch ($phase) {site_default_country
     case 'install':
       if (!file_stream_wrapper_get_instance_by_uri('private://')) {
         $reqs['system'] = array(
           'title'       => 'File System',
           'value'       => t("Private file system path isn't configured."),
           'severity'    => REQUIREMENT_ERROR,
-          'description' => t("Aborting! Drupal's file system path needs to be configured. Please go to !link to configure.<br />\n", array('!link' => l('File System', 'admin/config/media/file-system', array('attributes' => array('target' => '_blank'))))),
+          'description' => t("Aborting! Drupal's file system path needs to be configured. Please go to !link to configure.<br />\n", array('!link' => l('file system', 'admin/config/media/file-system', array('attributes' => array('target' => '_blank'))))),
+        );
+      }
+      if (!variable_get('site_default_country', NULL)) {
+        $reqs['system'] = array(
+          'title'       => 'Default Country',
+          'value'       => t("The default country isn't configured."),
+          'severity'    => REQUIREMENT_ERROR,
+          'description' => t("Aborting! default country needs to be configured. Please go to !link to configure.<br />\n", array('!link' => l('regional settings', 'admin/config/regional/settings', array('attributes' => array('target' => '_blank'))))),
         );
       }
       break;
