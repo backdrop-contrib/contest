@@ -392,8 +392,8 @@ function contest_form_user_profile_form_alter(&$form, &$form_state) {
  * Custom validation function.
  */
 function contest_form_validate($form, &$form_state) {
-  $start = mktime(0, 0, 0, $form_state['values']['start']['month'], $form_state['values']['start']['day'], $form_state['values']['start']['year']);
-  $end = mktime(0, 0, 0, $form_state['values']['end']['month'], $form_state['values']['end']['day'], $form_state['values']['end']['year']);
+  $start = mktime(0, 0, 0, intval($form_state['values']['start']['month']), intval($form_state['values']['start']['day']), intval($form_state['values']['start']['year']));
+  $end = mktime(0, 0, 0, intval($form_state['values']['end']['month']), intval($form_state['values']['end']['day']), intval($form_state['values']['end']['year']));
   $day = 86400;
 
 // If the end date is before the start date set an error.
