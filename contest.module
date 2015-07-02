@@ -235,11 +235,11 @@ function contest_entry_form_submit($form, &$form_state) {
   }
 // Check to see if they've entered today.
 
-  $entered = FALSE;//_contest_get_entered($form_state['values']['uid'], $form_state['values']['nid'], $now, $period);
+  $entered = _contest_get_entered($form_state['values']['uid'], $form_state['values']['nid'], $period);
 
   if ($entered) {
     drupal_set_message("You can enter the contest {$periods[$period]}. We already have an entry for you during this period.", 'error');
-    return 'node/' . $form_state['values']['nid'];
+    return "node/{$form_state['values']['nid']}";
   }
 // Enter them into the contest.
 
@@ -793,6 +793,40 @@ function _contest_get_contest_featured_block_data() {
     return $cache;
   }
   return _contest_cache_set($cid, array('data' => $data));
+}
+/**
+ * Return true if entered in the contest during this period, (configuarble).
+ *
+ * @param $nid (int) The node ID.
+ * @param $uid (int) The user's ID.
+ * @param $period (int) The seconds allowed between entries.
+ *
+ * @return (bool) True if the user has entered the contest already durring this period.
+ */
+function _contest_get_entered($uid, $nid, $period) {
+  $periods = variable_get('contest_period', array(86400 => 'daily', 2147483646 => 'once'));
+  $fmt = array(
+    86400    => 'Y-m-d',
+    604800   => 'Y-W',
+    2592000  => 'Y-m',
+    31536000 => 'Y',
+  );
+// If it's a one entry contest check for an entry and return.
+
+  if ($periods[$period] == 'once') {
+    return db_query_range("SELECT 1 FROM {contest_entry} WHERE uid = :uid AND nid = :nid", 0, 1, array(':nid' => $nid, ':uid' => $uid))->fetchField();
+  }
+// If we can't figure out the format. We'll assume the worst and return TRUE.
+
+  if (empty($fmt[$period])) {
+    return TRUE;
+  }
+// Determin if the user has already enter the conetest.
+
+  $today = date($fmt[$period], REQUEST_TIME);
+  $entered = date($fmt[$period], db_query_range("SELECT created FROM {contest_entry} WHERE uid = :uid AND nid = :nid ORDER BY created DESC", 0, 1, array(':nid' => $nid, ':uid' => $uid))->fetchField());
+
+  return ($entered == $today)? TRUE: FALSE;
 }
 /**
  * Gets the states for the selected country.
