@@ -855,39 +855,40 @@ function _contest_contestant($form_state) {
   }
 // If they don't exist, create them.
 
-  if (empty($usr->uid)) {
-    $args['name'] = _contest_name_gen($form_state['values']['contest_name']);
-    $args['mail'] = $form_state['values']['mail'];
-    $args['pass'] = _contest_email_to_password($form_state['values']['mail']);
-    $args['roles'] = array(2 => 'authenticated user');
-    $args['status'] = 1;
-
+  $args = array(
+    'name'     => _contest_name_gen($form_state['values']['contest_name']),
+    'mail'     => $form_state['values']['mail'],
+    'pass'     => _contest_email_to_password($form_state['values']['mail']),
+    'roles'    => array(2 => 'authenticated user'),
+    'status'   => 1,
+    'timezone' => variable_get('date_default_timezone', 'America/New_York'),
+  );
 // Save the new user.
 
-    $usr = _contest_usr_save(user_save($usr, $args), $form_state);
+  $usr = _contest_usr_save(user_save($usr, $args), $form_state);
 
 // Build the message variables, send out the welcome email and set the welcome message.
 
-    $site_name = variable_get('site_name', 'Contest Host');
-    $vars = array(
-      '!date'      => format_date(REQUEST_TIME),
-      '!edit_uri'  => url("user/$usr->uid/edit", array('absolute' => TRUE)),
-      '!login_uri' => url('user', array('absolute' => TRUE)),
-      '!login_url' => user_pass_reset_url($usr),
-      '!password'  => $args['pass'],
-      '!site'      => $site_name,
-      '!site team' => $site_name,
-      '!username'  => $args['name'],
-    );
-    $mail = drupal_mail('contest', 'register_no_approval_required', $usr->mail, user_preferred_language($usr), array('account' => $usr, 'vars' => $vars), $from, TRUE);
+  $site_name = variable_get('site_name', 'Contest Host');
+  $vars = array(
+    '!date'      => format_date(REQUEST_TIME),
+    '!edit_uri'  => url("user/$usr->uid/edit", array('absolute' => TRUE)),
+    '!login_uri' => url('user', array('absolute' => TRUE)),
+    '!login_url' => user_pass_reset_url($usr),
+    '!password'  => $args['pass'],
+    '!site'      => $site_name,
+    '!site team' => $site_name,
+    '!username'  => $args['name'],
+  );
+  $mail = drupal_mail('contest', 'register_no_approval_required', $usr->mail, user_preferred_language($usr), array('account' => $usr, 'vars' => $vars), $from, TRUE);
 
-    drupal_set_message("You have been added to the $site_name website. Below is your login information.<br>Username: $usr->name<br>Password: {$args['pass']}.<br>Please keep this information for you records. If you have a problem logging in, use the password recovery tool located at the top of the user's login page.");
+  drupal_set_message("You have been added to the $site_name website. Below is your login information.<br>Username: $usr->name<br>Password: {$args['pass']}.<br>Please keep this information for you records. If you have a problem logging in, use the password recovery tool located at the top of the user's login page.");
 
 // Log them in.
 
-    user_authenticate($usr->name, trim($args['pass']));
-    user_module_invoke('login', $edit, $usr);
-  }
+  user_authenticate($usr->name, trim($args['pass']));
+  user_module_invoke('login', $edit, $usr);
+
 // Return the user's id.
 
   return $usr->uid;
