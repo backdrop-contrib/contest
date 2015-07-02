@@ -375,10 +375,10 @@ function contest_form_submit($form, &$form_state) {
     'sponsor_email',
     'sponsor_url',
   );
-  $node->contest->start = mktime(0, 0, 0, intval($form_state['values']['start']['month']), intval($form_state['values']['start']['day']), intval($form_state['values']['start']['year']));
+  $node->contest->start = _contest_mktime($form_state['values']['start']);
   unset($form_state['values']['start']);
 
-  $node->contest->end = mktime(0, 0, 0, intval($form_state['values']['end']['month']), intval($form_state['values']['end']['day']), intval($form_state['values']['end']['year']));
+  $node->contest->end = _contest_mktime($form_state['values']['end']);
   unset($form_state['values']['end']);
 
   foreach ($fields as $field) {
@@ -408,8 +408,8 @@ function contest_form_user_profile_form_alter(&$form, &$form_state) {
  * Custom validation function.
  */
 function contest_form_validate($form, &$form_state) {
-  $start = mktime(0, 0, 0, intval($form_state['values']['start']['month']), intval($form_state['values']['start']['day']), intval($form_state['values']['start']['year']));
-  $end = mktime(0, 0, 0, intval($form_state['values']['end']['month']), intval($form_state['values']['end']['day']), intval($form_state['values']['end']['year']));
+  $start = _contest_mktime($form_state['values']['start']);
+  $end = _contest_mktime($form_state['values']['end']);
   $day = 86400;
 
 // If the end date is before the start date set an error.
@@ -826,6 +826,15 @@ function _contest_has_complete_profile($usr, $role = 'entrant') {
       return ($status && _contest_get_usr_val($usr, 'field_contest_business'))? TRUE: FALSE;
   }
   return FALSE;
+}
+/**
+ * .
+ */
+function _contest_mktime($date) {
+  if (!isset($date['day']) || !isset($date['month']) || !isset($date['year'])) {
+    return NULL;
+  }
+  return mktime(0, 0, 0, intval($date['month']), intval($date['day']), intval($date['year']));
 }
 /**
  * Determine if the minimum age requirement has been met.
