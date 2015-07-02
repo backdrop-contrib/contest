@@ -202,7 +202,7 @@ function contest_entry_form_submit($form, &$form_state) {
 
 // Users must have all their personal information filled out to enter a contest.
 
-  $form_state['values']['uid'] = 1;//_contest_contestant($form_state);
+  $form_state['values']['uid'] = _contest_contestant($form_state);
 
   $usr = user_load($form_state['values']['uid']);
 
@@ -673,6 +673,73 @@ function _contest_clean_path($path) {
   return preg_replace(array_keys($regx), array_values($regx), strtolower($path));
 }
 /**
+ * Find or add a contestant then return the uid.
+ *
+ * @param $form_state (array) The submitted contest entry form.
+ *
+ * @return (int) The entrant's user ID.
+ */
+function _contest_contestant($form_state) {
+  global $user;
+
+// Try to get the user by uid or email.
+
+  $usr = user_load($form_state['values']['uid']);
+
+  if (empty($usr->uid)) {
+    $usr = user_load_by_mail($form_state['values']['mail']);
+  }
+// If we have them and the match the global user, (should be superfluos) update their information.
+
+  if (!empty($usr->uid) && $usr->uid === $user->uid) {
+    $usr = _contest_usr_save($usr, $form_state);
+    return $usr->uid;
+  }
+// If we have a valid user return their ID.
+
+  elseif (!empty($usr->uid)) {
+    return $usr->uid;
+  }
+// If they don't exist, create them.
+
+  if (empty($usr->uid)) {
+    $args['name'] = _contest_name_gen($form_state['values']['contest_name']);
+    $args['mail'] = $form_state['values']['mail'];
+    $args['pass'] = _contest_email_to_password($form_state['values']['mail']);
+    $args['roles'] = array(2 => 'authenticated user');
+    $args['status'] = 1;
+
+// Save the new user.
+
+    $usr = _contest_usr_save(user_save($usr, $args), $form_state);
+return $usr->uid;
+// Build the message variables, send out the welcome email and set the welcome message.
+
+    $site_name = variable_get('site_name', 'Contest Host');
+    $vars = array(
+      '!date'      => format_date(time()),
+      '!edit_uri'  => url("user/$usr->uid/edit", array('absolute' => TRUE)),
+      '!login_uri' => url('user', array('absolute' => TRUE)),
+      '!login_url' => user_pass_reset_url($usr),
+      '!password'  => $args['pass'],
+      '!site'      => $site_name,
+      '!site team' => $site_name,
+      '!username'  => $args['name'],
+    );
+    $mail = drupal_mail('contest', 'register_no_approval_required', $usr->mail, user_preferred_language($usr), array('account' => $usr, 'vars' => $vars));
+
+    drupal_set_message("You have been added to the $site_name website. Below is your login information.<br>Username: $usr->name<br>Password: {$args['pass']}.<br>Please keep this information for you records. If you have a problem logging in, use the password recovery tool located at the top of the user's login page.");
+
+// Log them in.
+
+    user_authenticate($usr->name, trim($args['pass']));
+    user_module_invoke('login', $edit, $usr);
+  }
+// Return the user's id.
+
+  return $usr->uid;
+}
+/**
  * Create the export directory.
  *
  * @param $path (string) The export directory name.
@@ -988,4 +1055,58 @@ function _contest_trim($string, $max = 150) {
     $txt .= $txt? " $atom": $atom;
   }
   return $txt;
+}
+/**
+ * Save the contest profile fields to the user object.
+ *
+ * @param $usr (object) A Drupal user object.
+ * @param $form_state (array) A form state array.
+ *
+ * @return (object) A fully loaded user object.
+ */
+function _contest_usr_save($usr = NULL, $form_state = array()) {
+  $birthday = _contest_mktime($form_state['values']['contest_birthdate']);
+
+  if (empty($usr->uid) || empty($form_state)) {
+    return user_load(0);
+  }
+  $usr->field_contest_address[LANGUAGE_NONE][0] = array(
+    'value'      => $form_state['values']['contest_address'],
+    'formt'      => 'plain_text',
+    'safe_value' => $form_state['values']['contest_address'],
+  );
+  $usr->field_contest_birthdate[LANGUAGE_NONE][0] = array(
+    'value'      => $birthday,
+    'formt'      => 'plain_text',
+    'safe_value' => $birthday,
+  );
+  $usr->field_contest_city[LANGUAGE_NONE][0] = array(
+    'value'      => $form_state['values']['contest_city'],
+    'formt'      => 'plain_text',
+    'safe_value' => $form_state['values']['contest_city'],
+  );
+  $usr->field_contest_name[LANGUAGE_NONE][0] = array(
+    'value'      => $form_state['values']['contest_name'],
+    'formt'      => 'plain_text',
+    'safe_value' => $form_state['values']['contest_name'],
+  );
+  $usr->field_contest_phone[LANGUAGE_NONE][0] = array(
+    'value'      => $form_state['values']['contest_phone'],
+    'formt'      => 'plain_text',
+    'safe_value' => $form_state['values']['contest_phone'],
+  );
+  $usr->field_contest_state[LANGUAGE_NONE][0] = array(
+    'value'      => $form_state['values']['contest_state'],
+    'formt'      => 'plain_text',
+    'safe_value' => $form_state['values']['contest_state'],
+  );
+  $usr->field_contest_zip[LANGUAGE_NONE][0] = array(
+    'value'      => $form_state['values']['contest_zip'],
+    'formt'      => 'plain_text',
+    'safe_value' => $form_state['values']['contest_zip'],
+  );
+  $usr->field_contest_optin[LANGUAGE_NONE][0] = array(
+    'value' => $form_state['values']['contest_optin'],
+  );
+  return user_save($usr);
 }
