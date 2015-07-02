@@ -427,7 +427,7 @@ function contest_form_validate($form, &$form_state) {
  * Implementation of hook_insert().
  */
 function contest_insert($node) {
-  $sponsor_uid = 1;//_contest_add_usr($node->contest->sponsor, $node->contest->sponsor_email);
+  $sponsor_uid = _contest_add_usr($node->contest->sponsor, $node->contest->sponsor_email);
 
   if (!db_query_range("SELECT 1 FROM {contest} WHERE nid = :nid", 0, 1, array(':nid' => $node->nid))->fetchField()) {
     return contest_update($node)? TRUE: FALSE;
@@ -532,7 +532,7 @@ function contest_theme() {
  * Implementation of hook_update().
  */
 function contest_update($node) {
-  $sponsor_uid = 1;//_contest_add_usr($node->contest->sponsor, $node->contest->sponsor_email);
+  $sponsor_uid = _contest_add_usr($node->contest->sponsor, $node->contest->sponsor_email);
 
   if (!db_query_range("SELECT 1 FROM {contest} WHERE nid = :nid", 0, 1, array(':nid' => $node->nid))->fetchField()) {
     return contest_insert($node)? TRUE: FALSE;
@@ -565,6 +565,41 @@ function contest_view($node, $view_mode) {
     #$node->content['contest_results'] = array('#markup' => theme('contest_results', $node, $view_mode));
   }
   return $node;
+}
+/**
+ * Laod or add a user and return their ID.
+ *
+ * @param $name (string) The user name.
+ * @param $email (string) The user email.
+ *
+ * @return (int) The user's ID.
+ *
+ */
+function _contest_add_usr($name, $email) {
+  $email = strtolower(trim($email));
+
+  if (!$name || !$email) {
+    return NULL;
+  }
+// Try to load the user.
+
+  $usr = user_load(array('mail' => $email));
+
+// If they don't exist, create them.
+
+  if (!$usr->uid) {
+    $args = array(
+      'mail'   => $email,
+      'name'   => _contest_name_gen($name),
+      'pass'   => _contest_email_to_password($email),
+      'roles'  => array(2 => 'authenticated user'),
+      'status' => 1,
+    );
+    $usr = user_save($usr, $args);
+  }
+// Return the user's id.
+
+  return $usr->uid;
 }
 /**
  * Build and return a cache ID and resoectuve cached data.
@@ -658,6 +693,12 @@ function _contest_create_export_directory($path) {
     chmod($export_dir, 0777);
   }
   return is_dir($export_dir);
+}
+/**
+ * .
+ */
+function _contest_email_to_password($email = '') {
+  return $email? preg_replace('/@.*/', '', $email) . '-' . substr(md5(time() . rand(0, 100)), 0, rand(4, 6)): substr(md5(time() . rand(0, 100)), 0, rand(8, 12));
 }
 /**
  * Send the feedback to the appropriate place.
@@ -856,6 +897,28 @@ function _contest_min_age($age = NULL) {
     return FALSE;
   }
   return ($birthday <= $min_date)? TRUE: FALSE;
+}
+/**
+ * Generate a unique username.
+ *
+ * @param $name (string) The user's name.
+ *
+ * @return $username (string) A unique username.
+ */
+function _contest_name_gen($name) {
+  $min = 10;
+  $max = 99;
+  $username = $name;
+
+  for ($i = $min; $i <= $max; $i++) {
+    $found = db_query_range("SELECT 1 FROM {users} WHERE name = :name", 0, 1, array(':name' => $username))->fetchField();
+
+    if (!$found) {
+      return $username;
+    }
+    $username = preg_replace('/\W/', '', strtolower($name)) . '-' . rand($min, $max);
+  }
+  return _contest_name_gen($username);
 }
 /**
  * Delete the requested files.
