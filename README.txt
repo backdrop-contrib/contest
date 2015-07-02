@@ -13,13 +13,13 @@ Installation
 ============
 1. Copy the 'contest' directory in to your Drupal modules directory.
 
-2. Copy the contest/node-contest.tpl.php file to your theme's template directory and edit as you see fit.
+2. Enable the module.
 
-3. Enable the module.
+3. Flush the cache.
 
-4. Flush the cache.
+4. Go to /admin/config/regional/settings and configure the country and time zone.
 
-5. Go to admin/settings/contest and configure the contest settings.
+5. Go to /admin/settings/contest and configure the contest settings.
 
 6. Complete a profile for the contest host, (defaults to user 1). This information is used in the contest view, (particularly the rules fieldset).
 
