@@ -424,6 +424,139 @@ function contest_form_validate($form, &$form_state) {
   }
 }
 /**
+ * Display the administration information about a contest.
+ *
+ * @param $nid (int) The node ID.
+ *
+ * @return $table (string) An HTML table with the contest information.
+ */
+function contest_information($node = NULL) {
+dpm($node);  
+  return '<h1>Woo Hoo!</h1>';
+  drupal_add_css(drupal_get_path('module', 'contest') . '/css/contest.css');
+  $admin_rows = FALSE;
+  $count = 0;
+  $end = 0;
+  $header = FALSE;
+  $i = 0;
+  $now = time();
+  $table_rows = '';
+  $users = 0;
+  $winners = array();
+  $winner_rows = '';
+
+  if (!user_access('edit contest')) {
+    return '';
+  }
+// Build the host information fieldset.
+
+  $host_title = variable_get('contest_host_title', '');
+  $host = user_load(variable_get('contest_host_uid', 1));
+  $host_address = "$host->contest_address, $host->contest_city, $host->contest_state $host->contest_zip";
+  $host_phone = $host->contest_phone;
+  $host_fieldset = "<fieldset class=\"contest-host\"><legend>Host</legend><a href=\"/user/$host->uid\">$host_title</a><br><a href=\"mailto:$host->mail\">$host->mail</a><br>$host_phone<br>$host_address</fieldset>";
+
+// Find out if the winners are published.
+
+  $published = db_result(db_query("SELECT publish_winners FROM {contest} WHERE nid = %d", $node->nid));
+
+// Build an array of winners ordered by place.
+
+  $result = db_query("SELECT uid, winner FROM {contest_entry} WHERE nid = %d AND winner > 0 ORDER BY winner ASC", $node->nid);
+
+  while ($row = db_fetch_object($result)) {
+    $places[$row->uid] = $row->winner;
+  }
+// Build the header and rows or entries counting the users and entries as we go.
+
+  $stmt = "
+    SELECT
+      u.uid,
+      u.name,
+      u.mail AS 'email',
+      COUNT(e.nid) AS 'cnt',
+      c.sponsor_url,
+      c.sponsor_uid,
+      c.start,
+      c.end,
+      c.places,
+      e.created,
+      n.title,
+      s.name AS 'sponsor',
+      s.mail AS 'sponsor_email'
+    FROM
+      {contest_entry} e
+      JOIN {node} n ON n.nid = e.nid
+      JOIN {contest} c ON c.nid = n.nid
+      JOIN {users} u ON u.uid = e.uid
+      JOIN {users} s ON s.uid = c.sponsor_uid
+    WHERE
+      e.nid = %d
+    GROUP BY
+      u.uid
+    ORDER BY
+      cnt DESC,
+      u.name ASC
+  ";
+  $result = db_query($stmt, $node->nid);
+
+  while ($row = db_fetch_object($result)) {
+
+    if (!$row->email) {
+      continue;
+    }
+    if (!$header) {
+      $start = $row->start;
+      $start_date = date('F j Y H:i:s', $row->start);
+      $end = $row->end;
+      $end_date = date('F j Y H:i:s', $row->end);
+      $places_allowed = $row->places;
+      $header = "<tr><th colspan=4>$row->title</td></tr><tr><td colspan=4 class=\"contest-host-sponsor-wrapper\">$host_fieldset<fieldset class=\"contest-sponsor\"><legend>Sponsor</legend><a href=\"/user/$row->sponsor_uid\">$row->sponsor</a><br><a href=\"mailto:$row->sponsor_email\">$row->sponsor_email</a><br><a href=\"http://$row->sponsor_url\" target=\"_blank\">$row->sponsor_url</a></fieldset></th></tr>";
+    }
+    if (isset($places[$row->uid])) {
+      $winners[$places[$row->uid]] = "&nbsp;<a href=\"/user/$row->uid\">$row->name</a></td><td>&nbsp;<a href=\"mailto:$row->email\">$row->email</a></td><td>&nbsp;<a href=\"/contest/clear_winner/$node->nid/$row->uid\">Clear</a></td></tr>";
+    }
+    $table_rows .= '<tr' . (isset($places[$row->uid])? ' class="contest-winner"': '') . "><td>&nbsp;<a href=\"/user/$row->uid\">$row->name</a></td><td>&nbsp;<a href=\"mailto:$row->email\">$row->email</a></td><td>&nbsp;$row->cnt</td><td>&nbsp;" . (isset($places[$row->uid])? "<a href=\"/contest/clear_winner/$node->nid/$row->uid\">Clear</a>": "<a href=\"/contest/pick_winner/$node->nid/$row->uid\">Pick</a>") . "</td></tr>";
+    $table_rows .= "</td></tr>";
+
+    $count += $row->cnt;
+    $users++;
+  }
+// Build the rows of winners.
+
+  if (count($winners)) {
+    $winner_rows = "<tr><th colspan=4>Contest Winners</th></tr>";
+    ksort($winners);
+    foreach ($winners as $winner) {
+      $winner_rows .= '<tr><td>' . (++$i) . ".$winner";
+    }
+  }
+// Build the admin functions.
+
+  if ($end < $now || count($winners)) {
+    $admin_rows = "<tr><td colspan=4><ul><li><a href=\"/contest/pick_winner/$node->nid\">Pick Random Winner</a></li>";
+    $admin_rows .= $published? "<li><a href=\"/contest/unpublish_winners/$node->nid\">Unpublish Winners</a></li>": "<li><a href=\"/contest/publish_winners/$node->nid\">Publish Winners</a></li>";
+    $admin_rows .= "<li><a href=\"/contest/clear_winners/$node->nid\">Clear All Winners</a></li></ul></td></tr>";
+    $admin_rows .= "<tr><td colspan=4><ul><li><a href=\"/contest/export_entries/$node->nid\">Export Entries</a></li>";
+    $admin_rows .= "<li><a href=\"/contest/export_unique/$node->nid\">Export Unique Users</a></li></ul></td></tr>";
+  }
+// Put the table together and return it.
+
+  $table = '<table id="contest-information">';
+  $table .= $header;
+  $table .= "<tr><td colspan=4><b>Start Date:</b>&nbsp;$start_date<br><b>End Date:</b>&nbsp;$end_date<br><b>Total Entries:</b>&nbsp;$count<br><b>Total Users:</b>&nbsp;$users<br><b>Places Allowed:</b>&nbsp;$places_allowed";
+  $table .= $admin_rows? "<br><b>Winners Published:</b>&nbsp;" . ($published? 'True': 'False') . '</th></tr>': '</th></tr>';
+  $table .= $admin_rows? $admin_rows: '';
+  $table .= $winner_rows;
+  $table .= "<tr><th colspan=4>Contest Entries</th></tr>";
+  $table .= "<tr><td>&nbsp;<b>Name</b></td><td>&nbsp;<b>Email</b></td><td>&nbsp;<b>Count</b></td><td>&nbsp;<b>Winner</b></td></tr>";
+  $table .= $table_rows;
+  $table .= '</table>';
+
+  return $table;
+}
+
+/**
  * Implementation of hook_insert().
  */
 function contest_insert($node) {
@@ -486,6 +619,14 @@ function contest_menu() {
     'delivery callback' => 'ajax_callback',
     'access arguments'  => array('access content'),
     'type'              => MENU_CALLBACK,
+  );
+  $items['node/%node/contest-admin'] = array(
+    'title'            => 'Contest',
+    'page callback'    => 'contest_information',
+    'page arguments'   => array(1),
+    'access arguments' => array('administer contest'),
+    'weight'           => 1,
+    'type'             => MENU_LOCAL_TASK,
   );
   return $items;
 }
@@ -762,7 +903,11 @@ function _contest_create_export_directory($path) {
   return is_dir($export_dir);
 }
 /**
- * .
+ * Generate a password from an email address.
+ *
+ * @param $email (string) The user's email address.
+ *
+ * @return (string) A password that hopefully isn't too terrible.
  */
 function _contest_email_to_password($email = '') {
   return $email? preg_replace('/@.*/', '', $email) . '-' . substr(md5(time() . rand(0, 100)), 0, rand(4, 6)): substr(md5(time() . rand(0, 100)), 0, rand(8, 12));
@@ -970,7 +1115,11 @@ function _contest_has_complete_profile($usr, $role = 'entrant') {
   return FALSE;
 }
 /**
- * .
+ * Generate a UNIX timestamp from an array.
+ *
+ * @param $date (array) An array with day, month and year.
+ *
+ * @return (int) A UNIX timestamp.
  */
 function _contest_mktime($date) {
   if (!isset($date['day']) || !isset($date['month']) || !isset($date['year'])) {
