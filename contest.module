@@ -602,6 +602,17 @@ function contest_load(&$nodes) {
   }
 }
 /**
+ * Implementation of hook_mail().
+ */
+function contest_mail($key, &$message, $params) {
+  global $language;
+  $language = isset($message['language'])? $message['language']:  $language; 
+dpm(array($key, $message, $params));  
+  $message['subject'] .= _user_mail_text("{$key}_subject", $language, $params);
+  $message['body'][] = _user_mail_text("{$key}_body", $language, $params);
+dpm(array($key, $message, $params));  
+}
+/**
  * Implementation of hook_menu().
  */
 function contest_menu() {
@@ -822,6 +833,7 @@ function _contest_clean_path($path) {
  */
 function _contest_contestant($form_state) {
   global $user;
+  $from = variable_get('site_mail', 'webmaster@' . preg_replace('/(\w+\.[a-z]+)$/', "$1", $base_url));
 
 // Try to get the user by uid or email.
 
@@ -853,12 +865,12 @@ function _contest_contestant($form_state) {
 // Save the new user.
 
     $usr = _contest_usr_save(user_save($usr, $args), $form_state);
-return $usr->uid;
+
 // Build the message variables, send out the welcome email and set the welcome message.
 
     $site_name = variable_get('site_name', 'Contest Host');
     $vars = array(
-      '!date'      => format_date(time()),
+      '!date'      => format_date(REQUEST_TIME),
       '!edit_uri'  => url("user/$usr->uid/edit", array('absolute' => TRUE)),
       '!login_uri' => url('user', array('absolute' => TRUE)),
       '!login_url' => user_pass_reset_url($usr),
@@ -867,7 +879,7 @@ return $usr->uid;
       '!site team' => $site_name,
       '!username'  => $args['name'],
     );
-    $mail = drupal_mail('contest', 'register_no_approval_required', $usr->mail, user_preferred_language($usr), array('account' => $usr, 'vars' => $vars));
+    $mail = drupal_mail('contest', 'register_no_approval_required', $usr->mail, user_preferred_language($usr), array('account' => $usr, 'vars' => $vars), $from, TRUE);
 
     drupal_set_message("You have been added to the $site_name website. Below is your login information.<br>Username: $usr->name<br>Password: {$args['pass']}.<br>Please keep this information for you records. If you have a problem logging in, use the password recovery tool located at the top of the user's login page.");
 
