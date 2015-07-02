@@ -42,7 +42,7 @@ function contest_entry_form() {
   global $user;
   $states = _contest_get_states(variable_get('site_default_country', ''));
 
-// Add the JavaScrit and CSS.
+// Add the JavaScript and CSS.
 
   drupal_add_css(drupal_get_path('module', 'contest') . '/css/contest.css');
   drupal_add_js(drupal_get_path('module', 'contest') . '/js/contest.js');
@@ -51,7 +51,7 @@ function contest_entry_form() {
 
   $usr = user_load($user->uid);
 
-  $birthday = _contest_get_usr_val($usr, 'field_contest_birthdate');
+  $birthday = _contest_get_usr_val($usr, 'field_contest_birthdate', 0, REQUEST_TIME);
 
 // Build the form.
 
@@ -795,7 +795,7 @@ function _contest_get_template_path($module, $template = '') {
  *
  * @return (string) The safe_value if set.
  */
-function _contest_get_usr_val($usr = NULL, $field = '', $index = 0) {
+function _contest_get_usr_val($usr = NULL, $field = '', $index = 0, $default = NULL) {
   if (!is_object($usr) || empty($field)) {
     return NULL;
   }
@@ -805,7 +805,7 @@ function _contest_get_usr_val($usr = NULL, $field = '', $index = 0) {
   elseif (!empty($usr->{$field}[LANGUAGE_NONE][$index]['value'])) {
     return $usr->{$field}[LANGUAGE_NONE][$index]['value'];
   }
-  return NULL;
+  return $default;
 }
 /**
  * Determine if the profile is complete.
