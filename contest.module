@@ -408,9 +408,9 @@ function contest_form_user_profile_form_alter(&$form, &$form_state) {
  * Custom validation function.
  */
 function contest_form_validate($form, &$form_state) {
-  $start = _contest_mktime($form_state['values']['start']);
-  $end = _contest_mktime($form_state['values']['end']);
   $day = 86400;
+  $end = _contest_mktime($form_state['values']['end']);
+  $start = _contest_mktime($form_state['values']['start']);
 
 // If the end date is before the start date set an error.
 
@@ -431,7 +431,7 @@ function contest_form_validate($form, &$form_state) {
  * @return $table (string) An HTML table with the contest information.
  */
 function contest_information($node = NULL) {
-dpm($node);  
+dpm($node);
   return '<h1>Woo Hoo!</h1>';
   drupal_add_css(drupal_get_path('module', 'contest') . '/css/contest.css');
   $admin_rows = FALSE;
@@ -555,7 +555,6 @@ dpm($node);
 
   return $table;
 }
-
 /**
  * Implementation of hook_insert().
  */
@@ -606,11 +605,11 @@ function contest_load(&$nodes) {
  */
 function contest_mail($key, &$message, $params) {
   global $language;
-  $language = isset($message['language'])? $message['language']:  $language; 
-dpm(array($key, $message, $params));  
+  $language = isset($message['language'])? $message['language']:  $language;
+dpm(array($key, $message, $params));
   $message['subject'] .= _user_mail_text("{$key}_subject", $language, $params);
   $message['body'][] = _user_mail_text("{$key}_body", $language, $params);
-dpm(array($key, $message, $params));  
+dpm(array($key, $message, $params));
 }
 /**
  * Implementation of hook_menu().
@@ -701,7 +700,9 @@ function contest_update($node) {
   return db_update('contest')->fields($fields)->condition('vid', $node->vid)->execute()? TRUE: FALSE;
 }
 /**
- * .
+ * Callback for username auto-complete fields.
+ *
+ * @return (JSON) A username to username hash.
  */
 function contest_usr_autocomplete($name = '') {
   return drupal_json_output(db_query("SELECT name, name FROM {users} WHERE name LIKE :name", array(':name' => "$name%"))->fetchAllKeyed());
@@ -1222,6 +1223,28 @@ function _contest_purge_exports() {
   return _contest_purge_dir($file_regx, $max_age);
 }
 /**
+ * Set a plain text user profile value.
+ *
+ * @param $usr (object) A user object.
+ * @param $values (array) The contents of the form_state['values'].
+ * @param $field (string) The field name.
+ * @param $index (int) The index of the field.
+ *
+ * @param $usr (object) A user object.
+ */
+function _contest_set_usr_txt_val($usr = NULL, $values = array(), $field = '', $index = 0) {
+  if (empty($usr) || !is_object($usr) || empty($values) || empty($field) || !is_int($index)) {
+    return;
+  }
+  $property = "field_{$field}";
+
+  $usr->{$property}[LANGUAGE_NONE][$index] = array(
+    'value'      => !empty($values[$field])? $values[$field]: '',
+    'formt'      => 'plain_text',
+    'safe_value' => !empty($values[$field])? check_plain($values[$field]): '',
+  );
+}
+/**
  * Convert the provided string to a lowercase stroke delimited string, (uppercase converted to lower, consequitive non alpha-numeric characters converted to a stroke).
  *
  * @param $txt (string) The string to convert.
@@ -1261,48 +1284,20 @@ function _contest_trim($string, $max = 150) {
  * @return (object) A fully loaded user object.
  */
 function _contest_usr_save($usr = NULL, $form_state = array()) {
-  $birthday = _contest_mktime($form_state['values']['contest_birthdate']);
-
-  if (empty($usr->uid) || empty($form_state)) {
+  if (empty($usr->uid)) {
     return user_load(0);
   }
-  $usr->field_contest_address[LANGUAGE_NONE][0] = array(
-    'value'      => $form_state['values']['contest_address'],
-    'formt'      => 'plain_text',
-    'safe_value' => $form_state['values']['contest_address'],
-  );
-  $usr->field_contest_birthdate[LANGUAGE_NONE][0] = array(
-    'value'      => $birthday,
-    'formt'      => 'plain_text',
-    'safe_value' => $birthday,
-  );
-  $usr->field_contest_city[LANGUAGE_NONE][0] = array(
-    'value'      => $form_state['values']['contest_city'],
-    'formt'      => 'plain_text',
-    'safe_value' => $form_state['values']['contest_city'],
-  );
-  $usr->field_contest_name[LANGUAGE_NONE][0] = array(
-    'value'      => $form_state['values']['contest_name'],
-    'formt'      => 'plain_text',
-    'safe_value' => $form_state['values']['contest_name'],
-  );
-  $usr->field_contest_phone[LANGUAGE_NONE][0] = array(
-    'value'      => $form_state['values']['contest_phone'],
-    'formt'      => 'plain_text',
-    'safe_value' => $form_state['values']['contest_phone'],
-  );
-  $usr->field_contest_state[LANGUAGE_NONE][0] = array(
-    'value'      => $form_state['values']['contest_state'],
-    'formt'      => 'plain_text',
-    'safe_value' => $form_state['values']['contest_state'],
-  );
-  $usr->field_contest_zip[LANGUAGE_NONE][0] = array(
-    'value'      => $form_state['values']['contest_zip'],
-    'formt'      => 'plain_text',
-    'safe_value' => $form_state['values']['contest_zip'],
-  );
-  $usr->field_contest_optin[LANGUAGE_NONE][0] = array(
-    'value' => $form_state['values']['contest_optin'],
-  );
+  if (empty($form_state)) {
+    return $usr;
+  }
+  _contest_set_usr_txt_val($usr, $form_state['values'], 'contest_name');
+  _contest_set_usr_txt_val($usr, $form_state['values'], 'contest_address');
+  _contest_set_usr_txt_val($usr, $form_state['values'], 'contest_city');
+  _contest_set_usr_txt_val($usr, $form_state['values'], 'contest_state');
+  _contest_set_usr_txt_val($usr, $form_state['values'], 'contest_zip');
+  _contest_set_usr_txt_val($usr, $form_state['values'], 'contest_phone');
+  _contest_set_usr_txt_val($usr, array('contest_birthdate' => _contest_mktime($form_state['values']['contest_birthdate'])), 'contest_birthdate');
+  $usr->field_contest_optin[LANGUAGE_NONE][0] = array('value' => intval($form_state['values']['contest_optin']));
+
   return user_save($usr);
 }
