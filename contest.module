@@ -318,6 +318,7 @@ function contest_form($node, $form_state) {
   );
   $form['sponsor_url'] = array(
     '#title'         => t('Sponsor Url'),
+    '#description'   => t('A URL including protocol, (http, https).'),
     '#type'          => 'textfield',
     '#default_value' => !empty($node->contest->sponsor_url)? $node->contest->sponsor_url: '',
     '#required'      => FALSE,
@@ -431,41 +432,35 @@ function contest_form_validate($form, &$form_state) {
  * @return $table (string) An HTML table with the contest information.
  */
 function contest_information($node = NULL) {
-  return '<h1>Woo Hoo!</h1>';
   drupal_add_css(drupal_get_path('module', 'contest') . '/css/contest.css');
-  $admin_rows = FALSE;
-  $count = 0;
-  $end = 0;
-  $header = FALSE;
-  $i = 0;
-  $now = time();
-  $table_rows = '';
-  $users = 0;
-  $winners = array();
-  $winner_rows = '';
-
-  if (!user_access('edit contest')) {
-    return '';
-  }
-// Build the host information fieldset.
-
-  $host_title = variable_get('contest_host_title', '');
   $host = user_load(variable_get('contest_host_uid', 1));
-  $host_address = "$host->contest_address, $host->contest_city, $host->contest_state $host->contest_zip";
-  $host_phone = $host->contest_phone;
-  $host_fieldset = "<fieldset class=\"contest-host\"><legend>Host</legend><a href=\"/user/$host->uid\">$host_title</a><br><a href=\"mailto:$host->mail\">$host->mail</a><br>$host_phone<br>$host_address</fieldset>";
+  
+  $host->address = _contest_get_usr_val($host, 'field_contest_address') . ', ' . _contest_get_usr_val($host, 'field_contest_city') . ' ' . _contest_get_usr_val($host, 'field_contest_state') . ' ' . _contest_get_usr_val($host, 'field_contest_zip');
+  
+  $host->title = variable_get('contest_host_title', '');
+  
+  $node->contest->sponsor_uid = db_query_range("SELECT uid FROM {users} WHERE mail = :mail", 0, 1, array(':mail' => $node->contest->sponsor_email))->fetchField();
 
-// Find out if the winners are published.
-
-  $published = db_result(db_query("SELECT publish_winners FROM {contest} WHERE nid = %d", $node->nid));
-
+  $node->contest->published = db_query_range("SELECT publish_winners FROM {contest} WHERE nid = :nid", 0, 1, array(':nid' => $node->nid))->fetchField();
+  
+  $node->contest->winners = array();
+    
 // Build an array of winners ordered by place.
 
-  $result = db_query("SELECT uid, winner FROM {contest_entry} WHERE nid = %d AND winner > 0 ORDER BY winner ASC", $node->nid);
+  $rows = db_query("SELECT uid, winner FROM {contest_entry} WHERE nid = :nid AND winner > 0 ORDER BY winner ASC", array(':nid' => $node->nid))->fetchAll();
 
-  while ($row = db_fetch_object($result)) {
-    $places[$row->uid] = $row->winner;
+  foreach ($rows as $row) {
+    $node->contest->winners[$row->uid] = $row->winner;
   }
+// .
+  
+  $data = (object) array(
+    'host'    => $host,
+    'node'    => $node,
+    'contest' => $node->contest,
+  );
+  return theme('contest_admin', array('data' => $data));
+  
 // Build the header and rows or entries counting the users and entries as we go.
 
   $stmt = "
@@ -674,6 +669,10 @@ function contest_theme() {
     'contest_featured_block' => array(
       'path'     => _contest_get_template_path('contest', 'contest-featured-block'),
       'template' => 'contest-featured-block',
+    ),
+    'contest_admin' => array(
+      'path'     => _contest_get_template_path('contest', 'contest-admin'),
+      'template' => 'contest-admin',
     ),
   );
 }

@@ -1,3 +1,7 @@
 input.invalid {
   background:#ffaaaa;
 }
+#contest-admin fieldset.contest-admin-host,
+#contest-admin fieldset.contest-admin-sponsor {
+  padding:1.5rem 0.5rem 0.5rem 0.5rem;
+}
