@@ -840,7 +840,6 @@ function _contest_get_admin_data($node = NULL) {
   $node->contest->contestants = array();
   $node->contest->entrants = 0;
   $node->contest->entries = 0;
-  $node->contest->published = db_query_range("SELECT publish_winners FROM {contest} WHERE nid = :nid", 0, 1, array(':nid' => $node->nid))->fetchField();
   $node->contest->winners = array();
 
 // Build the header and rows or entries counting the users and entries as we go.
