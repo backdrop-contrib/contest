@@ -10,7 +10,7 @@
  *
  * @param $nid (int) The node ID.
  *
- * @return $table (string) An HTML table with the contest information.
+ * @return (string) Fully themed contest admin page.
  */
 function contest_admin_page($node = NULL) {
   drupal_add_css(drupal_get_path('module', 'contest') . '/css/contest.css');
@@ -818,11 +818,11 @@ function _contest_feedback($txt) {
   }
 }
 /**
- * .
+ * Build the data for a contest's admin page.
  *
  * @param $nid (int) The node ID.
  *
- * @return (array) .
+ * @return (array) A one element array of objects.
  */
 function _contest_get_admin_data($node = NULL) {
   $data = array();
@@ -834,7 +834,7 @@ function _contest_get_admin_data($node = NULL) {
   $node->contest->host = _contest_usr_load(user_load(variable_get('contest_host_uid', 1)));
   $node->contest->host->title = variable_get('contest_host_title', '');
 
-  $node->contest->sponsor = _contest_usr_load(user_load_by_mail($node->contest->sponsor_email), $node);
+  $node->contest->sponsor = _contest_usr_load(user_load_by_mail($node->contest->sponsor_email));
   $node->contest->sponsor->url = $node->contest->sponsor_url;
 
   $node->contest->contestants = array();
@@ -1231,15 +1231,17 @@ function _contest_trim($string, $max = 150) {
   return $txt;
 }
 /**
- * .
+ * Build a more friendlier user object.
+ *
+ * @param $usr (object) A user object
+ *
+ * @return (object) An object with the data we'll be using moved to the root so it's friendlier to use.
  */
-function _contest_usr_load($usr = NULL, $node = NULL) {
-  $obj = (object) array(
+function _contest_usr_load($usr = NULL) {
+  return (object) array(
     'uid'       => $usr->uid,
     'name'      => $usr->name,
     'mail'      => $usr->mail,
-    #'title'     => !empty($node->contest->sponsor_url)? $node->contest->sponsor_url: '',
-    #'url'       => !empty($node->contest->sponsor_url)? $node->contest->sponsor_url: '',
     'full_name' => _contest_get_usr_val($usr, 'field_contest_name'),
     'business'  => _contest_get_usr_val($usr, 'field_contest_business'),
     'address'   => _contest_get_usr_val($usr, 'field_contest_address'),
@@ -1249,7 +1251,6 @@ function _contest_usr_load($usr = NULL, $node = NULL) {
     'phone'     => _contest_get_usr_val($usr, 'field_contest_phone'),
     'birthdate' => _contest_get_usr_val($usr, 'field_contest_birthdate'),
   );
-  return $obj;
 }
 /**
  * Save the contest profile fields to the user object.
