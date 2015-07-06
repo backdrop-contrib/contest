@@ -14,7 +14,7 @@
  */
 function contest_admin_page($node = NULL) {
   drupal_add_css(drupal_get_path('module', 'contest') . '/css/contest.css');
-  return theme('contest_admin', _contest_get_admin_data($node));
+  return theme('contest_admin', _contest_get_admin_page_data($node));
 }
 /**
  * Implementation of hook_block_info().
@@ -824,7 +824,7 @@ function _contest_feedback($txt) {
  *
  * @return (array) A one element array of objects.
  */
-function _contest_get_admin_data($node = NULL) {
+function _contest_get_admin_page_data($node = NULL) {
   $data = array();
   list($cid, $cache) = _contest_cache_get(array(__FUNCTION__, $node->nid));
 
@@ -841,8 +841,6 @@ function _contest_get_admin_data($node = NULL) {
   $node->contest->entrants = 0;
   $node->contest->entries = 0;
   $node->contest->winners = array();
-
-// Build the header and rows or entries counting the users and entries as we go.
 
   $stmt = "
     SELECT
@@ -881,7 +879,7 @@ function _contest_get_admin_data($node = NULL) {
   }
   asort($node->contest->winners);
 
-// Build the template's data.
+// Build the template's data object.
 
   $data = (object) array(
     'node'        => $node,
