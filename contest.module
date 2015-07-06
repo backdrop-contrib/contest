@@ -28,7 +28,7 @@ function contest_block_view($delta = '') {
   switch ($delta) {
     case 'contest_featured':
       return array(
-        'content' => theme('contest_contest_featured_block', _contest_get_contest_featured_block_data()),
+        'content' => theme('contest_featured_block', _contest_get_featured_block_data()),
       );
   }
   return array();
@@ -434,17 +434,17 @@ function contest_form_validate($form, &$form_state) {
 function contest_information($node = NULL) {
   drupal_add_css(drupal_get_path('module', 'contest') . '/css/contest.css');
   $host = user_load(variable_get('contest_host_uid', 1));
-  
+
   $host->address = _contest_get_usr_val($host, 'field_contest_address') . ', ' . _contest_get_usr_val($host, 'field_contest_city') . ' ' . _contest_get_usr_val($host, 'field_contest_state') . ' ' . _contest_get_usr_val($host, 'field_contest_zip');
-  
+
   $host->title = variable_get('contest_host_title', '');
-  
+
   $node->contest->sponsor_uid = db_query_range("SELECT uid FROM {users} WHERE mail = :mail", 0, 1, array(':mail' => $node->contest->sponsor_email))->fetchField();
 
   $node->contest->published = db_query_range("SELECT publish_winners FROM {contest} WHERE nid = :nid", 0, 1, array(':nid' => $node->nid))->fetchField();
-  
+
   $node->contest->winners = array();
-    
+
 // Build an array of winners ordered by place.
 
   $rows = db_query("SELECT uid, winner FROM {contest_entry} WHERE nid = :nid AND winner > 0 ORDER BY winner ASC", array(':nid' => $node->nid))->fetchAll();
@@ -453,14 +453,14 @@ function contest_information($node = NULL) {
     $node->contest->winners[$row->uid] = $row->winner;
   }
 // .
-  
+
   $data = (object) array(
     'host'    => $host,
     'node'    => $node,
     'contest' => $node->contest,
   );
   return theme('contest_admin', array('data' => $data));
-  
+
 // Build the header and rows or entries counting the users and entries as we go.
 
   $stmt = "
@@ -936,7 +936,7 @@ function _contest_feedback($txt) {
  *
  * @return $data (object) An object with the data to display a client page.
  */
-function _contest_get_contest_featured_block_data() {
+function _contest_get_featured_block_data() {
   $data = array();
   list($cid, $cache) = _contest_cache_get(__FUNCTION__);
 
