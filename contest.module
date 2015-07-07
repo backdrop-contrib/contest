@@ -21,7 +21,7 @@ function contest_admin_page($node = NULL) {
  */
 function contest_block_info() {
   return array(
-    'contest_featured' => array(
+    'contest_list' => array(
       'info'       => t('Contest Featured'),
       'cache'      => DRUPAL_CACHE_PER_ROLE,
       'pages'      => '<front>',
@@ -37,9 +37,9 @@ function contest_block_info() {
  */
 function contest_block_view($delta = '') {
   switch ($delta) {
-    case 'contest_featured':
+    case 'contest_list':
       return array(
-        'content' => theme('contest_featured_block', _contest_get_featured_block_data()),
+        'content' => theme('contest_list_block', _contest_get_list_block_data()),
       );
   }
   return array();
@@ -381,6 +381,11 @@ function contest_field_extra_fields() {
         'label'       => t('Contest Entry Form'),
         'description' => t('Allows a user to enter a contest.'),
         'weight'      => 1,
+      ),
+      'contest_results' => array(
+        'label'       => t('Contest Results'),
+        'description' => t('Displays the contest results.'),
+        'weight'      => 2,
       ),
     ),
   );
@@ -781,13 +786,13 @@ function contest_theme() {
       'path'     => _contest_get_template_path('contest', 'contest-admin-page'),
       'template' => 'contest-admin-page',
     ),
-    'contest_featured_block' => array(
-      'path'     => _contest_get_template_path('contest', 'contest-featured-block'),
-      'template' => 'contest-featured-block',
+    'contest_list_block' => array(
+      'path'     => _contest_get_template_path('contest', 'contest-list-block'),
+      'template' => 'contest-list-block',
     ),
     'contest_results' => array(
-      'path'     => _contest_get_template_path('contest', 'contest-featured-block'),
-      'template' => 'contest-featured-block',
+      'path'     => _contest_get_template_path('contest', 'contest-results'),
+      'template' => 'contest-results',
     ),
   );
 }
@@ -832,11 +837,13 @@ function contest_usr_autocomplete($name = '') {
  * Implements hook_view().
  */
 function contest_view($node, $view_mode) {
+  drupal_add_css(drupal_get_path('module', 'contest') . '/css/contest.css');
+  
   if ($node->contest->start < REQUEST_TIME && REQUEST_TIME < $node->contest->end) {
     $node->content['contest_entry_form'] = drupal_get_form('contest_entry_form', $node);
   }
   else {
-    $node->content['contest_results'] = array('#markup' => theme('contest_results', $node, $view_mode));
+    $node->content['contest_results'] = array('#markup' => theme('contest_results', _contest_get_results_data($node)));
   }
   return $node;
 }
@@ -1133,20 +1140,6 @@ function _contest_get_admin_page_data($node = NULL) {
   return _contest_cache_set($cid, array('data' => $data));
 }
 /**
- * Build the data needed to display the blog block.
- *
- * @return $data (object) An object with the data to display a client page.
- */
-function _contest_get_featured_block_data() {
-  $data = array();
-  list($cid, $cache) = _contest_cache_get(__FUNCTION__);
-
-  if ($cache !== FALSE) {
-    return $cache;
-  }
-  return _contest_cache_set($cid, array('data' => $data));
-}
-/**
  * Return true if entered in the contest during this period, (configuarble).
  *
  * @param $nid (int) The node ID.
@@ -1179,6 +1172,51 @@ function _contest_get_entered($uid, $nid, $period) {
   $entered = date($fmt[$period], db_query_range("SELECT created FROM {contest_entry} WHERE uid = :uid AND nid = :nid ORDER BY created DESC", 0, 1, array(':nid' => $nid, ':uid' => $uid))->fetchField());
 
   return ($entered == $today)? TRUE: FALSE;
+}
+/**
+ * Build the data needed to display the blog block.
+ *
+ * @return $data (object) An object with the data to display a client page.
+ */
+function _contest_get_list_block_data() {
+  $data = array();
+  list($cid, $cache) = _contest_cache_get(__FUNCTION__);
+
+  if ($cache !== FALSE) {
+    return $cache;
+  }
+  return _contest_cache_set($cid, array('data' => $data));
+}
+/**
+ * Build the data needed to display the results.
+ *
+ * @param $node (object) A node object.
+ *
+ * @return (array) A one elemet array of data to build the results.
+ */
+function _contest_get_results_data($node = NULL) {
+  $states = _contest_get_states(variable_get('site_default_country', ''));
+  $winners = array();
+  $data = (object) array();
+  list($cid, $cache) = _contest_cache_get(array(__FUNCTION__, $node->nid));
+
+  if ($cache !== FALSE) {
+    return $cache;
+  }
+  $rows = db_query("SELECT winner, uid FROM {contest_entry} WHERE nid = :nid AND winner ORDER BY winner ASC", array(':nid' => $node->nid))->fetchAllKeyed();
+  
+  foreach ($rows as $place => $uid) {
+    $winners[$place] = _contest_usr_load(user_load($uid));
+    
+    if (!empty($states[$winners[$place]->state])) { 
+      $winners[$place]->state = $states[$winners[$place]->state];
+    }
+  }
+  $data = (object) array(
+    'node'    => $node, 
+    'winners' => $winners,
+  );    
+  return _contest_cache_set($cid, array('data' => $data));
 }
 /**
  * Gets the states for the selected country.

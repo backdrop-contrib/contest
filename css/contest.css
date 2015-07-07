@@ -5,7 +5,8 @@ input.invalid {
 #contest-admin fieldset.contest-admin-sponsor {
   padding:1.5rem 0.5rem 0.5rem 0.5rem;
 }
-#contest-admin table caption {
+#contest-admin table caption,
+#contest-results table caption {
   font-size: 1.0rem;
   font-weight: bold;
   text-align: center;

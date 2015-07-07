@@ -53,14 +53,14 @@
 ?>
 <div id="contest-admin">
   <fieldset class="contest-admin-host">
-    <legend>Host</legend>
+    <legend><?php print t('Host'); ?></legend>
     <?php print l($data->host->title, "user/{$data->host->uid}"); ?><br />
     <?php print l($data->host->mail, "mailto:{$data->host->mail}", array('absolute' => TRUE)); ?><br />
     <?php print t('Phone: @phone', array('@phone' => $data->host->phone)); ?><br />
     <?php print t('Address: @address', array('@address' => "{$data->host->address}, {$data->host->city} {$data->host->state} {$data->host->zip}")); ?>
   </fieldset>
   <fieldset class="contest-admin-sponsor">
-    <legend>Sponsor</legend>
+    <legend><?php print t('Sponsor'); ?></legend>
     <?php print l($data->contest->sponsor->name, "user/{$data->contest->sponsor->uid}"); ?><br />
     <?php print l($data->contest->sponsor->mail, "mailto:{$data->contest->sponsor->mail}", array('absolute' => TRUE)); ?><br />
     <?php print l(preg_replace('/https?:\/\//', '', $data->contest->sponsor->url), $data->contest->sponsor->url, array('absolute' => TRUE)); ?>
@@ -85,7 +85,7 @@
 
 <?php if (!empty($data->winners)): ?>
   <table border="0" cellspacing="0" class="contest-admin-winners">
-    <caption>Contest Winners</caption>
+    <caption><?php print t('Contest Winners'); ?></caption>
     <thead>
       <tr>
         <th><?php print t('Place'); ?></th>
@@ -118,7 +118,7 @@
 <?php endif; ?>
   
   <table border="0" cellspacing="0" class="contest-admin-contestants">
-    <caption>Contest Entrants</caption>
+    <caption><?php print t('Contest Entrants'); ?></caption>
     <thead>
       <tr>
         <th><?php print t('Name'); ?></th>
