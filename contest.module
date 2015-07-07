@@ -846,7 +846,7 @@ function _contest_get_admin_page_data($node = NULL) {
     SELECT
       u.uid,
       u.name,
-      u.mail AS 'email',
+      u.mail,
       COUNT(e.nid) AS 'qty',
       e.created,
       e.winner
@@ -866,7 +866,7 @@ function _contest_get_admin_page_data($node = NULL) {
   $rows = db_query($stmt, array(':nid' => $node->nid))->fetchAll();
 
   foreach  ($rows as $row) {
-    if (!$row->email) {
+    if (!$row->mail) {
       continue;
     }
     $node->contest->contestants[] = $row;
