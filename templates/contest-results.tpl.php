@@ -1,3 +1,25 @@
+<?php
+
+/**
+ * @file contest-results.tpl.php
+ * Template for a contest's results on the view page.
+ *
+ * Available variables:
+ * - $data (object)
+ * - - node (object) contest node object
+ * - - winners (array of objects) place => contestant object
+ * - - - uid (int)
+ * - - - name (string)
+ * - - - mail (string)
+ * - - - full_name (string)
+ * - - - address (string)
+ * - - - city (string)
+ * - - - state (string)
+ * - - - zip (string)
+ * - - - phone (string)
+ * - - - birthdate (int)
+ */
+?>
 <div id="contest-results">
 
 <?php if (!empty($data->winners)): ?>
