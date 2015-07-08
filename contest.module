@@ -892,7 +892,7 @@ function contest_view($node, $view_mode) {
   else {
     $node->content['contest_results'] = array('#markup' => theme('contest_results', _contest_get_results_data($node)));
   }
-  $node->content['contest_tnc'] = theme('contest_tnc', _contest_get_block(variable_get('contest_block_tnc', 0)));
+  $node->content['contest_tnc'] = theme('contest_tnc', array('node' => $node, 'tnc' => _contest_get_block(variable_get('contest_block_tnc', 0))));
   
   return $node;
 }
@@ -903,7 +903,28 @@ function contest_view($node, $view_mode) {
  *
  * @return $form (array) A drupal form array used to wrap the T&C in a collapsible fieldset.
  */
-function theme_contest_tnc($tnc) {  
+function theme_contest_tnc($args) {
+  $node = !empty($args['node'])? $args['node']: new stdClass();
+  $tnc = !empty($args['tnc'])? $args['tnc']: '';
+  $host = _contest_usr_load(user_load(variable_get('contest_host_uid', 1)));
+  
+  $tokens = array(
+    '!host_link'     => l($_SERVER['HTTP_HOST'], "http://{$_SERVER['HTTP_HOST']}"),
+    '@county'        => variable_get('site_default_country', 'US'),
+    '@date_end'      => format_date($node->contest->end, 'long'),
+    '@date_notify'   => format_date(($node->contest->end + (60 * 60 * 24 * 31)), 'long'),
+    '@date_start'    => format_date($node->contest->start, 'long'),
+    '@host_address'  => $host->address,
+    '@host_business' => $host->business,
+    '@host_city'     => $host->city,
+    '@host_country'  => variable_get('site_default_country', 'US'),
+    '@host_name'     => $host->full_name,
+    '@host_state'    => $host->state,
+    '@host_zip'      => $host->zip,
+    '@host_title'    => variable_get('contest_host_title', 'Contest Host'),
+    '@places'        => $node->contest->places,
+    '@timezone'      => date('T'),
+  );  
   $form['wrapper'] = array(
     '#type'        => 'fieldset',
     '#title'       => t('Terms & Conditions'),
@@ -913,7 +934,7 @@ function theme_contest_tnc($tnc) {
   );  
   $form['wrapper']['tnc'] = array(
     'type'    => 'markup',
-    '#markup' => $tnc['element'],
+    '#markup' => t($tnc, $tokens),
   );
   return $form;
 }
