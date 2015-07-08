@@ -43,7 +43,7 @@ function contest_settings_form() {
   );
   $form['contest_export_dir'] = array(
     '#title'         => t('Export Directory'),
-    '#description'   => t('The export directory under files/, (no leading of trailing slash).'),
+    '#description'   => t("The export directory under the site's private directory, (no leading of trailing slash)."),
     '#type'          => 'textfield',
     '#default_value' => variable_get('contest_export_dir', 'contest_export'),
     '#size'          => 30,
@@ -161,12 +161,11 @@ function contest_settings_form_submit($form, &$form_state) {
   }
 // Update the T&C content.
 
-  $bid = variable_get('contest_block_tnc', 0);
   $fields = array(
     'body'   => $form_state['values']['contest_block_tnc_content']['value'],
     'format' => $form_state['values']['contest_block_tnc_content']['format'],
   );
-  db_update('block_custom')->fields($fields)->condition('bid', $bid)->execute();
+  db_update('block_custom')->fields($fields)->condition('bid', variable_get('contest_block_tnc', 0))->execute();
 
   unset($form_state['values']['contest_block_tnc_content']);
   
@@ -180,7 +179,7 @@ function contest_settings_form_submit($form, &$form_state) {
   }
   $old_dir = $wrapper->getDirectoryPath() . '/' . variable_get('contest_export_dir', '');
   _contest_purge_dir("$old_dir/*", 0);
-  chmod($old_dir, 0777);
+  @chmod($old_dir, 0777);
   rmdir($old_dir);
 
   _contest_create_export_directory($path);

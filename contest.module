@@ -1126,7 +1126,7 @@ function _contest_create_export_directory($path) {
 
   if (!is_dir($export_dir)) {
     mkdir($export_dir);
-    chmod($export_dir, 0777);
+    @chmod($export_dir, 0777);
   }
   return is_dir($export_dir);
 }

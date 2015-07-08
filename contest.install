@@ -236,7 +236,7 @@ function contest_uninstall () {
   if ($wrapper) {
     $export_dir = $wrapper->getDirectoryPath() . "/$export_dir";
     _contest_install_purge_dir("$export_dir/*", 0);
-    chmod($export_dir, 0777);
+    @chmod($export_dir, 0777);
     rmdir($export_dir);
   }
 // Delete the variables.
@@ -320,7 +320,7 @@ function _contest_install_purge_dir($file_regx, $age) {
 
   foreach ($files as $file) {
     if (is_file($file) && ($now - filemtime($file)) >= $age) {
-      chmod($file, 0777);
+      @chmod($file, 0777);
       unlink($file);
       $count++;
     }
