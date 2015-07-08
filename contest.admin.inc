@@ -16,6 +16,24 @@ function contest_settings_form() {
     (90 * 86400)  => t('Three months between wins.'),
     (365 * 86400) => t('One year between wins.'),
   );
+  $token_description = "
+    <b>These are the tokens used by the Terms and Conditions:</b><br />
+  	!host_link - A link to this site.<br />
+  	@county - The host's country.<br />
+  	@date_end - The date the contest ends.<br />
+  	@date_notify - The date the winners will be notified by.<br />
+  	@date_start - The date the contest starts.<br />
+  	@host_address - The host's address.<br />
+  	@host_business - The host's business.<br />
+  	@host_city - The hosts's city.<br />
+  	@host_name - The host's name.<br />
+  	@host_state - The host's state<br />
+  	@host_zip - The host's postal code, (zip).<br />
+  	@host_title - The host's alternate name.<br />
+  	@places - The number of places this contest is awarding.<br />
+  	@timezone - The timezone that will be used for the contest.<br />
+  ";
+
   $form['#submit'][] = 'contest_settings_form_submit';
   $form['#validate'][] = 'contest_settings_form_validate';
   $form['desc'] = array(
@@ -77,6 +95,7 @@ function contest_settings_form() {
   );
   $form['tnc']['contest_block_tnc_content'] = array(
     '#type'          => 'text_format',
+    '#description'   => t($token_description),
     '#default_value' => _contest_get_block(variable_get('contest_block_tnc', 0)),
     '#format'        => _contest_get_block_format(variable_get('contest_block_tnc', 0)),
     '#required'      => FALSE,
