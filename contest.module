@@ -66,6 +66,13 @@ function contest_clear_winners($nid, $uid = NULL) {
   drupal_goto("node/$nid/contest-admin");
 }
 /**
+ * Implimentation of hook_cron().
+ * Rebuild the custom taxonomy paths.
+ */
+function contest_cron() {
+  _contest_purge_exports();
+}
+/**
  * Implementation of hook_entity_info_alter().
  */
 function contest_entity_info_alter(&$entity_info) {
@@ -1452,7 +1459,7 @@ function _contest_purge_dir($file_regx, $age) {
 
   foreach ($files as $file) {
     if (is_file($file) && (REQUEST_TIME - filemtime($file)) >= $age) {
-      chmod($file, 0777);
+      @chmod($file, 0777);
       unlink($file);
       $count++;
     }
