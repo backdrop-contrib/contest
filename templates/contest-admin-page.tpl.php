@@ -97,6 +97,14 @@
     <li><?php print l(t('Export Entries'), "contest/export-entries/{$data->node->nid}"); ?></li>
     <li><?php print l(t('Export Unique Users'), "contest/export-unique/{$data->node->nid}"); ?></li>
   </ul>
+<?php else: ?>
+  <ul class="contest-admin-actions">
+    <li class="inactive"><?php print t('Pick Random Winner'); ?></li>
+    <li class="inactive"><?php print t('Publish Winners'); ?></li>
+    <li class="inactive"><?php print t('Clear All Winners'); ?></li>
+    <li class="inactive"><?php print t('Export Entries'); ?></li>
+    <li class="inactive"><?php print t('Export Unique Users'); ?></li>
+  </ul>
 <?php endif; ?>
 
 <?php if (!empty($data->winners)): ?>
