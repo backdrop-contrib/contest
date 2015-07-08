@@ -387,6 +387,11 @@ function contest_field_extra_fields() {
         'description' => t('Displays the contest results.'),
         'weight'      => 2,
       ),
+      'contest_tnc' => array(
+        'label'       => t('Contest T&C'),
+        'description' => t("The contest's terms and conditions."),
+        'weight'      => 3,
+      ),
     ),
   );
   return $extra;
@@ -855,9 +860,11 @@ function contest_view($node, $view_mode) {
   
   if ($node->contest->start < REQUEST_TIME && REQUEST_TIME < $node->contest->end) {
     $node->content['contest_entry_form'] = drupal_get_form('contest_entry_form', $node);
+    $node->content['contest_tnc'] = _contest_get_block(variable_get('contest_block_tnc', 0));
   }
   else {
     $node->content['contest_results'] = array('#markup' => theme('contest_results', _contest_get_results_data($node)));
+    $node->content['contest_tnc'] = _contest_get_block(variable_get('contest_block_tnc', 0));
   }
   return $node;
 }
