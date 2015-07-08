@@ -18,3 +18,6 @@ input.invalid {
   list-style-position: inside;
   padding: 0;
 }
+#contest-admin .inactive {
+  color: #aaaaaa;
+}

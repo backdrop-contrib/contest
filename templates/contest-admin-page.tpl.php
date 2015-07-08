@@ -72,12 +72,28 @@
     <?php print t('Total Users: !entrants', array('!entrants' => $data->contest->entrants)); ?><br />
     <?php print t('Places Allowed: !places', array('!places' => $data->contest->places)); ?>
   </div>
-  
+
 <?php if ($data->contest->end < REQUEST_TIME): ?>
   <ul class="contest-admin-actions">
+
+  <?php if (count($data->winners) < $data->contest->places): ?>
     <li><?php print l(t('Pick Random Winner'), "contest/pick-winner/{$data->node->nid}"); ?></li>
+  <?php else: ?>
+    <li class="inactive"><?php print t('Pick Random Winner'); ?></li>
+  <?php endif; ?>
+
+  <?php if (count($data->winners) == $data->contest->places): ?>
     <li><?php print $data->contest->publish_winners? l(t('Unpublish Winners'), "contest/unpublish-winners/{$data->node->nid}"):  l(t('Publish Winners'), "contest/publish-winners/{$data->node->nid}"); ?></li>
+  <?php else: ?>
+    <li class="inactive"><?php print t('Publish Winners'); ?></li>
+  <?php endif; ?>
+
+  <?php if (count($data->winners) && !$data->contest->publish_winners): ?>
     <li><?php print l(t('Clear All Winners'), "contest/clear-winners/{$data->node->nid}"); ?></li>
+  <?php else: ?>
+    <li class="inactive"><?php print t('Clear All Winners'); ?></li>
+  <?php endif; ?>
+
     <li><?php print l(t('Export Entries'), "contest/export-entries/{$data->node->nid}"); ?></li>
     <li><?php print l(t('Export Unique Users'), "contest/export-unique/{$data->node->nid}"); ?></li>
   </ul>
@@ -92,18 +108,18 @@
         <th><?php print t('Name'); ?></th>
         <th><?php print t('Email'); ?></th>
         <th><?php print t('Operation'); ?></th>
-      </tr>    
+      </tr>
     </thead>
     <tbody>
-      
-    <?php $index = 0; ?>  
+
+    <?php $index = 0; ?>
     <?php foreach ($data->winners as $uid => $place): ?>
       <?php if (empty($data->contestants[$uid])): ?>
         <?php continue; ?>
       <?php else: ?>
         <?php $usr = $data->contestants[$uid]; ?>
       <?php endif; ?>
-      
+
       <?php $index++; ?>
       <tr class="<?php print ($index % 2)? 'odd': 'even'; ?>">
         <td><?php print $place; ?>.</td>
@@ -112,11 +128,11 @@
         <td><?php print l(t('Clear'), "contest/clear-winners/{$data->node->nid}/$usr->uid"); ?></td>
       </tr>
     <?php endforeach; ?>
-      
+
     </tbody>
-  </table>      
+  </table>
 <?php endif; ?>
-  
+
   <table border="0" cellspacing="0" class="contest-admin-contestants">
     <caption><?php print t('Contest Entrants'); ?></caption>
     <thead>
@@ -125,23 +141,23 @@
         <th><?php print t('Email'); ?></th>
         <th><?php print t('Count'); ?></th>
         <th><?php print t('Operation'); ?></th>
-      </tr>    
+      </tr>
     </thead>
     <tbody>
-    
-    <?php $index = 0; ?>  
+
+    <?php $index = 0; ?>
     <?php foreach ($data->contestants as $usr): ?>
       <?php $index++; ?>
-      
+
       <?php if (($index % 50) === 0): ?>
       <tr>
         <th><?php print t('Name'); ?></th>
         <th><?php print t('Email'); ?></th>
         <th><?php print t('Count'); ?></th>
         <th><?php print t('Winner'); ?></th>
-      </tr>    
+      </tr>
       <?php endif; ?>
-      
+
       <tr class="<?php print ($index % 2)? 'odd': 'even'; ?><?php print $usr->winner? ' winner': ''; ?>">
         <td><?php print l($usr->name, "user/$usr->uid"); ?></td>
         <td><?php print l($usr->mail, "mailto:$usr->mail", array('absolute' => TRUE)); ?></td>
@@ -149,7 +165,10 @@
         <td><?php print $usr->winner? l(t('Clear'), "contest/clear-winners/{$data->node->nid}/$usr->uid"): l(t('Pick'), "contest/pick-winner/{$data->node->nid}/$usr->uid"); ?></td>
       </tr>
     <?php endforeach; ?>
-    
+
     </tbody>
   </table>
 </div>
+<pre>
+  <?php print_r($data->contest); ?>
+</pre>
