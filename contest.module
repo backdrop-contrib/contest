@@ -66,6 +66,15 @@ function contest_clear_winners($nid, $uid = NULL) {
   drupal_goto("node/$nid/contest-admin");
 }
 /**
+ * Implementation of hook_entity_info_alter().
+ */
+function contest_entity_info_alter(&$entity_info) {
+  $entity_info['node']['view modes']['block'] = array(
+    'label'           => t('Block View'),
+    'custom settings' => TRUE,
+  );
+}
+/**
  * Contest entry form.
  *
  * @return $form (array) A Drupal form array.
@@ -1197,7 +1206,7 @@ function _contest_get_list_block_data() {
 
   foreach ($rows as $row) {
     $node = node_load($row->nid);
-    $data[] = node_view($node, 'teaser');
+    $data[] = node_view($node, 'block');
   }
   return _contest_cache_set($cid, array('data' => $data));
 }
