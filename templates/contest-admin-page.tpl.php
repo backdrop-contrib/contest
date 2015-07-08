@@ -52,6 +52,9 @@
  */
 ?>
 <div id="contest-admin">
+
+<!-- Some host details. --->
+
   <fieldset class="contest-admin-host">
     <legend><?php print t('Host'); ?></legend>
     <?php print l($data->host->title, "user/{$data->host->uid}"); ?><br />
@@ -59,12 +62,18 @@
     <?php print t('Phone: @phone', array('@phone' => $data->host->phone)); ?><br />
     <?php print t('Address: @address', array('@address' => "{$data->host->address}, {$data->host->city} {$data->host->state} {$data->host->zip}")); ?>
   </fieldset>
+
+<!-- Some sponsor details. --->
+
   <fieldset class="contest-admin-sponsor">
     <legend><?php print t('Sponsor'); ?></legend>
     <?php print l($data->contest->sponsor->name, "user/{$data->contest->sponsor->uid}"); ?><br />
     <?php print l($data->contest->sponsor->mail, "mailto:{$data->contest->sponsor->mail}", array('absolute' => TRUE)); ?><br />
     <?php print l(preg_replace('/https?:\/\//', '', $data->contest->sponsor->url), $data->contest->sponsor->url, array('absolute' => TRUE)); ?>
   </fieldset>
+
+<!-- Some contest details. --->
+
   <div class="contest-admin-detail">
     <?php print t('Start Date: !start_date', array('!start_date' => format_date($data->contest->start, 'long'))); ?><br />
     <?php print t('End Date: !end_date', array('!end_date' => format_date($data->contest->end, 'long'))); ?><br />
@@ -72,6 +81,9 @@
     <?php print t('Total Users: !entrants', array('!entrants' => $data->contest->entrants)); ?><br />
     <?php print t('Places Allowed: !places', array('!places' => $data->contest->places)); ?>
   </div>
+
+
+<!-- The administration actions. --->
 
 <?php if ($data->contest->end < REQUEST_TIME): ?>
   <ul class="contest-admin-actions">
@@ -107,6 +119,9 @@
   </ul>
 <?php endif; ?>
 
+
+<!-- The contest winners. --->
+
 <?php if (!empty($data->winners)): ?>
   <table border="0" cellspacing="0" class="contest-admin-winners">
     <caption><?php print t('Contest Winners'); ?></caption>
@@ -141,6 +156,9 @@
   </table>
 <?php endif; ?>
 
+
+<!-- The contest contestants. --->
+
   <table border="0" cellspacing="0" class="contest-admin-contestants">
     <caption><?php print t('Contest Entrants'); ?></caption>
     <thead>
@@ -162,7 +180,7 @@
         <th><?php print t('Name'); ?></th>
         <th><?php print t('Email'); ?></th>
         <th><?php print t('Count'); ?></th>
-        <th><?php print t('Winner'); ?></th>
+        <th><?php print t('Operation'); ?></th>
       </tr>
       <?php endif; ?>
 
@@ -170,13 +188,16 @@
         <td><?php print l($usr->name, "user/$usr->uid"); ?></td>
         <td><?php print l($usr->mail, "mailto:$usr->mail", array('absolute' => TRUE)); ?></td>
         <td><?php print $usr->qty; ?></td>
+
+      <?php if ($data->contest->end < REQUEST_TIME): ?>
         <td><?php print $usr->winner? l(t('Clear'), "contest/clear-winners/{$data->node->nid}/$usr->uid"): l(t('Pick'), "contest/pick-winner/{$data->node->nid}/$usr->uid"); ?></td>
+      <?php else: ?>
+        <td>&mdash;</td>
+      <?php endif; ?>
+
       </tr>
     <?php endforeach; ?>
 
     </tbody>
   </table>
 </div>
-<pre>
-  <?php print_r($data->contest); ?>
-</pre>

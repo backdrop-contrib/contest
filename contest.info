@@ -6,6 +6,7 @@ package = Other
 core = "7.x"
 configure = admin/config/contest
 
+dependencies[] = block
 dependencies[] = date
 dependencies[] = list
 dependencies[] = text

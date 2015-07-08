@@ -22,13 +22,7 @@ function contest_admin_page($node = NULL) {
 function contest_block_info() {
   return array(
     'contest_list' => array(
-      'info'       => t('Contest Featured'),
-      'cache'      => DRUPAL_CACHE_PER_ROLE,
-      'pages'      => '<front>',
-      'region'     => 'content',
-      'status'     => 1,
-      'visibility' => BLOCK_VISIBILITY_LISTED,
-      'weight'     => 0,
+      'info'       => t('Contest List'),
     ),
   );
 }
@@ -770,11 +764,11 @@ function contest_publish_winners($node) {
   $winners = db_query_range("SELECT COUNT(uid) FROM {contest_entry} WHERE nid = :nid AND winner", 0, 1, array(':nid' => $node->nid))->fetchField();
 
   if ($winners != $node->contest->places) {
-    drupal_set_message("You can't publish winners before they've all been selected.", 'error');    
+    drupal_set_message("You can't publish winners before they've all been selected.", 'error');
     drupal_goto("node/$node->nid/contest-admin");
   }
   db_update('contest')->fields(array('publish_winners' => 1))->condition('nid', $node->nid)->execute();
-  
+
   drupal_goto("node/$node->nid/contest-admin");
 }
 /**
@@ -838,7 +832,7 @@ function contest_usr_autocomplete($name = '') {
  */
 function contest_view($node, $view_mode) {
   drupal_add_css(drupal_get_path('module', 'contest') . '/css/contest.css');
-  
+
   if ($node->contest->start < REQUEST_TIME && REQUEST_TIME < $node->contest->end) {
     $node->content['contest_entry_form'] = drupal_get_form('contest_entry_form', $node);
   }
@@ -1086,7 +1080,7 @@ function _contest_get_admin_page_data($node = NULL) {
   $node->contest->entrants = 0;
   $node->contest->entries = 0;
   $node->contest->winners = array();
-  
+
   $winners = db_query("SELECT uid, winner FROM {contest_entry} WHERE nid = :nid AND winner ORDER BY winner ASC", array(':nid' => $node->nid))->fetchAllKeyed();
 
   $stmt = "
@@ -1176,7 +1170,7 @@ function _contest_get_entered($uid, $nid, $period) {
 /**
  * Build the data needed to display the blog block.
  *
- * @return $data (object) An object with the data to display a client page.
+ * @return $data (array) An array of node objects prepared for render().
  */
 function _contest_get_list_block_data() {
   $data = array();
@@ -1184,6 +1178,26 @@ function _contest_get_list_block_data() {
 
   if ($cache !== FALSE) {
     return $cache;
+  }
+  $stmt = "
+    SELECT
+      c.nid
+    FROM
+      {contest} c
+      JOIN {node} n ON n.nid = c.nid
+    WHERE
+      n.status = 1
+    ORDER BY
+      n.sticky DESC,
+      c.end ASC,
+      c.start DESC,
+      n.title ASC
+  ";
+  $rows = db_query($stmt)->fetchAll();
+
+  foreach ($rows as $row) {
+    $node = node_load($row->nid);
+    $data[] = node_view($node, 'teaser');
   }
   return _contest_cache_set($cid, array('data' => $data));
 }
@@ -1204,18 +1218,18 @@ function _contest_get_results_data($node = NULL) {
     return $cache;
   }
   $rows = db_query("SELECT winner, uid FROM {contest_entry} WHERE nid = :nid AND winner ORDER BY winner ASC", array(':nid' => $node->nid))->fetchAllKeyed();
-  
+
   foreach ($rows as $place => $uid) {
     $winners[$place] = _contest_usr_load(user_load($uid));
-    
-    if (!empty($states[$winners[$place]->state])) { 
+
+    if (!empty($states[$winners[$place]->state])) {
       $winners[$place]->state = $states[$winners[$place]->state];
     }
   }
   $data = (object) array(
-    'node'    => $node, 
+    'node'    => $node,
     'winners' => $winners,
-  );    
+  );
   return _contest_cache_set($cid, array('data' => $data));
 }
 /**
