@@ -67,6 +67,20 @@ function contest_settings_form() {
     '#required'      => TRUE,
     '#weight'        => 50,
   );
+  $form['tnc'] = array(
+    '#title'       => t('Terms & Conditions'),
+    '#description' => t("The contest's terms and conditions."),
+    '#type'        => 'fieldset',
+    '#collapsible' => TRUE,
+    '#collapsed'   => TRUE,
+    '#weight'      => 60,
+  );
+  $form['tnc']['contest_block_tnc_content'] = array(
+    '#type'          => 'text_format',
+    '#default_value' => _contest_get_block(variable_get('contest_block_tnc', 0)),
+    '#format'        => _contest_get_block_format(variable_get('contest_block_tnc', 0)),
+    '#required'      => FALSE,
+  );
   return system_settings_form($form);
 }
 /**
@@ -126,6 +140,17 @@ function contest_settings_form_submit($form, &$form_state) {
   if ($uid) {
     variable_set('contest_host_uid', $uid);
   }
+// Update the T&C content.
+
+  $bid = variable_get('contest_block_tnc', 0);
+  $fields = array(
+    'body'   => $form_state['values']['contest_block_tnc_content']['value'],
+    'format' => $form_state['values']['contest_block_tnc_content']['format'],
+  );
+  db_update('block_custom')->fields($fields)->condition('bid', $bid)->execute();
+
+  unset($form_state['values']['contest_block_tnc_content']);
+  
 // Change the export directory if we need to.
 
   if ($path && $path === variable_get('contest_export_dir', '')) {

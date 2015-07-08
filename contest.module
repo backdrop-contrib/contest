@@ -22,7 +22,13 @@ function contest_admin_page($node = NULL) {
 function contest_block_info() {
   return array(
     'contest_list' => array(
-      'info'       => t('Contest List'),
+      'info'       => t('Contest Featured'),
+      'cache'      => DRUPAL_CACHE_PER_ROLE,
+      'pages'      => '<front>',
+      'region'     => 'content',
+      'status'     => 1,
+      'visibility' => BLOCK_VISIBILITY_LISTED,
+      'weight'     => 0,
     ),
   );
 }
@@ -33,7 +39,7 @@ function contest_block_view($delta = '') {
   switch ($delta) {
     case 'contest_list':
       return array(
-        'content' => theme('contest_list_block', _contest_get_list_data('block')),
+        'content' => theme('contest_list_block', _contest_get_list_block_data()),
       );
   }
   return array();
@@ -64,22 +70,6 @@ function contest_clear_winners($nid, $uid = NULL) {
       ->execute();
   }
   drupal_goto("node/$nid/contest-admin");
-}
-/**
- * Implimentation of hook_cron().
- * Rebuild the custom taxonomy paths.
- */
-function contest_cron() {
-  _contest_purge_exports();
-}
-/**
- * Implementation of hook_entity_info_alter().
- */
-function contest_entity_info_alter(&$entity_info) {
-  $entity_info['node']['view modes']['block'] = array(
-    'label'           => t('Block View'),
-    'custom settings' => TRUE,
-  );
 }
 /**
  * Contest entry form.
@@ -402,6 +392,13 @@ function contest_field_extra_fields() {
   return $extra;
 }
 /**
+ * Implimentation of hook_flush_caches().
+ */
+function contest_flush_caches() {
+  db_query("DELETE FROM {cache} WHERE cid LIKE 'contest-%'");
+  return array();
+}
+/**
  * Implementation of hook_form().
  */
 function contest_form($node, $form_state) {
@@ -480,6 +477,13 @@ function contest_form($node, $form_state) {
     '#weight'        => 80,
   );
   return $form;
+}
+/**
+ * Implimentation of hook_form_FORM_ID_alter().
+ * Remove the block module's instance of our content blocks, (content editable via the contest config form).
+ */
+function contest_form_block_admin_display_form_alter(&$form, &$form_state, $form_id) {
+  unset($form['blocks']['block_' . variable_get('contest_block_tnc', 0)]);
 }
 /**
  * Custom submit function.
@@ -563,20 +567,6 @@ function contest_insert($node) {
   return db_insert('contest')->fields($fields)->execute()? TRUE: FALSE;
 }
 /**
- * Callback for the contest list page.
- *
- * @return (string) fully rendered HTML for the contest list page.
- */
-function contest_list_page() {
-  $data = _contest_get_list_data('teaser');
-  $html = '';
-
-  foreach ($data['data'] as $content) {
-    $html .= render($content);
-  }
-  return $html;
-}
-/**
  * Implementation of hook_load().
  */
 function contest_load(&$nodes) {
@@ -615,19 +605,12 @@ function contest_mail($key, &$message, $params) {
  */
 function contest_menu() {
   $items['admin/config/contest'] = array(
-    'title'            => 'Contest Settings',
+    'title'            => 'Contest Config',
     'description'      => 'Custom settings for the Contest site.',
     'page callback'    => 'drupal_get_form',
     'page arguments'   => array('contest_settings_form'),
     'access arguments' => array('administer contest'),
     'file'             => 'contest.admin.inc',
-    'type'             => MENU_NORMAL_ITEM,
-  );
-  $items['contest'] = array(
-    'title'            => '!site_name Contests',
-    'title arguments'  => array('!site_name' => variable_get('site_name', '')),
-    'page callback'    => 'contest_list_page',
-    'access arguments' => array('access content'),
     'type'             => MENU_NORMAL_ITEM,
   );
   $items['contest/clear-winners/%'] = array(
@@ -649,6 +632,13 @@ function contest_menu() {
     'page callback'    => 'contest_export_unique',
     'page arguments'   => array(2),
     'access arguments' => array('administer contest'),
+    'type'             => MENU_CALLBACK,
+  );
+  $items['contest/pick-winner/%'] = array(
+    'title'            => 'Select Random Contest Winner',
+    'page callback'    => 'contest_pick_winner',
+    'page arguments'   => array(2),
+    'access arguments' => array('edit contest'),
     'type'             => MENU_CALLBACK,
   );
   $items['contest/pick-winner/%'] = array(
@@ -794,11 +784,11 @@ function contest_publish_winners($node) {
   $winners = db_query_range("SELECT COUNT(uid) FROM {contest_entry} WHERE nid = :nid AND winner", 0, 1, array(':nid' => $node->nid))->fetchField();
 
   if ($winners != $node->contest->places) {
-    drupal_set_message("You can't publish winners before they've all been selected.", 'error');
+    drupal_set_message("You can't publish winners before they've all been selected.", 'error');    
     drupal_goto("node/$node->nid/contest-admin");
   }
   db_update('contest')->fields(array('publish_winners' => 1))->condition('nid', $node->nid)->execute();
-
+  
   drupal_goto("node/$node->nid/contest-admin");
 }
 /**
@@ -862,7 +852,7 @@ function contest_usr_autocomplete($name = '') {
  */
 function contest_view($node, $view_mode) {
   drupal_add_css(drupal_get_path('module', 'contest') . '/css/contest.css');
-
+  
   if ($node->contest->start < REQUEST_TIME && REQUEST_TIME < $node->contest->end) {
     $node->content['contest_entry_form'] = drupal_get_form('contest_entry_form', $node);
   }
@@ -1074,19 +1064,6 @@ function _contest_email_to_password($email = '') {
   return $email? preg_replace('/@.*/', '', $email) . '-' . substr(md5(time() . rand(0, 100)), 0, rand(4, 6)): substr(md5(time() . rand(0, 100)), 0, rand(8, 12));
 }
 /**
- * Send the feedback to the appropriate place.
- *
- * @param $txt (string) The string to print.
- */
-function _contest_feedback($txt) {
-  if (defined('STDIN')) {
-    print "$txt\n";
-  }
-  else {
-    drupal_set_message($txt);
-  }
-}
-/**
  * Build the data for a contest's admin page.
  *
  * @param $nid (int) The node ID.
@@ -1110,7 +1087,7 @@ function _contest_get_admin_page_data($node = NULL) {
   $node->contest->entrants = 0;
   $node->contest->entries = 0;
   $node->contest->winners = array();
-
+  
   $winners = db_query("SELECT uid, winner FROM {contest_entry} WHERE nid = :nid AND winner ORDER BY winner ASC", array(':nid' => $node->nid))->fetchAllKeyed();
 
   $stmt = "
@@ -1164,6 +1141,26 @@ function _contest_get_admin_page_data($node = NULL) {
   return _contest_cache_set($cid, array('data' => $data));
 }
 /**
+ * Retrieve the block body.
+ *
+ * @param $bid (int) The block ID.
+ *
+ * @return (string) The block body.
+ */
+function _contest_get_block($bid = 0) {
+  return db_query_range("SELECT body FROM {block_custom} WHERE bid = :bid", 0, 1, array(':bid' => $bid))->fetchField();
+}
+/**
+ * Retrieve the block body format.
+ *
+ * @param $bid (int) The block ID.
+ *
+ * @return (string) The block body format.
+ */
+function _contest_get_block_format($bid = 0) {
+  return db_query_range("SELECT format FROM {block_custom} WHERE bid = :bid", 0, 1, array(':bid' => $bid))->fetchField();
+}
+/**
  * Return true if entered in the contest during this period, (configuarble).
  *
  * @param $nid (int) The node ID.
@@ -1200,34 +1197,14 @@ function _contest_get_entered($uid, $nid, $period) {
 /**
  * Build the data needed to display the blog block.
  *
- * @return $data (array) An array of node objects prepared for render().
+ * @return $data (object) An object with the data to display a client page.
  */
-function _contest_get_list_data($view_mode = 'teaser') {
+function _contest_get_list_block_data() {
   $data = array();
   list($cid, $cache) = _contest_cache_get(__FUNCTION__);
 
   if ($cache !== FALSE) {
     return $cache;
-  }
-  $stmt = "
-    SELECT
-      c.nid
-    FROM
-      {contest} c
-      JOIN {node} n ON n.nid = c.nid
-    WHERE
-      n.status = 1
-    ORDER BY
-      n.sticky DESC,
-      c.end ASC,
-      c.start DESC,
-      n.title ASC
-  ";
-  $rows = db_query($stmt)->fetchAll();
-
-  foreach ($rows as $row) {
-    $node = node_load($row->nid);
-    $data[] = node_view($node, $view_mode);
   }
   return _contest_cache_set($cid, array('data' => $data));
 }
@@ -1248,18 +1225,18 @@ function _contest_get_results_data($node = NULL) {
     return $cache;
   }
   $rows = db_query("SELECT winner, uid FROM {contest_entry} WHERE nid = :nid AND winner ORDER BY winner ASC", array(':nid' => $node->nid))->fetchAllKeyed();
-
+  
   foreach ($rows as $place => $uid) {
     $winners[$place] = _contest_usr_load(user_load($uid));
-
-    if (!empty($states[$winners[$place]->state])) {
+    
+    if (!empty($states[$winners[$place]->state])) { 
       $winners[$place]->state = $states[$winners[$place]->state];
     }
   }
   $data = (object) array(
-    'node'    => $node,
+    'node'    => $node, 
     'winners' => $winners,
-  );
+  );    
   return _contest_cache_set($cid, array('data' => $data));
 }
 /**
@@ -1473,7 +1450,7 @@ function _contest_purge_dir($file_regx, $age) {
 
   foreach ($files as $file) {
     if (is_file($file) && (REQUEST_TIME - filemtime($file)) >= $age) {
-      @chmod($file, 0777);
+      chmod($file, 0777);
       unlink($file);
       $count++;
     }
