@@ -589,6 +589,21 @@ function contest_form($node, $form_state) {
  */
 function contest_form_block_admin_display_form_alter(&$form, &$form_state, $form_id) {
   unset($form['blocks']['block_' . variable_get('contest_block_tnc', 0)]);
+
+  if (!variable_get('contest_body_configured', 0)) {  
+    $instance = field_read_instance('node', 'body', 'contest');
+  
+    $instance['display']['block'] = array(
+      'label'    => 'hidden',
+      'type'     => 'text_summary_or_trimmed',
+      'settings' => array('trim_length' => 100),
+      'module'   => 'text',
+      'weight'   => 0,
+    );
+    field_update_instance($instance);
+    
+    variable_get('contest_body_configured', 1);
+  }  
 }
 /**
  * Custom submit function.
