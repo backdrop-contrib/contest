@@ -590,7 +590,7 @@ function contest_form_validate($form, &$form_state) {
 function contest_insert($node) {
   $sponsor_uid = _contest_add_usr($node->contest->sponsor, $node->contest->sponsor_email);
 
-  if (!db_query_range("SELECT 1 FROM {contest} WHERE nid = :nid", 0, 1, array(':nid' => $node->nid))->fetchField()) {
+  if (db_query_range("SELECT 1 FROM {contest} WHERE nid = :nid", 0, 1, array(':nid' => $node->nid))->fetchField()) {
     return contest_update($node)? TRUE: FALSE;
   }
   $fields = array(
@@ -979,8 +979,11 @@ function _contest_add_usr($name, $email) {
   }
 // Try to load the user.
 
-  $usr = user_load(array('mail' => $email));
-
+  $usr = user_load_by_name($name);
+  
+  if (empty($usr->uid)) {
+    $usr = user_load_by_mail($mail);
+  }
 // If they don't exist, create them.
 
   if (empty($usr->uid)) {
