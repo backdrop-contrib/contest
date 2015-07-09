@@ -73,6 +73,30 @@ function contest_cron() {
   _contest_purge_exports();
 }
 /**
+ * Implements hook_date_format_types().
+ */
+function contest_date_format_types() {
+  return array(
+    'contest_date'  => t('Month Day Year'),
+  );
+}
+/**
+ * Implementation of hook_date_formats().
+ */
+function contest_date_formats() {
+  $formats = array(
+    0 => array(
+      'type'    => 'contest_date',
+      'format'  => 'F j Y',
+      'locales' => array(),
+    ),
+  );
+  foreach ($formats as $format) {
+    variable_set("date_format_{$format['type']}", $format['format']);
+  }
+  return $formats;
+}
+/**
  * Implementation of hook_entity_info_alter().
  */
 function contest_entity_info_alter(&$entity_info) {
@@ -911,9 +935,9 @@ function theme_contest_tnc($args) {
   $tokens = array(
     '!host_link'     => l($_SERVER['HTTP_HOST'], "http://{$_SERVER['HTTP_HOST']}"),
     '@county'        => variable_get('site_default_country', 'US'),
-    '@date_end'      => format_date($node->contest->end, 'long'),
-    '@date_notify'   => format_date(($node->contest->end + (60 * 60 * 24 * 31)), 'long'),
-    '@date_start'    => format_date($node->contest->start, 'long'),
+    '@date_end'      => format_date($node->contest->end, 'contest_date'),
+    '@date_notify'   => format_date(($node->contest->end + (60 * 60 * 24 * 31)), 'contest_date'),
+    '@date_start'    => format_date($node->contest->start, 'contest_date'),
     '@host_address'  => $host->address,
     '@host_business' => $host->business,
     '@host_city'     => $host->city,
