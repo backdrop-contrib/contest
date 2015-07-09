@@ -527,6 +527,9 @@ function _contest_install_user_fields() {
       $instance['widget']['settings']['display_label'] = 1;
       $instance['display']['default']['type'] = 'inline';
     }
+    elseif ($field->type == 'datestamp') {
+      $instance['widget']['settings']['year_range'] = '-100:+0';
+    }
     field_create_instance($instance);
   }
 }

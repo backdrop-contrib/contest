@@ -414,17 +414,83 @@ function contest_field_extra_fields() {
       'contest_entry_form' => array(
         'label'       => t('Contest Entry Form'),
         'description' => t('Allows a user to enter a contest.'),
-        'weight'      => 1,
+        'weight'      => 1,        
+        'display' => array(
+          'default' => array(
+            'weight'  => 1,
+            'visible' => TRUE,
+          ),
+          'full' => array(
+            'weight'  => 1,
+            'visible' => TRUE,
+          ),
+          'teaser' => array(
+            'weight'  => 1,
+            'visible' => FALSE,
+          ),
+          'block' => array(
+            'weight'  => 1,
+            'visible' => FALSE,
+          ),
+          'rss' => array(
+            'weight'  => 1,
+            'visible' => FALSE,
+          ),
+        ),      
       ),
       'contest_results' => array(
         'label'       => t('Contest Results'),
         'description' => t('Displays the contest results.'),
         'weight'      => 2,
+        'display' => array(
+          'default' => array(
+            'weight'  => 2,
+            'visible' => TRUE,
+          ),
+          'full' => array(
+            'weight'  => 2,
+            'visible' => TRUE,
+          ),
+          'teaser' => array(
+            'weight'  => 2,
+            'visible' => FALSE,
+          ),
+          'block' => array(
+            'weight'  => 2,
+            'visible' => FALSE,
+          ),
+          'rss' => array(
+            'weight'  => 2,
+            'visible' => FALSE,
+          ),
+        ),      
       ),
       'contest_tnc' => array(
         'label'       => t('Contest T&C'),
         'description' => t("The contest's terms and conditions."),
         'weight'      => 3,
+        'display' => array(
+          'default' => array(
+            'weight'  => 3,
+            'visible' => TRUE,
+          ),
+          'full' => array(
+            'weight'  => 3,
+            'visible' => TRUE,
+          ),
+          'teaser' => array(
+            'weight'  => 3,
+            'visible' => FALSE,
+          ),
+          'block' => array(
+            'weight'  => 3,
+            'visible' => FALSE,
+          ),
+          'rss' => array(
+            'weight'  => 3,
+            'visible' => FALSE,
+          ),
+        ),      
       ),
     ),
   );
@@ -982,7 +1048,7 @@ function _contest_add_usr($name, $email) {
   $usr = user_load_by_name($name);
   
   if (empty($usr->uid)) {
-    $usr = user_load_by_mail($mail);
+    $usr = user_load_by_mail($email);
   }
 // If they don't exist, create them.
 
