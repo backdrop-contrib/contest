@@ -277,14 +277,15 @@ function contest_uninstall () {
  */
 function _contest_install_block_add($info, $body, $format = 'full_html') {
   $bid = db_query_range("SELECT bid FROM {block_custom} WHERE TRIM(LOWER(info)) = TRIM(LOWER(:info))", 0, 1, array(':info' => $info))->fetchField();
+  $formats = filter_formats();
 
   if ($bid) {
     return $bid;
-  }
+  }  
   $fields = array(
     'body'   => $body,
     'info'   => $info,
-    'format' => $format,
+    'format' => !empty($formats[$format])? $format: key($formats),
   );
   $bid = db_insert('block_custom')->fields($fields)->execute();
 
