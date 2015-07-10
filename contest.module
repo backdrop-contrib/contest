@@ -1010,7 +1010,8 @@ function theme_contest_tnc($args) {
   $tokens = array(
     '!host_link'     => l($_SERVER['HTTP_HOST'], "http://{$_SERVER['HTTP_HOST']}"),
     '!server_link'   => l($_SERVER['SERVER_NAME'], "http://{$_SERVER['SERVER_NAME']}"),
-    '@county'        => variable_get('site_default_country', ''),
+    '!sponsor'       => !empty($node->contest->sponsor_url)? l($node->contest->sponsor, $node->contest->sponsor_url, array('absolute' => TRUE)): $node->contest->sponsor,
+    '@country'        => variable_get('site_default_country', ''),
     '@date_end'      => format_date($node->contest->end, 'contest_date'),
     '@date_notify'   => format_date(($node->contest->end + (60 * 60 * 24 * 31)), 'contest_date'),
     '@date_start'    => format_date($node->contest->start, 'contest_date'),
