@@ -1,7 +1,7 @@
 name = "Contest"
 description = Allows your site to host a sweepstakes, (contestants win prizes via a random drawing).
 project = "contest"
-version = "7.x-1.x"
+version = "7.x-1.x-dev"
 package = Other
 core = "7.x"
 configure = admin/config/contest
