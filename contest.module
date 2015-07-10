@@ -145,10 +145,17 @@ function contest_entry_form() {
   );
   $form['heading2'] = array(
     '#type'   => 'markup',
-    '#value'  => $usr->uid? '': '<b>' . t('Please fill in and submit the form below; all fields are required.') . '</b><p>' . t('If you already have an account click <a href="/user/login">here</a> to log in and skip filling in the form.' . '</p>'),
+    '#markup' => $usr->uid? '': '<p><b>' . t('Please fill in and submit the form below, (all fields are required).') . '</b><br />' . t('If you already have an account click !link to log in and skip filling in the form.', array('!link' => l('here', 'user/login'))) . '</p>',
     '#weight' => -1,
   );
-  $form['contest_name'] = array(
+  $form['fieldset'] = array(
+    '#type'        => 'fieldset',
+    '#title'       => t('Contestant Profile'),
+    '#attributes'  => $usr->uid? array('class' => array('collapsible', 'collapsed')): array('class' => array('collapsible')),
+    '#collapsible' => TRUE,
+    '#collapsed'   => $usr->uid? TRUE: FALSE,
+  );
+  $form['fieldset']['contest_name'] = array(
     '#title'         => t('Name'),
     '#type'          => 'textfield',
     '#attributes'    => array('pattern' => '^\s*[\s\w\-\.]+\s*$'),
@@ -158,7 +165,7 @@ function contest_entry_form() {
     '#required'      => TRUE,
     '#weight'        => 0,
   );
-  $form['contest_address'] = array(
+  $form['fieldset']['contest_address'] = array(
     '#title'         => t('Address'),
     '#type'          => 'textfield',
     '#attributes'    => array('pattern' => '^\s*[\s\w\-\.\,#]+\s*$'),
@@ -168,7 +175,7 @@ function contest_entry_form() {
     '#required'      => TRUE,
     '#weight'        => 1,
   );
-  $form['contest_city'] = array(
+  $form['fieldset']['contest_city'] = array(
     '#title'         => t('City'),
     '#type'          => 'textfield',
     '#attributes'    => array('pattern' => '^\s*[\s\w\-\.]+\s*$'),
@@ -179,7 +186,7 @@ function contest_entry_form() {
     '#weight'        => 2,
   );
   if (!empty($states)) {
-    $form['contest_state'] = array(
+    $form['fieldset']['contest_state'] = array(
       '#title'         => t('State'),
       '#type'          => 'select',
       '#attributes'    => array('pattern' => '^.+$'),
@@ -190,7 +197,7 @@ function contest_entry_form() {
     );
   }
   else {
-    $form['contest_state'] = array(
+    $form['fieldset']['contest_state'] = array(
       '#title'         => t('Province'),
       '#type'          => 'textfield',
       '#attributes'    => array('pattern' => '^.+$'),
@@ -201,7 +208,7 @@ function contest_entry_form() {
       '#weight'        => 3,
     );
   }
-  $form['contest_zip'] = array(
+  $form['fieldset']['contest_zip'] = array(
     '#title'         => t('Zip'),
     '#type'          => 'textfield',
     '#attributes'    => array('pattern' => '^\s*\d+\s*$'),
@@ -211,7 +218,7 @@ function contest_entry_form() {
     '#required'      => TRUE,
     '#weight'        => 4,
   );
-  $form['mail'] = array(
+  $form['fieldset']['mail'] = array(
     '#title'         => t('Email'),
     '#type'          => 'textfield',
     '#attributes'    => array('pattern' => '^\s*[\w\-\.]+@[\w\-\.]+\.\w+\s*$'),
@@ -221,7 +228,7 @@ function contest_entry_form() {
     '#required'      => TRUE,
     '#weight'        => 5,
   );
-  $form['contest_phone'] = array(
+  $form['fieldset']['contest_phone'] = array(
     '#title'         => t('Phone'),
     '#type'          => 'textfield',
     '#default_value' => _contest_get_usr_val($usr, 'field_contest_phone'),
@@ -230,7 +237,7 @@ function contest_entry_form() {
     '#required'      => FALSE,
     '#weight'        => 6,
   );
-  $form['contest_birthdate'] = array(
+  $form['fieldset']['contest_birthdate'] = array(
     '#title'         => t('Birthday'),
     '#type'          => 'date',
     '#default_value' => array(
@@ -238,7 +245,7 @@ function contest_entry_form() {
       'day'   => format_date($birthday, 'custom', 'j'),
       'year'  => format_date($birthday, 'custom', 'Y'),
     ),
-    '#required'      => FALSE,
+    '#required'      => TRUE,
     '#weight'        => 7,
   );
   $form['contest_optin'] = array(
