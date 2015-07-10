@@ -671,10 +671,10 @@ function contest_help($path, $arg) {
     case 'admin/help#contest':
       $output .= '<h3>' . t('About') . '</h3>';
       $output .= '<p>' . t('The contest module allows your site to host random games of chance, &ldquo;Sweepstakes&rdquo;. Where users can enter to win prizes via a random drawing.') . '</p>';
-      $output .= '<p>' . t("Anonymous users can fill-in their personal information and a user will be created for them.") . '</p>';
-      $output .= '<p>' . t("Logged in users with complete profiles can just click the &ldquo;Enter Contest&rdquo; button.") . '</p>';
+      $output .= '<p>' . t('Anonymous users can fill-in their personal information and a user will be created for them.') . '</p>';
+      $output .= '<p>' . t('Logged in users with complete profiles can just click the &ldquo;Enter Contest&rdquo; button.') . '</p>';
       $output .= '<p>' . t("Winners can be selected via a contest's admin page or the entries exported and printed for a public drawing.") . '</p>';
-      $output .= '<p>' . t("The same export can be provided to sponsors or affiliates for marketing purposes.") . '</p>';
+      $output .= '<p>' . t('The same export can be provided to sponsors or affiliates for marketing purposes.') . '</p>';
       return $output;
   }
 }
@@ -895,10 +895,38 @@ function contest_pick_winner($nid, $uid = FALSE) {
 // Select the winner randomly from the qualifying entrants.
 
   if ($uid) {
-    $row = db_query_range("SELECT uid, created FROM {contest_entry} WHERE nid = :nid AND uid = :uid ORDER BY RAND()", 0, 1, array(':nid' => $nid, ':uid' => $uid))->fetchObject();
+    $stmt = "
+      SELECT 
+        e.uid, 
+        e.created 
+      FROM 
+        {contest_entry} e
+        JOIN {users} u ON u.uid = e.uid 
+      WHERE 
+        e.nid = :nid 
+        AND e.uid = :uid
+        AND u.status = 1 
+      ORDER BY 
+        RAND()
+    ";
+    $row = db_query_range($stmt, 0, 1, array(':nid' => $nid, ':uid' => $uid))->fetchObject();
   }
   else {
-    $row = db_query_range("SELECT uid, created FROM {contest_entry} WHERE nid = :nid AND uid NOT IN (:wids) ORDER BY RAND()", 0, 1, array(':nid' => $nid, ':wids' => $wids))->fetchObject();
+    $stmt = "
+      SELECT 
+        e.uid, 
+        e.created 
+      FROM 
+        {contest_entry} e
+        JOIN {users} u ON u.uid = e.uid 
+      WHERE 
+        e.nid = :nid 
+        AND e.uid NOT IN (:wids)
+        AND u.status = 1 
+      ORDER BY 
+        RAND()
+    ";
+    $row = db_query_range($stmt, 0, 1, array(':nid' => $nid, ':wids' => $wids))->fetchObject();
   }
 // If we have a winner get the next place and update the winning entry.
 
