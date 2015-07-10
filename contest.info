@@ -1,5 +1,5 @@
 name = "Contest"
-description = Allows your site to host contests, (leagally I think they're actually Sweepstakes but I'm no lawyer).
+description = Allows your site to host a sweepstakes, (contestants win prizes via a random drawing).
 project = "contest"
 version = "7.x-1.x"
 package = Other

@@ -222,7 +222,7 @@ function contest_entry_form() {
     '#title'         => t('Email'),
     '#type'          => 'textfield',
     '#attributes'    => array('pattern' => '^\s*[\w\-\.]+@[\w\-\.]+\.\w+\s*$'),
-    '#default_value' => !empty($usr->mail)? $usr->mail: '',
+    '#default_value' => !empty($usr->mail)? check_plain($usr->mail): '',
     '#size'          => 30,
     '#maxlength'     => 100,
     '#required'      => TRUE,
@@ -525,21 +525,21 @@ function contest_form($node, $form_state) {
   $form['title'] = array(
     '#title'         => check_plain($type->title_label),
     '#type'          => 'textfield',
-    '#default_value' => !empty($node->title)? $node->title: '',
+    '#default_value' => !empty($node->title)? check_plain($node->title): '',
     '#required'      => TRUE,
     '#weight'        => 0,
   );
   $form['sponsor'] = array(
     '#title'         => t('Contest Sponsor'),
     '#type'          => 'textfield',
-    '#default_value' => !empty($node->contest->sponsor)? $node->contest->sponsor: '',
+    '#default_value' => !empty($node->contest->sponsor)? check_plain($node->contest->sponsor): '',
     '#required'      => FALSE,
     '#weight'        => 20,
   );
   $form['sponsor_email'] = array(
     '#title'         => t('Sponsor Email'),
     '#type'          => 'textfield',
-    '#default_value' => !empty($node->contest->sponsor_email)? $node->contest->sponsor_email: '',
+    '#default_value' => !empty($node->contest->sponsor_email)? check_plain($node->contest->sponsor_email): '',
     '#required'      => FALSE,
     '#weight'        => 30,
   );
@@ -547,7 +547,7 @@ function contest_form($node, $form_state) {
     '#title'         => t('Sponsor Url'),
     '#description'   => t('A URL including protocol, (http, https).'),
     '#type'          => 'textfield',
-    '#default_value' => !empty($node->contest->sponsor_url)? $node->contest->sponsor_url: '',
+    '#default_value' => !empty($node->contest->sponsor_url)? check_plain($node->contest->sponsor_url): '',
     '#required'      => FALSE,
     '#weight'        => 40,
   );

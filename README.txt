@@ -52,3 +52,14 @@ Installation
 		7. Complete a profile for the contest sponsor, (if host and sponsor are the 
 		   same you can skip this). Again, this information is used in the contest
 		   view, (particularly the rules fieldset).
+
+
+MAINTAINERS
+===========
+Current maintainers:
+ * Bill Kelly (bkelly) - https://drupal.org/user/265918
+
+Much of the 7.x-1.x Contest module development was sponsored by:
+ * WEYMOUTH DESIGN
+   Friendly Drupal experts providing professional development, media and branding
+   services. Visit https://www.weymouthdesign.com for more information.
