@@ -82,6 +82,7 @@ function contest_date_format_types() {
 }
 /**
  * Implementation of hook_date_formats().
+ * We want a simple date only format. 
  */
 function contest_date_formats() {
   $formats = array(
@@ -589,21 +590,6 @@ function contest_form($node, $form_state) {
  */
 function contest_form_block_admin_display_form_alter(&$form, &$form_state, $form_id) {
   unset($form['blocks']['block_' . variable_get('contest_block_tnc', 0)]);
-
-  if (!variable_get('contest_body_configured', 0)) {
-    $instance = field_read_instance('node', 'body', 'contest');
-
-    $instance['display']['block'] = array(
-      'label'    => 'hidden',
-      'type'     => 'text_summary_or_trimmed',
-      'settings' => array('trim_length' => 100),
-      'module'   => 'text',
-      'weight'   => 0,
-    );
-    field_update_instance($instance);
-
-    variable_set('contest_body_configured', 1);
-  }
 }
 /**
  * Custom submit function.
@@ -617,6 +603,9 @@ function contest_form_submit($form, &$form_state) {
     'sponsor_email',
     'sponsor_url',
   );
+  if (empty($node->contest) || !is_object($node->contest)) {
+    $node->contest = new stdClass();
+  }
   $node->contest->start = _contest_mktime($form_state['values']['start']);
   unset($form_state['values']['start']);
 
@@ -625,7 +614,7 @@ function contest_form_submit($form, &$form_state) {
 
   foreach ($fields as $field) {
     if (!empty($form_state['values'][$field])) {
-      $node->contest->$field = $form_state['values'][$field];
+      $node->contest->{$field} = $form_state['values'][$field];
       unset($form_state['values'][$field]);
     }
   }
@@ -671,7 +660,7 @@ function contest_form_validate($form, &$form_state) {
 function contest_insert($node) {
   $sponsor_uid = _contest_add_usr($node->contest->sponsor, $node->contest->sponsor_email);
 
-  if (db_query_range("SELECT 1 FROM {contest} WHERE nid = :nid", 0, 1, array(':nid' => $node->nid))->fetchField()) {
+  if (!empty($node->nid) && db_query_range("SELECT 1 FROM {contest} WHERE nid = :nid", 0, 1, array(':nid' => $node->nid))->fetchField()) {
     return contest_update($node)? TRUE: FALSE;
   }
   $fields = array(
@@ -962,7 +951,7 @@ function contest_unpublish_winners($node) {
 function contest_update($node) {
   $sponsor_uid = _contest_add_usr($node->contest->sponsor, $node->contest->sponsor_email);
 
-  if (!db_query_range("SELECT 1 FROM {contest} WHERE nid = :nid", 0, 1, array(':nid' => $node->nid))->fetchField()) {
+  if (!empty($node->nid) && !db_query_range("SELECT 1 FROM {contest} WHERE nid = :nid", 0, 1, array(':nid' => $node->nid))->fetchField()) {
     return contest_insert($node)? TRUE: FALSE;
   }
   $fields = array(
@@ -997,7 +986,7 @@ function contest_view($node, $view_mode) {
   else {
     $node->content['contest_results'] = array('#markup' => theme('contest_results', _contest_get_results_data($node)));
   }
-  $node->content['contest_tnc'] = theme('contest_tnc', array('node' => $node, 'tnc' => _contest_get_block(variable_get('contest_block_tnc', 0))));
+  $node->content['contest_tnc'] = theme('contest_tnc', array('node' => $node, 'tnc' => _contest_get_block_body(variable_get('contest_block_tnc', 0))));
 
   return $node;
 }
@@ -1015,14 +1004,14 @@ function theme_contest_tnc($args) {
 
   $tokens = array(
     '!host_link'     => l($_SERVER['HTTP_HOST'], "http://{$_SERVER['HTTP_HOST']}"),
-    '@county'        => variable_get('site_default_country', 'US'),
+    '!server_link'   => l($_SERVER['SERVER_NAME'], "http://{$_SERVER['SERVER_NAME']}"),
+    '@county'        => variable_get('site_default_country', ''),
     '@date_end'      => format_date($node->contest->end, 'contest_date'),
     '@date_notify'   => format_date(($node->contest->end + (60 * 60 * 24 * 31)), 'contest_date'),
     '@date_start'    => format_date($node->contest->start, 'contest_date'),
     '@host_address'  => $host->address,
     '@host_business' => $host->business,
     '@host_city'     => $host->city,
-    '@host_country'  => variable_get('site_default_country', 'US'),
     '@host_name'     => $host->full_name,
     '@host_state'    => $host->state,
     '@host_zip'      => $host->zip,
@@ -1060,10 +1049,10 @@ function _contest_add_usr($name, $email) {
   }
 // Try to load the user.
 
-  $usr = user_load_by_name($name);
+  $usr = user_load_by_mail($email);
 
   if (empty($usr->uid)) {
-    $usr = user_load_by_mail($email);
+    $usr = user_load_by_name($name);
   }
 // If they don't exist, create them.
 
@@ -1246,7 +1235,7 @@ function _contest_create_export_directory($path) {
  * @return (string) A password that hopefully isn't too terrible.
  */
 function _contest_email_to_password($email = '') {
-  return $email? preg_replace('/@.*/', '', $email) . '-' . substr(md5(time() . rand(0, 100)), 0, rand(4, 6)): substr(md5(time() . rand(0, 100)), 0, rand(8, 12));
+  return $email? preg_replace('/@.*/', '', $email) . '-' . substr(md5(REQUEST_TIME . rand(0, 100)), 0, rand(4, 6)): substr(md5(REQUEST_TIME . rand(0, 100)), 0, rand(8, 12));
 }
 /**
  * Build the data for a contest's admin page.
@@ -1332,7 +1321,7 @@ function _contest_get_admin_page_data($node = NULL) {
  *
  * @return (string) The block body.
  */
-function _contest_get_block($bid = 0) {
+function _contest_get_block_body($bid = 0) {
   return db_query_range("SELECT body FROM {block_custom} WHERE bid = :bid", 0, 1, array(':bid' => $bid))->fetchField();
 }
 /**
@@ -1342,7 +1331,7 @@ function _contest_get_block($bid = 0) {
  *
  * @return (string) The block body format.
  */
-function _contest_get_block_format($bid = 0) {
+function _contest_get_block_body_format($bid = 0) {
   return db_query_range("SELECT format FROM {block_custom} WHERE bid = :bid", 0, 1, array(':bid' => $bid))->fetchField();
 }
 /**
@@ -1702,7 +1691,7 @@ function _contest_set_usr_txt_val($usr = NULL, $values = array(), $field = '', $
   );
 }
 /**
- * Convert the provided string to a lowercase stroke delimited string, (uppercase converted to lower, consequitive non alpha-numeric characters converted to a stroke).
+ * Convert the provided string to a lowercase stroke delimited string, (uppercase converted to lower, consecutive non alpha-numeric characters converted to a stroke).
  *
  * @param $txt (string) The string to convert.
  *
@@ -1751,7 +1740,7 @@ function _contest_trim($string, $max = 150) {
   return $txt;
 }
 /**
- * Build a more friendlier user object.
+ * Build a more friendly user object.
  *
  * @param $usr (object) A user object
  *

@@ -34,6 +34,19 @@ function contest_enable() {
 // Create the export direcory.
 
   _contest_create_export_directory(variable_get('contest_export_dir', 'contest_export'));
+
+// Set the display settings for the "block" view mode.
+
+  $instance = field_read_instance('node', 'body', 'contest');
+
+  $instance['display']['block'] = array(
+    'label'    => 'hidden',
+    'type'     => 'text_summary_or_trimmed',
+    'settings' => array('trim_length' => 100),
+    'module'   => 'text',
+    'weight'   => 0,
+  );
+  field_update_instance($instance);
 }
 /**
  * Implementation of hook_install().
@@ -63,7 +76,7 @@ function contest_install() {
   variable_set('contest_period', $periods);
 
   _contest_install_type_create();
-  
+
 // Build some content blocks using the block system for storage.
 
   $bid = _contest_install_block_add('Contest Terms and Conditions', _contest_install_tnc());
@@ -71,6 +84,7 @@ function contest_install() {
 }
 /**
  * Implementation of hook_requirements().
+ * We need the private path, country and timezone configured. 
  */
 function contest_requirements($phase) {
   $reqs = array();
@@ -90,7 +104,15 @@ function contest_requirements($phase) {
           'title'       => 'Default Country',
           'value'       => t("The default country isn't configured."),
           'severity'    => REQUIREMENT_ERROR,
-          'description' => t("Aborting! default country needs to be configured. Please go to !link to configure.<br />\n", array('!link' => l('regional settings', 'admin/config/regional/settings', array('attributes' => array('target' => '_blank'))))),
+          'description' => t("Aborting! The default country needs to be configured. Please go to !link to configure.<br />\n", array('!link' => l('regional settings', 'admin/config/regional/settings', array('attributes' => array('target' => '_blank'))))),
+        );
+      }
+      if (!variable_get('date_default_timezone', NULL)) {
+        $reqs['system'] = array(
+          'title'       => 'Default Timezone',
+          'value'       => t("The default timezone isn't configured."),
+          'severity'    => REQUIREMENT_ERROR,
+          'description' => t("Aborting! Thedefault timezone needs to be configured. Please go to !link to configure.<br />\n", array('!link' => l('regional settings', 'admin/config/regional/settings', array('attributes' => array('target' => '_blank'))))),
         );
       }
       break;
@@ -126,7 +148,7 @@ function contest_schema() {
         'default'     => 0,
       ),
       'sponsor_url' => array(
-        'description' => '',
+        'description' => "The sponsor's URL",
         'type'        => 'varchar',
         'length'      => 100,
         'not null'    => TRUE,
@@ -317,10 +339,9 @@ function _contest_install_feedback($txt) {
 function _contest_install_purge_dir($file_regx, $age) {
   $count = 0;
   $files = glob($file_regx);
-  $now = time();
 
   foreach ($files as $file) {
-    if (is_file($file) && ($now - filemtime($file)) >= $age) {
+    if (is_file($file) && (REQUEST_TIME - filemtime($file)) >= $age) {
       @chmod($file, 0777);
       unlink($file);
       $count++;
