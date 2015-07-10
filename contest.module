@@ -662,6 +662,23 @@ function contest_form_validate($form, &$form_state) {
   }
 }
 /**
+ * Implements hook_help().
+ */
+function contest_help($path, $arg) {
+  $output = '';
+  
+  switch ($path) {
+    case 'admin/help#contest':
+      $output .= '<h3>' . t('About') . '</h3>';
+      $output .= '<p>' . t('The contest module allows your site to host random games of chance, &ldquo;Sweepstakes&rdquo;. Where users can enter to win prizes via a random drawing.') . '</p>';
+      $output .= '<p>' . t("Anonymous users can fill-in their personal information and a user will be created for them.") . '</p>';
+      $output .= '<p>' . t("Logged in users with complete profiles can just click the &ldquo;Enter Contest&rdquo; button.") . '</p>';
+      $output .= '<p>' . t("Winners can be selected via a contest's admin page or the entries exported and printed for a public drawing.") . '</p>';
+      $output .= '<p>' . t("The same export can be provided to sponsors or affiliates for marketing purposes.") . '</p>';
+      return $output;
+  }
+}
+/**
  * Implementation of hook_insert().
  */
 function contest_insert($node) {
