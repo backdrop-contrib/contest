@@ -681,13 +681,7 @@ function contest_insert($node) {
  * @return (string) fully rendered HTML for the contest list page.
  */
 function contest_list_page() {
-  $data = _contest_get_list_data('teaser');
-  $html = '';
-
-  foreach ($data['data'] as $content) {
-    $html .= render($content);
-  }
-  return $html;
+  return theme('contest_list_page', array('data' => _contest_get_list_data('teaser')));
 }
 /**
  * Implementation of hook_load().
@@ -926,6 +920,10 @@ function contest_theme() {
     'contest_list_block' => array(
       'path'     => _contest_get_template_path('contest', 'contest-list-block'),
       'template' => 'contest-list-block',
+    ),
+    'contest_list_page' => array(
+      'path'     => _contest_get_template_path('contest', 'contest-list-page'),
+      'template' => 'contest-list-page',
     ),
     'contest_results' => array(
       'path'     => _contest_get_template_path('contest', 'contest-results'),
