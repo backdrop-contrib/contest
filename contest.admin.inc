@@ -9,6 +9,8 @@
  * Menu callback to configure module settings.
  */
 function contest_settings_form() {
+  $cfg = config('contest.settings');
+dpm($cfg->get());
   $periods = array(
     2147483646    => t('Can only win once.'),
     (7 * 86400)   => t('One week between wins.'),
@@ -45,7 +47,7 @@ function contest_settings_form() {
     '#title'         => t('Export Directory'),
     '#description'   => t("The export directory under the site's private directory, (no leading of trailing slash)."),
     '#type'          => 'textfield',
-    '#default_value' => config_get('contest.settings', 'export_dir'),
+    '#default_value' => $cfg->get('export_dir'),
     '#size'          => 30,
     '#maxlength'     => 30,
     '#required'      => TRUE,
@@ -55,7 +57,7 @@ function contest_settings_form() {
     '#title'         =>  t('Days Between Wins'),
     '#type'          => 'select',
     '#options'       => $periods,
-    '#default_value' => config_get('contest.settings', 'hog_days'),
+    '#default_value' => $cfg->get('hog_days'),
     '#required'      => TRUE,
     '#weight'        => 20,
   );
@@ -63,14 +65,14 @@ function contest_settings_form() {
     '#type'              => 'textfield',
     '#title'             => t('Host'),
     '#autocomplete_path' => 'contest/usr-autocomplete',
-    '#default_value'     => db_query_range("SELECT name FROM {users} WHERE uid = :uid", 0, 1, array(':uid' => config_get('contest.settings', 'host_uid')))->fetchField(),
+    '#default_value'     => db_query_range("SELECT name FROM {users} WHERE uid = :uid", 0, 1, array(':uid' => $cfg->get('host_uid')))->fetchField(),
     '#size'              => 30,
   );
   $form['host_title'] = array(
     '#title'         =>  t('Host Title'),
     '#description'   => t("The host's display title."),
     '#type'          => 'textfield',
-    '#default_value' => config_get('contest.settings', 'host_title'),
+    '#default_value' => $cfg->get('host_title'),
     '#size'          => 30,
     '#maxlength'     => 60,
     '#required'      => TRUE,
@@ -81,7 +83,7 @@ function contest_settings_form() {
     '#description'   => t("The minimum age required to enter a contest."),
     '#type'          => 'select',
     '#options'       => array_combine(range(1, 100), range(1, 100)),
-    '#default_value' => config_get('contest.settings', 'min_age'),
+    '#default_value' => $cfg->get('min_age'),
     '#required'      => TRUE,
     '#weight'        => 50,
   );
@@ -96,8 +98,8 @@ function contest_settings_form() {
 #  $form['tnc']['contest_block_tnc_content'] = array(
 #    '#type'          => 'text_format',
 #    '#description'   => t($token_description),
-#    '#default_value' => _contest_get_block_body(config_get('contest.settings', 'block_tnc')),
-#    '#format'        => _contest_get_block_body_format(config_get('contest.settings', 'block_tnc')),
+#    '#default_value' => _contest_get_block_body($cfg->get('block_tnc')),
+#    '#format'        => _contest_get_block_body_format($cfg->get('block_tnc')),
 #    '#required'      => FALSE,
 #  );
   return system_settings_form($form);

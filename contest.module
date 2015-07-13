@@ -72,30 +72,30 @@
 #function contest_cron() {
 #  _contest_purge_exports();
 #}
-/**
- * Implements hook_date_format_types().
- */
-function contest_date_format_types() {
-  return array(
-    'contest_date' => t('Month Day Year'),
-  );
-}
-/**
- * Implementation of hook_date_formats().
- * We want a simple date only format.
- */
-function contest_date_formats() {
-  $formats = array(
-    0 => array(
-      'label' => 'Contest Date',
-      'pattern' => 'F j Y',
-    ),
-  );
-  foreach ($formats as $format) {
-     config_set('system.date', 'formats.contest_date', $format);
-  }
-  return $formats;
-}
+#/**
+# * Implements hook_date_format_types().
+# */
+#function contest_date_format_types() {
+#  return array(
+#    'contest_date' => t('Month Day Year'),
+#  );
+#}
+#/**
+# * Implementation of hook_date_formats().
+# * We want a simple date only format.
+# */
+#function contest_date_formats() {
+#  $formats = array(
+#    0 => array(
+#      'label' => 'Contest Date',
+#      'pattern' => 'F j Y',
+#    ),
+#  );
+#  foreach ($formats as $format) {
+#     config_set('system.date', 'formats.contest_date', $format);
+#  }
+#  return $formats;
+#}
 #/**
 # * Implementation of hook_entity_info_alter().
 # */
@@ -755,7 +755,7 @@ function contest_menu() {
   );
 #  $items['contest'] = array(
 #    'title'            => '!site_name Contests',
-#    'title arguments'  => array('!site_name' => variable_get('site_name', '')),
+#    'title arguments'  => array('!site_name' => 'Backdrop'),//variable_get('site_name', '')),
 #    'page callback'    => 'contest_list_page',
 #    'access arguments' => array('access content'),
 #    'type'             => MENU_NORMAL_ITEM,

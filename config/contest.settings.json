@@ -1,17 +1,16 @@
 {
   "_config_name": "contest.settings",
   "_config_static": true,
-  "contest_body_configured": 1,
-  "contest_export_dir": "contest_export",
-  "contest_hog_days": 89,
-  "contest_host_title": "admin",
-  "contest_host_uid": 1,
-  "contest_min_age": 18,
-  "contest_period": {
+  "export_dir": "contest_export",
+  "hog_days": 89,
+  "host_title": "admin",
+  "host_uid": 1,
+  "min_age": 18,
+  "period": {
     "86400": "daily",
-    "604800" "weekly",
+    "604800": "weekly",
     "2592000": "monthly",
-    "31536000" "yearly",
+    "31536000": "yearly",
     "2147483646": "once"
   }
 }
