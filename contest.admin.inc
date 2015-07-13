@@ -136,7 +136,7 @@
 #    return;
 #  }
 #  if (!$wrapper) {
-#    drupal_set_message("Drupal's file system private path needs to be configured. Please go to !link to configure.", array('!link' => l('File System', 'admin/config/media/file-system', array('target' => '_blank'))));
+#    backdrop_set_message("Backdrop's file system private path needs to be configured. Please go to !link to configure.", array('!link' => l('File System', 'admin/config/media/file-system', array('target' => '_blank'))));
 #  }
 #  $old_dir = $wrapper->getDirectoryPath() . '/' . variable_get('contest_export_dir', '');
 #  _contest_purge_dir("$old_dir/*", 0);
@@ -164,7 +164,7 @@
 #// Private system path not configured.
 #
 #    if (!$wrapper) {
-#      form_set_error('contest_export_dir', t("Drupal's file system path needs to be configured. Please go to !link to configure.", array('!link' => l('File System', 'admin/config/media/file-system', array('target' => '_blank')))));
+#      form_set_error('contest_export_dir', t("Backdrop's file system path needs to be configured. Please go to !link to configure.", array('!link' => l('File System', 'admin/config/media/file-system', array('target' => '_blank')))));
 #    }
 #    $path = $wrapper->getDirectoryPath() . '/' . _contest_clean_path($form_state['values']['contest_export_dir']);
 #

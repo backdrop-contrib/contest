@@ -13,7 +13,7 @@
 # * @return (string) Fully themed contest admin page.
 # */
 #function contest_admin_page($node = NULL) {
-#  drupal_add_css(drupal_get_path('module', 'contest') . '/css/contest.css');
+#  backdrop_add_css(backdrop_get_path('module', 'contest') . '/css/contest.css');
 #  return theme('contest_admin_page', _contest_get_admin_page_data($node));
 #}
 #/**
@@ -48,7 +48,7 @@
 #  $published = db_query_range("SELECT publish_winners FROM {contest} WHERE nid = :nid", 0, 1, array(':nid' => $nid))->fetchField();
 #
 #  if ($published) {
-#    drupal_set_message('You must unpublish contest winners before clearing a winner.', 'error');
+#    backdrop_set_message('You must unpublish contest winners before clearing a winner.', 'error');
 #  }
 #  elseif ($uid) {
 #    db_update('contest_entry')
@@ -63,7 +63,7 @@
 #      ->condition('nid', $nid)
 #      ->execute();
 #  }
-#  drupal_goto("node/$nid/contest-admin");
+#  backdrop_goto("node/$nid/contest-admin");
 #}
 #/**
 # * Implimentation of hook_cron().
@@ -109,7 +109,7 @@
 #/**
 # * Contest entry form.
 # *
-# * @return $form (array) A Drupal form array.
+# * @return $form (array) A Backdrop form array.
 # */
 #function contest_entry_form() {
 #  global $user;
@@ -117,8 +117,8 @@
 #
 #// Add the JavaScript and CSS.
 #
-#  drupal_add_css(drupal_get_path('module', 'contest') . '/css/contest.css');
-#  drupal_add_js(drupal_get_path('module', 'contest') . '/js/contest.js');
+#  backdrop_add_css(backdrop_get_path('module', 'contest') . '/css/contest.css');
+#  backdrop_add_js(backdrop_get_path('module', 'contest') . '/js/contest.js');
 #
 #// Load the full user object.
 #
@@ -289,15 +289,15 @@
 #// If they're not logged in, are already a user and have an incomplete profile give them the explanation and redirect them to the login page.
 #
 #  if ($user->uid != $usr->uid && (empty($usr->field_contest_name) || empty($usr->field_contest_address) || empty($usr->field_contest_city) || empty($usr->field_contest_state) || empty($usr->field_contest_zip))) {
-#    drupal_set_message('You already have an account with an incomplete profile. The easiest way to enter the contest is to log in and come back and enter the contest.', 'error');
-#    drupal_set_message('Once your profile is complete you won\'t have to do this again.');
-#    drupal_set_message('If you have problems logging in click the "Request new password" link and a login link will be sent to your email.');
+#    backdrop_set_message('You already have an account with an incomplete profile. The easiest way to enter the contest is to log in and come back and enter the contest.', 'error');
+#    backdrop_set_message('Once your profile is complete you won\'t have to do this again.');
+#    backdrop_set_message('If you have problems logging in click the "Request new password" link and a login link will be sent to your email.');
 #    return 'user';
 #  }
 #// I don't think this should ever get used, but...
 #
 #  elseif (empty($usr->field_contest_name) || empty($usr->field_contest_address) || empty($usr->field_contest_city) || empty($usr->field_contest_state) || empty($usr->field_contest_zip)) {
-#    drupal_set_message('You must have a complete profile to enter a contest.', 'error');
+#    backdrop_set_message('You must have a complete profile to enter a contest.', 'error');
 #    return "user/$usr->uid/edit/Contest";
 #  }
 #// We'll check to see if the contest is running by getting the entry period.
@@ -310,7 +310,7 @@
 #  $period = db_query_range("SELECT period FROM {contest} WHERE nid = :nid AND start < :start AND :end < end", 0, 1, $values)->fetchField();
 #
 #  if (!$period) {
-#    drupal_set_message('This contest is closed.', 'error');
+#    backdrop_set_message('This contest is closed.', 'error');
 #    return 'contest';
 #  }
 #// Check to see if they've entered today.
@@ -318,7 +318,7 @@
 #  $entered = _contest_get_entered($form_state['values']['uid'], $form_state['values']['nid'], $period);
 #
 #  if ($entered) {
-#    drupal_set_message("You can enter the contest {$periods[$period]}. We already have an entry for you during this period.", 'error');
+#    backdrop_set_message("You can enter the contest {$periods[$period]}. We already have an entry for you during this period.", 'error');
 #    return "node/{$form_state['values']['nid']}";
 #  }
 #// Enter them into the contest.
@@ -331,7 +331,7 @@
 #  );
 #  return db_insert('contest_entry')->fields($fields)->execute();
 #
-#  drupal_set_message('You have been entered into the contest.');
+#  backdrop_set_message('You have been entered into the contest.');
 #
 #// Redirect to the contest page.
 #
@@ -554,7 +554,7 @@
 #  $form['places'] = array(
 #    '#title'         => t('Winning Places'),
 #    '#type'          => 'select',
-#    '#options'       => drupal_map_assoc(range(1, 10)),
+#    '#options'       => backdrop_map_assoc(range(1, 10)),
 #    '#default_value' => !empty($node->contest->places)? $node->contest->places: 1,
 #    '#required'      => TRUE,
 #    '#weight'        => 50,
@@ -748,7 +748,7 @@
 #  $items['admin/config/contest'] = array(
 #    'title'            => 'Contest Config',
 #    'description'      => 'Custom settings for the Contest site.',
-#    'page callback'    => 'drupal_get_form',
+#    'page callback'    => 'backdrop_get_form',
 #    'page arguments'   => array('contest_settings_form'),
 #    'access arguments' => array('administer contest'),
 #    'file'             => 'contest.admin.inc',
@@ -864,22 +864,22 @@
 #  $dq = $row->end - ($hog_days * 60 * 60 * 24);
 #
 #  if ($row->publish_winners) {
-#    drupal_set_message('You must unpublish a contest before editing results.', 'error');
-#    drupal_goto("node/$nid/contest-admin");
+#    backdrop_set_message('You must unpublish a contest before editing results.', 'error');
+#    backdrop_goto("node/$nid/contest-admin");
 #  }
 #// We don't allow the winner to be picked when the contest is still open.
 #
 #  if (REQUEST_TIME < $row->end) {
-#    drupal_set_message('You can\'t select a contest winner before the contest ends.', 'error');
-#    drupal_goto("node/$nid/contest-admin");
+#    backdrop_set_message('You can\'t select a contest winner before the contest ends.', 'error');
+#    backdrop_goto("node/$nid/contest-admin");
 #  }
 #// Check to see if there are any more winners allowed..
 #
 #  $winners = db_query_range("SELECT COUNT(uid) FROM {contest_entry} WHERE nid = :nid AND winner", 0, 1, array(':nid' => $nid))->fetchField();
 #
 #  if ($winners >= $row->places) {
-#    drupal_set_message("The contest allows " . (($row->places == 1)? 'one winner. ': "$row->places places") . 'Currently their ' . (($row->places == 1)? 'is one.': "are $row->places."), 'error');
-#    drupal_goto("node/$nid/contest-admin");
+#    backdrop_set_message("The contest allows " . (($row->places == 1)? 'one winner. ': "$row->places places") . 'Currently their ' . (($row->places == 1)? 'is one.': "are $row->places."), 'error');
+#    backdrop_goto("node/$nid/contest-admin");
 #  }
 #// Build a comma seperated string of the disqualified users ID's that will be used in a "IN" sql list.
 #
@@ -887,8 +887,8 @@
 #
 #  foreach ($rows as $row) {
 #    if ($uid && $row->uid == $uid) {
-#      drupal_set_message('This person has already won something in the last ' . (($hog_days == 1)? 'day.': "$hog_days days."), 'error');
-#      drupal_goto("node/$nid/contest-admin");
+#      backdrop_set_message('This person has already won something in the last ' . (($hog_days == 1)? 'day.': "$hog_days days."), 'error');
+#      backdrop_goto("node/$nid/contest-admin");
 #    }
 #    $wids[] = $row->uid;
 #  }
@@ -942,7 +942,7 @@
 #  }
 #// Redirect back to the contest entries list page.
 #
-#  drupal_goto("node/$nid/contest-admin");
+#  backdrop_goto("node/$nid/contest-admin");
 #}
 #/**
 # * Publish the winners of a contest.
@@ -953,12 +953,12 @@
 #  $winners = db_query_range("SELECT COUNT(uid) FROM {contest_entry} WHERE nid = :nid AND winner", 0, 1, array(':nid' => $node->nid))->fetchField();
 #
 #  if ($winners != $node->contest->places) {
-#    drupal_set_message("You can't publish winners before they've all been selected.", 'error');
-#    drupal_goto("node/$node->nid/contest-admin");
+#    backdrop_set_message("You can't publish winners before they've all been selected.", 'error');
+#    backdrop_goto("node/$node->nid/contest-admin");
 #  }
 #  db_update('contest')->fields(array('publish_winners' => 1))->condition('nid', $node->nid)->execute();
 #
-#  drupal_goto("node/$node->nid/contest-admin");
+#  backdrop_goto("node/$node->nid/contest-admin");
 #}
 #/**
 # * Implimentation of hook_theme().
@@ -993,7 +993,7 @@
 # */
 #function contest_unpublish_winners($node) {
 #  db_update('contest')->fields(array('publish_winners' => 0))->condition('nid', $node->nid)->execute();
-#  drupal_goto("node/$node->nid/contest-admin");
+#  backdrop_goto("node/$node->nid/contest-admin");
 #}
 #/**
 # * Implementation of hook_update().
@@ -1021,17 +1021,17 @@
 # * @return (JSON) A username to username hash.
 # */
 #function contest_usr_autocomplete($name = '') {
-#  return drupal_json_output(db_query("SELECT name, name FROM {users} WHERE name LIKE :name", array(':name' => "$name%"))->fetchAllKeyed());
+#  return backdrop_json_output(db_query("SELECT name, name FROM {users} WHERE name LIKE :name", array(':name' => "$name%"))->fetchAllKeyed());
 #}
 #/**
 # * Implements hook_view().
 # */
 #function contest_view($node, $view_mode) {
-#  drupal_add_library('system', 'drupal.collapse');
-#  drupal_add_css(drupal_get_path('module', 'contest') . '/css/contest.css');
+#  backdrop_add_library('system', 'drupal.collapse');
+#  backdrop_add_css(backdrop_get_path('module', 'contest') . '/css/contest.css');
 #
 #  if ($node->contest->start < REQUEST_TIME && REQUEST_TIME < $node->contest->end) {
-#    $node->content['contest_entry_form'] = drupal_get_form('contest_entry_form', $node);
+#    $node->content['contest_entry_form'] = backdrop_get_form('contest_entry_form', $node);
 #  }
 #  else {
 #    $node->content['contest_results'] = array('#markup' => theme('contest_results', _contest_get_results_data($node)));
@@ -1238,14 +1238,14 @@
 #
 #// Build the message variables, send out the welcome email and set the welcome message.
 #
-#  $mail = drupal_mail('contest', 'register_no_approval_required', $usr->mail, user_preferred_language($usr), array('user' => $usr), $from, TRUE);
+#  $mail = backdrop_mail('contest', 'register_no_approval_required', $usr->mail, user_preferred_language($usr), array('user' => $usr), $from, TRUE);
 #
 #  $tokens = array(
 #    '@password'  => $args['pass'],
 #    '@site_name' => variable_get('site_name', 'Contest Host'),
 #    '@username'  => $usr->name,
 #  );
-#  drupal_set_message(t("You have been added to the @site_name website. Below is your login information.<br>Username: @username<br>Password: @password.<br>Please keep this information for you records. If you have a problem logging in, use the password recovery tool located at the top of the user's login page.", $tokens));
+#  backdrop_set_message(t("You have been added to the @site_name website. Below is your login information.<br>Username: @username<br>Password: @password.<br>Please keep this information for you records. If you have a problem logging in, use the password recovery tool located at the top of the user's login page.", $tokens));
 #
 #// Log them in.
 #
@@ -1573,22 +1573,22 @@
 # * @param $module (string) The module name, (without the suffix).
 # * @param $template (string) The template name, (without the suffixes).
 # *
-# * @return (string) A Drupal path to the template's directory, (defaults to .../module/templates).
+# * @return (string) A Backdrop path to the template's directory, (defaults to .../module/templates).
 # */
 #function _contest_get_template_path($module, $template = '') {
-#  $theme_path = drupal_get_path('theme', variable_get('theme_default', 'garland'));
+#  $theme_path = backdrop_get_path('theme', variable_get('theme_default', 'garland'));
 #
 #  $scan = file_scan_directory($theme_path, "/^$template\.tpl\.php$/", array('recurse' => TRUE, 'filename' => TRUE));
 #
 #  if (!count($scan)) {
-#    $scan = file_scan_directory(drupal_get_path('module', $module), "/^$template\.tpl\.php$/", array('recurse' => TRUE, 'filename' => TRUE));
+#    $scan = file_scan_directory(backdrop_get_path('module', $module), "/^$template\.tpl\.php$/", array('recurse' => TRUE, 'filename' => TRUE));
 #  }
-#  return count($scan)? preg_replace('/(\/[^\/]+)$/', '', key($scan)):  drupal_get_path('module', $module) . '/templates';
+#  return count($scan)? preg_replace('/(\/[^\/]+)$/', '', key($scan)):  backdrop_get_path('module', $module) . '/templates';
 #}
 #/**
 # * Extract the contest profile value from the user object.
 # *
-# * @param $usr (object) A Drupal user object.
+# * @param $usr (object) A Backdrop user object.
 # * @param $field (string) The field name.
 # *
 # * @return (string) The safe_value if set.
@@ -1608,7 +1608,7 @@
 #/**
 # * Determine if the profile is complete.
 # *
-# * @param $usr (object) A Drupal user object.
+# * @param $usr (object) A Backdrop user object.
 # * @param $role (string) The role to test.
 # *
 # * @return (bool) True if the user has a completed profile.
@@ -1815,7 +1815,7 @@
 #/**
 # * Save the contest profile fields to the user object.
 # *
-# * @param $usr (object) A Drupal user object.
+# * @param $usr (object) A Backdrop user object.
 # * @param $form_state (array) A form state array.
 # *
 # * @return (object) A fully loaded user object.

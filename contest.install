@@ -96,7 +96,7 @@
 #          'title'       => 'File System',
 #          'value'       => t("Private file system path isn't configured."),
 #          'severity'    => REQUIREMENT_ERROR,
-#          'description' => t("Aborting! Drupal's file system path needs to be configured. Please go to !link to configure.<br />\n", array('!link' => l('file system', 'admin/config/media/file-system', array('attributes' => array('target' => '_blank'))))),
+#          'description' => t("Aborting! Backdrop's file system path needs to be configured. Please go to !link to configure.<br />\n", array('!link' => l('file system', 'admin/config/media/file-system', array('attributes' => array('target' => '_blank'))))),
 #        );
 #      }
 #      if (!variable_get('site_default_country', NULL)) {
@@ -325,7 +325,7 @@
 #    print "$txt\n";
 #  }
 #  else {
-#    drupal_set_message($txt);
+#    backdrop_set_message($txt);
 #  }
 #}
 #/**
