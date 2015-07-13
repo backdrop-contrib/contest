@@ -278,7 +278,7 @@
 # */
 #function contest_entry_form_submit($form, &$form_state) {
 #  global $user;
-#  $periods = config_get('contest.settings', 'contest_period'));
+#  $periods = config_get('contest.settings', 'period'));
 #
 #// Users must have all their personal information filled out to enter a contest.
 #
@@ -343,7 +343,7 @@
 # */
 #function contest_entry_form_validate($form, &$form_state) {
 #  if (!_contest_min_age($form_state['values']['contest_birthdate'])) {
-#    form_set_error('contest_birthdate', t("You must be at least @age years old to enter.", array('@age' => config_get('contest.settings', 'contest_min_age'))));
+#    form_set_error('contest_birthdate', t("You must be at least @age years old to enter.", array('@age' => config_get('contest.settings', 'min_age'))));
 #  }
 #  if ($form_state['values']['contest_optin'] != 1) {
 #    form_set_error('contest_optin', t("You must agree to be contacted by the contest's sponsors and host to enter."));
@@ -356,7 +356,7 @@
 # */
 #function contest_export_entries($node) {
 #  $csv = '"email","name","address","city","state","zip","phone"' . "\n";
-#  $export_dir = config_get('contest.settings', 'contest_export_dir');
+#  $export_dir = config_get('contest.settings', 'export_dir');
 #  $file_dir = file_stream_wrapper_get_instance_by_uri('private://')->getDirectoryPath();
 #  $file_name = "contest_entries_{$node->nid}_" . REQUEST_TIME . '.csv';
 #
@@ -388,7 +388,7 @@
 # */
 #function contest_export_unique($node) {
 #  $csv = '"email","name","address","city","state","zip","phone"' . "\n";
-#  $export_dir = config_get('contest.settings', 'contest_export_dir');
+#  $export_dir = config_get('contest.settings', 'export_dir');
 #  $file_dir = file_stream_wrapper_get_instance_by_uri('private://')->getDirectoryPath();
 #  $file_name = "contest_unique_{$node->nid}_" . REQUEST_TIME . '.csv';
 #
@@ -562,7 +562,7 @@
 #  $form['period'] = array(
 #    '#title'         => t('User Can Enter'),
 #    '#type'          => 'select',
-#    '#options'       => config_get('contest.settings', 'contest_period')),
+#    '#options'       => config_get('contest.settings', 'period')),
 #    '#default_value' => !empty($node->contest->period)? $node->contest->period: 86400,
 #    '#required'      => TRUE,
 #    '#weight'        => 60,
@@ -596,7 +596,7 @@
 # * Remove the block module's instance of our content blocks, (content editable via the contest config form).
 # */
 #function contest_form_block_admin_display_form_alter(&$form, &$form_state, $form_id) {
-#  unset($form['blocks']['block_' . config_get('contest.settings', 'contest_block_tnc')]);
+#  unset($form['blocks']['block_' . config_get('contest.settings', 'block_tnc')]);
 #}
 #/**
 # * Custom submit function.
@@ -854,7 +854,7 @@ function contest_menu() {
 # * @param uid (int) The user's ID.
 # */
 #function contest_pick_winner($nid, $uid = FALSE) {
-#  $hog_days = config_get('contest.settings', 'contest_hog_days');
+#  $hog_days = config_get('contest.settings', 'hog_days');
 #  $wids = array(0);
 #
 #// We don't allow contest results to be edited while they are published.
@@ -1036,7 +1036,7 @@ function contest_menu() {
 #  else {
 #    $node->content['contest_results'] = array('#markup' => theme('contest_results', _contest_get_results_data($node)));
 #  }
-#  $node->content['contest_tnc'] = theme('contest_tnc', array('node' => $node, 'tnc' => _contest_get_block_body(config_get('contest.settings', 'contest_block_tnc'))));
+#  $node->content['contest_tnc'] = theme('contest_tnc', array('node' => $node, 'tnc' => _contest_get_block_body(config_get('contest.settings', 'block_tnc'))));
 #
 #  return $node;
 #}
@@ -1050,7 +1050,7 @@ function contest_menu() {
 #function theme_contest_tnc($args) {
 #  $node = !empty($args['node'])? $args['node']: new stdClass();
 #  $tnc = !empty($args['tnc'])? $args['tnc']: '';
-#  $host = _contest_usr_load(user_load(config_get('contest.settings', 'contest_host_uid')));
+#  $host = _contest_usr_load(user_load(config_get('contest.settings', 'host_uid')));
 #
 #  $tokens = array(
 #    '!host_link'     => l($_SERVER['HTTP_HOST'], "http://{$_SERVER['HTTP_HOST']}"),
@@ -1066,7 +1066,7 @@ function contest_menu() {
 #    '@host_name'     => $host->full_name,
 #    '@host_state'    => $host->state,
 #    '@host_zip'      => $host->zip,
-#    '@host_title'    => config_get('contest.settings', 'contest_host_title'),
+#    '@host_title'    => config_get('contest.settings', 'host_title'),
 #    '@places'        => $node->contest->places,
 #    '@timezone'      => date('T'),
 #  );
@@ -1302,8 +1302,8 @@ function contest_menu() {
 #  if ($cache !== FALSE) {
 #    return $cache;
 #  }
-#  $node->contest->host = _contest_usr_load(user_load(config_get('contest.settings', 'contest_host_uid')));
-#  $node->contest->host->title = config_get('contest.settings', 'contest_host_title');
+#  $node->contest->host = _contest_usr_load(user_load(config_get('contest.settings', 'host_uid')));
+#  $node->contest->host->title = config_get('contest.settings', 'host_title');
 #
 #  $node->contest->sponsor = _contest_usr_load(user_load_by_mail($node->contest->sponsor_email));
 #  $node->contest->sponsor->url = $node->contest->sponsor_url;
@@ -1395,7 +1395,7 @@ function contest_menu() {
 # * @return (bool) True if the user has entered the contest already durring this period.
 # */
 #function _contest_get_entered($uid, $nid, $period) {
-#  $periods = config_get('contest.settings', 'contest_period'));
+#  $periods = config_get('contest.settings', 'period'));
 #  $fmt = array(
 #    86400    => 'Y-m-d',
 #    604800   => 'Y-W',
@@ -1646,7 +1646,7 @@ function contest_menu() {
 # * @return (bool) True if the minimum age requirement is met, otherwise false.
 # */
 #function _contest_min_age($age = NULL) {
-#  $min_date = mktime(0, 0, 0, intval(date('n')), intval(date('j')), (intval(date('Y')) - config_get('contest.settings', 'contest_min_age')));
+#  $min_date = mktime(0, 0, 0, intval(date('n')), intval(date('j')), (intval(date('Y')) - config_get('contest.settings', 'min_age')));
 #
 #  if (is_int($age)) {
 #    $birthday = $age;
@@ -1709,7 +1709,7 @@ function contest_menu() {
 # */
 #function _contest_purge_exports() {
 #  $max_age = 3600;
-#  $sub_dir = config_get('contest.settings', 'contest_export_dir');
+#  $sub_dir = config_get('contest.settings', 'export_dir');
 #  $wrapper = file_stream_wrapper_get_instance_by_uri('private://');
 #
 #  if (!$sub_dir || !$wrapper) {

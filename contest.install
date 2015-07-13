@@ -33,7 +33,7 @@
 #  }
 #// Create the export direcory.
 #
-#  _contest_create_export_directory(config_get('contest.settings', 'contest_export_dir'));
+#  _contest_create_export_directory(config_get('contest.settings', 'export_dir'));
 #
 #// Set the display settings for the "block" view mode.
 #
@@ -54,15 +54,15 @@
 #function contest_install() {
 #  $day = 86400;
 #
-#  variable_set('contest_export_dir', 'contest_export'); // The contest results export directory.
-#  variable_set('contest_hog_days', 89);                 // The number of days between a persons eligibility to win another contest.
-#  variable_set('contest_host_uid', 1);                  // The contest host's user id. We'll set it to the admin's to start.
-#  variable_set('contest_min_age', 18);                  // The minimum age to enter the contest.
+#  variable_set('export_dir', 'contest_export'); // The contest results export directory.
+#  variable_set('hog_days', 89);                 // The number of days between a persons eligibility to win another contest.
+#  variable_set('host_uid', 1);                  // The contest host's user id. We'll set it to the admin's to start.
+#  variable_set('min_age', 18);                  // The minimum age to enter the contest.
 #
 #// We'll use the admin's name as the default host's title.
 #
 #  $user = user_load(1);
-#  variable_set('contest_host_title', $user->name);
+#  variable_set('host_title', $user->name);
 #
 #// The time period between a user's contest entries, (default is daily).
 #
@@ -73,14 +73,14 @@
 #    (365 * $day) => 'yearly',
 #    2147483646   => 'once',
 #  );
-#  variable_set('contest_period', $periods);
+#  variable_set('period', $periods);
 #
 #  _contest_install_type_create();
 #
 #// Build some content blocks using the block system for storage.
 #
 #  $bid = _contest_install_block_add('Contest Terms and Conditions', _contest_install_tnc());
-#  variable_set('contest_block_tnc', $bid);
+#  variable_set('block_tnc', $bid);
 #}
 #/**
 # * Implementation of hook_requirements().
@@ -250,7 +250,7 @@
 # * Implementation of hook_uninstall()
 # */
 #function contest_uninstall () {
-#  $export_dir = config_get('contest.settings', 'contest_export_dir');
+#  $export_dir = config_get('contest.settings', 'export_dir');
 #  $wrapper = file_stream_wrapper_get_instance_by_uri('private://');
 #
 #// Remove the export directory.

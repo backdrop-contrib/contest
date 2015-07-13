@@ -41,21 +41,21 @@ function contest_settings_form() {
     '#value'  => t('Configuration options for the contest module.'),
     '#weight' => 0,
   );
-  $form['contest_export_dir'] = array(
+  $form['export_dir'] = array(
     '#title'         => t('Export Directory'),
     '#description'   => t("The export directory under the site's private directory, (no leading of trailing slash)."),
     '#type'          => 'textfield',
-    '#default_value' => config_get('contest.settings', 'contest_export_dir'),
+    '#default_value' => config_get('contest.settings', 'export_dir'),
     '#size'          => 30,
     '#maxlength'     => 30,
     '#required'      => TRUE,
     '#weight'        => 10,
   );
-  $form['contest_hog_days'] = array(
+  $form['hog_days'] = array(
     '#title'         =>  t('Days Between Wins'),
     '#type'          => 'select',
     '#options'       => $periods,
-    '#default_value' => config_get('contest.settings', 'contest_hog_days'),
+    '#default_value' => config_get('contest.settings', 'hog_days'),
     '#required'      => TRUE,
     '#weight'        => 20,
   );
@@ -63,25 +63,25 @@ function contest_settings_form() {
     '#type'              => 'textfield',
     '#title'             => t('Host'),
     '#autocomplete_path' => 'contest/usr-autocomplete',
-    '#default_value'     => db_query_range("SELECT name FROM {users} WHERE uid = :uid", 0, 1, array(':uid' => config_get('contest.settings', 'contest_host_uid')))->fetchField(),
+    '#default_value'     => db_query_range("SELECT name FROM {users} WHERE uid = :uid", 0, 1, array(':uid' => config_get('contest.settings', 'host_uid')))->fetchField(),
     '#size'              => 30,
   );
-  $form['contest_host_title'] = array(
+  $form['host_title'] = array(
     '#title'         =>  t('Host Title'),
     '#description'   => t("The host's display title."),
     '#type'          => 'textfield',
-    '#default_value' => config_get('contest.settings', 'contest_host_title'),
+    '#default_value' => config_get('contest.settings', 'host_title'),
     '#size'          => 30,
     '#maxlength'     => 60,
     '#required'      => TRUE,
     '#weight'        => 40,
   );
-  $form['contest_min_age'] = array(
+  $form['min_age'] = array(
     '#title'         =>  t('Minumum Age'),
     '#description'   => t("The minimum age required to enter a contest."),
     '#type'          => 'select',
     '#options'       => array_combine(range(1, 100), range(1, 100)),
-    '#default_value' => config_get('contest.settings', 'contest_min_age'),
+    '#default_value' => config_get('contest.settings', 'min_age'),
     '#required'      => TRUE,
     '#weight'        => 50,
   );
@@ -96,8 +96,8 @@ function contest_settings_form() {
 #  $form['tnc']['contest_block_tnc_content'] = array(
 #    '#type'          => 'text_format',
 #    '#description'   => t($token_description),
-#    '#default_value' => _contest_get_block_body(config_get('contest.settings', 'contest_block_tnc')),
-#    '#format'        => _contest_get_block_body_format(config_get('contest.settings', 'contest_block_tnc')),
+#    '#default_value' => _contest_get_block_body(config_get('contest.settings', 'block_tnc')),
+#    '#format'        => _contest_get_block_body_format(config_get('contest.settings', 'block_tnc')),
 #    '#required'      => FALSE,
 #  );
   return system_settings_form($form);
@@ -107,7 +107,7 @@ function contest_settings_form() {
 # * Create the export directory.
 # */
 #function contest_settings_form_submit($form, &$form_state) {
-#  $path = _contest_clean_path($form_state['values']['contest_export_dir']);
+#  $path = _contest_clean_path($form_state['values']['export_dir']);
 #  $wrapper = file_stream_wrapper_get_instance_by_uri('private://');
 #
 #// Convert the username to uid and save it and delete it's remnants from the form, (not sure if it matters but...).
@@ -118,7 +118,7 @@ function contest_settings_form() {
 #  unset($form_state['values']['host']);
 #
 #  if ($uid) {
-#    variable_set('contest_host_uid', $uid);
+#    variable_set('host_uid', $uid);
 #  }
 #// Update the T&C content.
 #
@@ -126,27 +126,27 @@ function contest_settings_form() {
 #    'body'   => $form_state['values']['contest_block_tnc_content']['value'],
 #    'format' => $form_state['values']['contest_block_tnc_content']['format'],
 #  );
-#  db_update('block_custom')->fields($fields)->condition('bid', config_get('contest.settings', 'contest_block_tnc'))->execute();
+#  db_update('block_custom')->fields($fields)->condition('bid', config_get('contest.settings', 'block_tnc'))->execute();
 #
 #  unset($form_state['values']['contest_block_tnc_content']);
 #
 #// Change the export directory if we need to.
 #
-#  if ($path && $path === config_get('contest.settings', 'contest_export_dir')) {
+#  if ($path && $path === config_get('contest.settings', 'export_dir')) {
 #    return;
 #  }
 #  if (!$wrapper) {
 #    backdrop_set_message("Backdrop's file system private path needs to be configured. Please go to !link to configure.", array('!link' => l('File System', 'admin/config/media/file-system', array('target' => '_blank'))));
 #  }
-#  $old_dir = $wrapper->getDirectoryPath() . '/' . config_get('contest.settings', 'contest_export_dir');
+#  $old_dir = $wrapper->getDirectoryPath() . '/' . config_get('contest.settings', 'export_dir');
 #  _contest_purge_dir("$old_dir/*", 0);
 #  @chmod($old_dir, 0777);
 #  rmdir($old_dir);
 #
 #  _contest_create_export_directory($path);
 #
-#  $form_state['input']['contest_export_dir'] = $path;
-#  $form_state['values']['contest_export_dir'] = $path;
+#  $form_state['input']['export_dir'] = $path;
+#  $form_state['values']['export_dir'] = $path;
 #}
 #/**
 # * Custom validation function for the contest setting form.
@@ -155,23 +155,23 @@ function contest_settings_form() {
 #
 #// Directory name doesn't match requirements.
 #
-#  if (!preg_match('/^\w[\w\/]*\w$/', $form_state['values']['contest_export_dir'])) {
-#    form_set_error('contest_export_dir', t('The export directory can contain alpha-numeric characters, hyphens and slashes and must start and end with a alpha-numeric character.'));
+#  if (!preg_match('/^\w[\w\/]*\w$/', $form_state['values']['export_dir'])) {
+#    form_set_error('export_dir', t('The export directory can contain alpha-numeric characters, hyphens and slashes and must start and end with a alpha-numeric character.'));
 #  }
-#  if ($form_state['values']['contest_export_dir'] !== config_get('contest.settings', 'contest_export_dir')) {
+#  if ($form_state['values']['export_dir'] !== config_get('contest.settings', 'export_dir')) {
 #    $wrapper = file_stream_wrapper_get_instance_by_uri('private://');
 #
 #// Private system path not configured.
 #
 #    if (!$wrapper) {
-#      form_set_error('contest_export_dir', t("Backdrop's file system path needs to be configured. Please go to !link to configure.", array('!link' => l('File System', 'admin/config/media/file-system', array('target' => '_blank')))));
+#      form_set_error('export_dir', t("Backdrop's file system path needs to be configured. Please go to !link to configure.", array('!link' => l('File System', 'admin/config/media/file-system', array('target' => '_blank')))));
 #    }
-#    $path = $wrapper->getDirectoryPath() . '/' . _contest_clean_path($form_state['values']['contest_export_dir']);
+#    $path = $wrapper->getDirectoryPath() . '/' . _contest_clean_path($form_state['values']['export_dir']);
 #
 #// Directory already in use.
 #
 #    if (is_dir($path) || is_file($path)) {
-#      form_set_error('contest_export_dir', t('That export directory is already in use.'));
+#      form_set_error('export_dir', t('That export directory is already in use.'));
 #    }
 #  }
 #// Non-existent contest host.
