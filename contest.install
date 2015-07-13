@@ -33,7 +33,7 @@
 #  }
 #// Create the export direcory.
 #
-#  _contest_create_export_directory(variable_get('contest_export_dir', 'contest_export'));
+#  _contest_create_export_directory(config_get('contest.settings', 'contest_export_dir'));
 #
 #// Set the display settings for the "block" view mode.
 #
@@ -250,7 +250,7 @@
 # * Implementation of hook_uninstall()
 # */
 #function contest_uninstall () {
-#  $export_dir = variable_get('contest_export_dir', 'contest_export');
+#  $export_dir = config_get('contest.settings', 'contest_export_dir');
 #  $wrapper = file_stream_wrapper_get_instance_by_uri('private://');
 #
 #// Remove the export directory.
