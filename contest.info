@@ -1,12 +1,12 @@
-name = "Contest"
+name = Contest
 description = Allows your site to host a sweepstakes, (contestants win prizes via a random drawing).
-project = "contest"
-version = "7.x-1.x-dev"
 package = Other
-core = "7.x"
-configure = admin/config/contest
+type = module
+backdrop = 1.x
 
 dependencies[] = block
 dependencies[] = date
 dependencies[] = list
 dependencies[] = text
+
+configure = admin/config/content/contest
