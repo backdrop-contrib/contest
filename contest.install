@@ -52,35 +52,20 @@
 # * Implementation of hook_install().
 # */
 #function contest_install() {
-#  $day = 86400;
-#
-#  variable_set('export_dir', 'contest_export'); // The contest results export directory.
-#  variable_set('hog_days', 89);                 // The number of days between a persons eligibility to win another contest.
-#  variable_set('host_uid', 1);                  // The contest host's user id. We'll set it to the admin's to start.
-#  variable_set('min_age', 18);                  // The minimum age to enter the contest.
-#
-#// We'll use the admin's name as the default host's title.
-#
-#  $user = user_load(1);
-#  variable_set('host_title', $user->name);
-#
-#// The time period between a user's contest entries, (default is daily).
-#
-#  $periods = array(
-#    $day         => 'daily',
-#    (7 * $day)   => 'weekly',
-#    (30 * $day)  => 'monthly',
-#    (365 * $day) => 'yearly',
-#    2147483646   => 'once',
-#  );
-#  variable_set('period', $periods);
+  $config = config('contest.settings');
+
+// We'll use the admin's name as the default host's title.
+  $user = user_load(1);
+  $config->set('host_title', $user->name);
 #
 #  _contest_install_type_create();
 #
 #// Build some content blocks using the block system for storage.
 #
 #  $bid = _contest_install_block_add('Contest Terms and Conditions', _contest_install_tnc());
-#  variable_set('block_tnc', $bid);
+  $config->set('block_tnc', $bid);
+
+  $config->save();
 #}
 #/**
 # * Implementation of hook_requirements().

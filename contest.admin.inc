@@ -118,7 +118,7 @@ function contest_settings_form() {
 #  unset($form_state['values']['host']);
 #
 #  if ($uid) {
-#    variable_set('host_uid', $uid);
+#     config_set('contest.settings', 'host_uid', $uid);
 #  }
 #// Update the T&C content.
 #

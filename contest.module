@@ -72,31 +72,30 @@
 #function contest_cron() {
 #  _contest_purge_exports();
 #}
-#/**
-# * Implements hook_date_format_types().
-# */
-#function contest_date_format_types() {
-#  return array(
-#    'contest_date'  => t('Month Day Year'),
-#  );
-#}
-#/**
-# * Implementation of hook_date_formats().
-# * We want a simple date only format.
-# */
-#function contest_date_formats() {
-#  $formats = array(
-#    0 => array(
-#      'type'    => 'contest_date',
-#      'format'  => 'F j Y',
-#      'locales' => array(),
-#    ),
-#  );
-#  foreach ($formats as $format) {
-#    variable_set("date_format_{$format['type']}", $format['format']);
-#  }
-#  return $formats;
-#}
+/**
+ * Implements hook_date_format_types().
+ */
+function contest_date_format_types() {
+  return array(
+    'contest_date' => t('Month Day Year'),
+  );
+}
+/**
+ * Implementation of hook_date_formats().
+ * We want a simple date only format.
+ */
+function contest_date_formats() {
+  $formats = array(
+    0 => array(
+      'label' => 'Contest Date',
+      'pattern' => 'F j Y',
+    ),
+  );
+  foreach ($formats as $format) {
+     config_set('system.date', 'formats.contest_date', $format);
+  }
+  return $formats;
+}
 #/**
 # * Implementation of hook_entity_info_alter().
 # */
