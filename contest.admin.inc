@@ -197,7 +197,7 @@ function contest_settings_form_validate($form, &$form_state) {
   }
 // Non-existent contest host.
 
-#  if (!_contest_has_complete_profile($host, 'host')) {
-#    form_set_error('host', t('@name has an incomplete profile. If you have permission, you can click !link to edit.', array('@name' => $form_state['values']['host'], '!link' => l('here', "user/$host->uid/edit", array('attributes' => array('target' => '_blank'))))));
-#  }
+  if (!_contest_has_complete_profile($host, 'host')) {
+    form_set_error('host', t('@name has an incomplete profile. If you have permission, you can click !link to edit.', array('@name' => $form_state['values']['host'], '!link' => l('here', "user/$host->uid/edit", array('attributes' => array('target' => '_blank'))))));
+  }
 }
