@@ -101,7 +101,13 @@ function contest_settings_form() {
 #    '#format'        => _contest_get_block_body_format($cfg->get('block_tnc')),
 #    '#required'      => FALSE,
 #  );
-  return system_settings_form($form);
+  $form['submit'] = array(
+    '#type'   => 'submit',
+    '#value'  => t('Save'),
+    '#weight' => 100,
+  );
+  return $form;
+  #return system_settings_form($form);
 }
 /**
  * Custom submit function for the contest setting form.
