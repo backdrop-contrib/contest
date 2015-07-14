@@ -16,28 +16,28 @@
 #  backdrop_add_css(backdrop_get_path('module', 'contest') . '/css/contest.css');
 #  return theme('contest_admin_page', _contest_get_admin_page_data($node));
 #}
-#/**
-# * Implementation of hook_block_info().
-# */
-#function contest_block_info() {
-#  return array(
-#    'contest_list' => array(
-#      'info'       => t('Contest List'),
-#    ),
-#  );
-#}
-#/**
-# * Implementation of hook_block_view().
-# */
-#function contest_block_view($delta = '') {
-#  switch ($delta) {
-#    case 'contest_list':
-#      return array(
-#        'content' => theme('contest_list_block', _contest_get_list_data('block')),
-#      );
-#  }
-#  return array();
-#}
+/**
+ * Implementation of hook_block_info().
+ */
+function contest_block_info() {
+  return array(
+    'contest_list' => array(
+      'info'       => t('Contest List'),
+    ),
+  );
+}
+/**
+ * Implementation of hook_block_view().
+ */
+function contest_block_view($delta = '') {
+  switch ($delta) {
+    case 'contest_list':
+      return array(
+        'content' => theme('contest_list_block', _contest_get_list_data('block')),
+      );
+  }
+  return array();
+}
 #/**
 # * Clear an individual winner of a contest.
 # *
@@ -65,13 +65,13 @@
 #  }
 #  backdrop_goto("node/$nid/contest-admin");
 #}
-#/**
-# * Implimentation of hook_cron().
-# * Rebuild the custom taxonomy paths.
-# */
-#function contest_cron() {
-#  _contest_purge_exports();
-#}
+/**
+ * Implimentation of hook_cron().
+ * Rebuild the custom taxonomy paths.
+ */
+function contest_cron() {
+  _contest_purge_exports();
+}
 #/**
 # * Implements hook_date_format_types().
 # */
@@ -348,70 +348,70 @@
 #    form_set_error('contest_optin', t("You must agree to be contacted by the contest's sponsors and host to enter."));
 #  }
 #}
-#/**
-# * Export a complete list of contest entries.
-# *
-# * @param $node (object) The contest node.
-# */
-#function contest_export_entries($node) {
-#  $csv = '"email","name","address","city","state","zip","phone"' . "\n";
-#  $export_dir = config_get('contest.settings', 'export_dir');
-#  $file_dir = file_stream_wrapper_get_instance_by_uri('private://')->getDirectoryPath();
-#  $file_name = "contest_entries_{$node->nid}_" . REQUEST_TIME . '.csv';
-#
-#// Get a list of all the contest entries.
-#
-#  $rows = db_query("SELECT uid FROM {contest_entry} WHERE nid = :nid", array(':nid' => $node->nid))->fetchAll();
-#
-#  foreach ($rows as $row) {
-#    $usr = user_load($row->uid);
-#    if ($usr->uid) {
-#      $csv .= _contest_to_csv($usr);
-#    }
-#  }
-#// Print the export to a file and output it to the user.
-#
-#  $fh = fopen("$file_dir/$export_dir/$file_name", 'w+');
-#  fwrite($fh, $csv);
-#  fclose($fh);
-#
-#  header('Content-Type: application/csv');
-#  header("Content-Disposition: attachment; filename=$file_name");
-#  header('Pragma: no-cache');
-#  readfile("$file_dir/$export_dir/$file_name");
-#}
-#/**
-# * Export a list of unique entrants.
-# *
-# * @param $node (object) The contest node.
-# */
-#function contest_export_unique($node) {
-#  $csv = '"email","name","address","city","state","zip","phone"' . "\n";
-#  $export_dir = config_get('contest.settings', 'export_dir');
-#  $file_dir = file_stream_wrapper_get_instance_by_uri('private://')->getDirectoryPath();
-#  $file_name = "contest_unique_{$node->nid}_" . REQUEST_TIME . '.csv';
-#
-#// Get a list of unique contest users.
-#
-#  $rows = db_query("SELECT uid FROM {contest_entry} WHERE nid = :nid GROUP BY uid", array(':nid' => $node->nid))->fetchAll();
-#
-#  foreach ($rows as $row) {
-#    $usr = user_load($row->uid);
-#    if ($usr->uid) {
-#      $csv .= _contest_to_csv($usr);
-#    }
-#  }
-#// Print the export to a file and redirect the user to it.
-#
-#  $fh = fopen("$file_dir/$export_dir/$file_name", 'w+');
-#  fwrite($fh, $csv);
-#  fclose($fh);
-#
-#  header('Content-Type: application/csv');
-#  header("Content-Disposition: attachment; filename=$file_name");
-#  header('Pragma: no-cache');
-#  readfile("$file_dir/$export_dir/$file_name");
-#}
+/**
+ * Export a complete list of contest entries.
+ *
+ * @param $node (object) The contest node.
+ */
+function contest_export_entries($node) {
+  $csv = '"email","name","address","city","state","zip","phone"' . "\n";
+  $export_dir = config_get('contest.settings', 'export_dir');
+  $file_dir = file_stream_wrapper_get_instance_by_uri('private://')->getDirectoryPath();
+  $file_name = "contest_entries_{$node->nid}_" . REQUEST_TIME . '.csv';
+
+// Get a list of all the contest entries.
+
+  $rows = db_query("SELECT uid FROM {contest_entry} WHERE nid = :nid", array(':nid' => $node->nid))->fetchAll();
+
+  foreach ($rows as $row) {
+    $usr = user_load($row->uid);
+    if ($usr->uid) {
+      $csv .= _contest_to_csv($usr);
+    }
+  }
+// Print the export to a file and output it to the user.
+
+  $fh = fopen("$file_dir/$export_dir/$file_name", 'w+');
+  fwrite($fh, $csv);
+  fclose($fh);
+
+  header('Content-Type: application/csv');
+  header("Content-Disposition: attachment; filename=$file_name");
+  header('Pragma: no-cache');
+  readfile("$file_dir/$export_dir/$file_name");
+}
+/**
+ * Export a list of unique entrants.
+ *
+ * @param $node (object) The contest node.
+ */
+function contest_export_unique($node) {
+  $csv = '"email","name","address","city","state","zip","phone"' . "\n";
+  $export_dir = config_get('contest.settings', 'export_dir');
+  $file_dir = file_stream_wrapper_get_instance_by_uri('private://')->getDirectoryPath();
+  $file_name = "contest_unique_{$node->nid}_" . REQUEST_TIME . '.csv';
+
+// Get a list of unique contest users.
+
+  $rows = db_query("SELECT uid FROM {contest_entry} WHERE nid = :nid GROUP BY uid", array(':nid' => $node->nid))->fetchAll();
+
+  foreach ($rows as $row) {
+    $usr = user_load($row->uid);
+    if ($usr->uid) {
+      $csv .= _contest_to_csv($usr);
+    }
+  }
+// Print the export to a file and redirect the user to it.
+
+  $fh = fopen("$file_dir/$export_dir/$file_name", 'w+');
+  fwrite($fh, $csv);
+  fclose($fh);
+
+  header('Content-Type: application/csv');
+  header("Content-Disposition: attachment; filename=$file_name");
+  header('Pragma: no-cache');
+  readfile("$file_dir/$export_dir/$file_name");
+}
 #/**
 # * Implements hook_field_extra_fields().
 # */
@@ -503,13 +503,13 @@
 #  );
 #  return $extra;
 #}
-#/**
-# * Implimentation of hook_flush_caches().
-# */
-#function contest_flush_caches() {
-#  db_query("DELETE FROM {cache} WHERE cid LIKE 'contest-%'");
-#  return array();
-#}
+/**
+ * Implimentation of hook_flush_caches().
+ */
+function contest_flush_caches() {
+  db_query("DELETE FROM {cache} WHERE cid LIKE 'contest-%'");
+  return array();
+}
 #/**
 # * Implementation of hook_form().
 # */
@@ -660,23 +660,23 @@
 #    form_set_error('start', 'Contest must run for at least one day.');
 #  }
 #}
-#/**
-# * Implements hook_help().
-# */
-#function contest_help($path, $arg) {
-#  $output = '';
-#
-#  switch ($path) {
-#    case 'admin/help#contest':
-#      $output .= '<h3>' . t('About') . '</h3>';
-#      $output .= '<p>' . t('The contest module allows your site to host random games of chance, &ldquo;Sweepstakes&rdquo;. Where users can enter to win prizes via a random drawing.') . '</p>';
-#      $output .= '<p>' . t('Anonymous users can fill-in their personal information and a user will be created for them.') . '</p>';
-#      $output .= '<p>' . t('Logged in users with complete profiles can just click the &ldquo;Enter Contest&rdquo; button.') . '</p>';
-#      $output .= '<p>' . t("Winners can be selected via a contest's admin page or the entries exported and printed for a public drawing.") . '</p>';
-#      $output .= '<p>' . t('The same export can be provided to sponsors or affiliates for marketing purposes.') . '</p>';
-#      return $output;
-#  }
-#}
+/**
+ * Implements hook_help().
+ */
+function contest_help($path, $arg) {
+  $output = '';
+
+  switch ($path) {
+    case 'admin/help#contest':
+      $output .= '<h3>' . t('About') . '</h3>';
+      $output .= '<p>' . t('The contest module allows your site to host random games of chance, &ldquo;Sweepstakes&rdquo;. Where users can enter to win prizes via a random drawing.') . '</p>';
+      $output .= '<p>' . t('Anonymous users can fill-in their personal information and a user will be created for them.') . '</p>';
+      $output .= '<p>' . t('Logged in users with complete profiles can just click the &ldquo;Enter Contest&rdquo; button.') . '</p>';
+      $output .= '<p>' . t("Winners can be selected via a contest's admin page or the entries exported and printed for a public drawing.") . '</p>';
+      $output .= '<p>' . t('The same export can be provided to sponsors or affiliates for marketing purposes.') . '</p>';
+      return $output;
+  }
+}
 #/**
 # * Implementation of hook_insert().
 # */
@@ -698,14 +698,14 @@
 #  );
 #  return db_insert('contest')->fields($fields)->execute()? TRUE: FALSE;
 #}
-#/**
-# * Callback for the contest list page.
-# *
-# * @return (string) fully rendered HTML for the contest list page.
-# */
-#function contest_list_page() {
-#  return theme('contest_list_page', array('data' => _contest_get_list_data('teaser')));
-#}
+/**
+ * Callback for the contest list page.
+ *
+ * @return (string) fully rendered HTML for the contest list page.
+ */
+function contest_list_page() {
+  return theme('contest_list_page', array('data' => _contest_get_list_data('teaser')));
+}
 #/**
 # * Implementation of hook_load().
 # */
@@ -753,13 +753,13 @@ function contest_menu() {
     'file'             => 'contest.admin.inc',
     'type'             => MENU_NORMAL_ITEM,
   );
-#  $items['contest'] = array(
-#    'title'            => '!site_name Contests',
-#    'title arguments'  => array('!site_name' => 'Backdrop'),//variable_get('site_name', '')),
-#    'page callback'    => 'contest_list_page',
-#    'access arguments' => array('access content'),
-#    'type'             => MENU_NORMAL_ITEM,
-#  );
+  $items['contest'] = array(
+    'title'            => '!site_name Contests',
+    'title arguments'  => array('!site_name' => config_get('system.core', 'site_name')),
+    'page callback'    => 'contest_list_page',
+    'access arguments' => array('access content'),
+    'type'             => MENU_NORMAL_ITEM,
+  );
 #  $items['contest/clear-winners/%'] = array(
 #    'title'            => 'Clear Contest Winner(s)',
 #    'page callback'    => 'contest_clear_winners',
@@ -802,12 +802,12 @@ function contest_menu() {
 #    'access arguments' => array('edit contest'),
 #    'type'             => MENU_CALLBACK,
 #  );
-#  $items['contest/usr-autocomplete'] = array(
-#    'page callback'     => 'contest_usr_autocomplete',
-#    'delivery callback' => 'ajax_callback',
-#    'access arguments'  => array('access content'),
-#    'type'              => MENU_CALLBACK,
-#  );
+  $items['contest/usr-autocomplete'] = array(
+    'page callback'     => 'contest_usr_autocomplete',
+    'delivery callback' => 'ajax_callback',
+    'access arguments'  => array('access content'),
+    'type'              => MENU_CALLBACK,
+  );
 #  $items['node/%node/contest-admin'] = array(
 #    'title'            => 'Contest',
 #    'page callback'    => 'contest_admin_page',
@@ -835,17 +835,17 @@ function contest_menu() {
 #    ),
 #  );
 #}
-#/**
-# * Implementation of hook_permission().
-# */
-#function contest_permission() {
-#  return array(
-#    'administer contest' => array(
-#      'title'       => t('Administer the Contest Module'),
-#      'description' => t('Perform administration tasks for the contest module.'),
-#    ),
-#  );
-#}
+/**
+ * Implementation of hook_permission().
+ */
+function contest_permission() {
+  return array(
+    'administer contest' => array(
+      'title'       => t('Administer the Contest Module'),
+      'description' => t('Perform administration tasks for the contest module.'),
+    ),
+  );
+}
 #/**
 # * Pick a random winner of a contest.
 # *
@@ -959,32 +959,32 @@ function contest_menu() {
 #
 #  backdrop_goto("node/$node->nid/contest-admin");
 #}
-#/**
-# * Implimentation of hook_theme().
-# */
-#function contest_theme() {
-#  return array(
-#    'contest_admin_page' => array(
-#      'path'     => _contest_get_template_path('contest', 'contest-admin-page'),
-#      'template' => 'contest-admin-page',
-#    ),
-#    'contest_list_block' => array(
-#      'path'     => _contest_get_template_path('contest', 'contest-list-block'),
-#      'template' => 'contest-list-block',
-#    ),
-#    'contest_list_page' => array(
-#      'path'     => _contest_get_template_path('contest', 'contest-list-page'),
-#      'template' => 'contest-list-page',
-#    ),
-#    'contest_results' => array(
-#      'path'     => _contest_get_template_path('contest', 'contest-results'),
-#      'template' => 'contest-results',
-#    ),
-#    'contest_tnc' => array(
-#      'render element' => 'element',
-#    ),
-#  );
-#}
+/**
+ * Implimentation of hook_theme().
+ */
+function contest_theme() {
+  return array(
+    'contest_admin_page' => array(
+      'path'     => _contest_get_template_path('contest', 'contest-admin-page'),
+      'template' => 'contest-admin-page',
+    ),
+    'contest_list_block' => array(
+      'path'     => _contest_get_template_path('contest', 'contest-list-block'),
+      'template' => 'contest-list-block',
+    ),
+    'contest_list_page' => array(
+      'path'     => _contest_get_template_path('contest', 'contest-list-page'),
+      'template' => 'contest-list-page',
+    ),
+    'contest_results' => array(
+      'path'     => _contest_get_template_path('contest', 'contest-results'),
+      'template' => 'contest-results',
+    ),
+    'contest_tnc' => array(
+      'render element' => 'element',
+    ),
+  );
+}
 #/**
 # * Unpublish the winners of a contest.
 # *
@@ -1014,14 +1014,14 @@ function contest_menu() {
 #  );
 #  return db_update('contest')->fields($fields)->condition('vid', $node->vid)->execute()? TRUE: FALSE;
 #}
-#/**
-# * Callback for username auto-complete fields.
-# *
-# * @return (JSON) A username to username hash.
-# */
-#function contest_usr_autocomplete($name = '') {
-#  return backdrop_json_output(db_query("SELECT name, name FROM {users} WHERE name LIKE :name", array(':name' => "$name%"))->fetchAllKeyed());
-#}
+/**
+ * Callback for username auto-complete fields.
+ *
+ * @return (JSON) A username to username hash.
+ */
+function contest_usr_autocomplete($name = '') {
+  return backdrop_json_output(db_query("SELECT name, name FROM {users} WHERE name LIKE :name", array(':name' => "$name%"))->fetchAllKeyed());
+}
 #/**
 # * Implements hook_view().
 # */
@@ -1120,61 +1120,61 @@ function contest_menu() {
 #
 #  return $usr->uid;
 #}
-#/**
-# * Build and return a cache ID and resoectuve cached data.
-# *
-# * @param $seeds (string|mixed) Data used to build a unique cache ID.
-# *
-# * @return (array) A two element ordered array of: cache ID, cached data.
-# */
-#function _contest_cache_get($seeds = array()) {
-#  global $conf;
-#  $cid = FALSE;
-#  $seeds = (array) $seeds;
-#
-#  if (empty($conf['core_devel'])) {
-#    $cid = _contest_cid($seeds);
-#
-#    $cache = $cid? cache_get($cid): FALSE;
-#
-#    if ($cache !== FALSE) {
-#      return array($cid, $cache->data);
-#    }
-#  }
-#  return array($cid, FALSE);
-#}
-#/**
-# * Set the cache and return the data.
-# *
-# * @param $cid (string) The cache ID.
-# * @param $data (mixed) The cached data.
-# *
-# * @return $data (mixed) The submitted, (and cached) data.
-# */
-#function _contest_cache_set($cid, $data) {
-#  global $conf;
-#
-#  if (empty($conf['core_devel']) && !empty($cid)) {
-#    cache_set($cid, $data, 'cache', CACHE_TEMPORARY);
-#  }
-#  return $data;
-#}
-#/**
-# * Generate a cache ID.
-# *
-# * @param $args (string|array) The string(s) to build the cache ID from.
-# *
-# * @return $cid (string) A unique cache ID.
-# */
-#function _contest_cid($args = '') {
-#  $args = (array) $args;
-#  $cid = '';
-#
-#  foreach ($args as $arg) {
-#    $cid .= (is_array($arg) || is_object($arg))? _contest_cid($arg): "-$arg";
-#  }
-#  return ($cid && strlen($cid) < 255)? _contest_stroked($cid): 'contest-' . md5($cid);
-#}
+/**
+ * Build and return a cache ID and resoectuve cached data.
+ *
+ * @param $seeds (string|mixed) Data used to build a unique cache ID.
+ *
+ * @return (array) A two element ordered array of: cache ID, cached data.
+ */
+function _contest_cache_get($seeds = array()) {
+  global $conf;
+  $cid = FALSE;
+  $seeds = (array) $seeds;
+
+  if (empty($conf['core_devel'])) {
+    $cid = _contest_cid($seeds);
+
+    $cache = $cid? cache_get($cid): FALSE;
+
+    if ($cache !== FALSE) {
+      return array($cid, $cache->data);
+    }
+  }
+  return array($cid, FALSE);
+}
+/**
+ * Set the cache and return the data.
+ *
+ * @param $cid (string) The cache ID.
+ * @param $data (mixed) The cached data.
+ *
+ * @return $data (mixed) The submitted, (and cached) data.
+ */
+function _contest_cache_set($cid, $data) {
+  global $conf;
+
+  if (empty($conf['core_devel']) && !empty($cid)) {
+    cache_set($cid, $data, 'cache', CACHE_TEMPORARY);
+  }
+  return $data;
+}
+/**
+ * Generate a cache ID.
+ *
+ * @param $args (string|array) The string(s) to build the cache ID from.
+ *
+ * @return $cid (string) A unique cache ID.
+ */
+function _contest_cid($args = '') {
+  $args = (array) $args;
+  $cid = '';
+
+  foreach ($args as $arg) {
+    $cid .= (is_array($arg) || is_object($arg))? _contest_cid($arg): "-$arg";
+  }
+  return ($cid && strlen($cid) < 255)? _contest_stroked($cid): 'contest-' . md5($cid);
+}
 /**
  * Process the path into a OS safe string.
  *
@@ -1255,38 +1255,38 @@ function _contest_clean_path($path) {
 #
 #  return $usr->uid;
 #}
-#/**
-# * Create the export directory.
-# *
-# * @param $path (string) The export directory name.
-# *
-# * @return (bool) True if the directory exists, otherwise false.
-# */
-#function _contest_create_export_directory($path) {
-#  $path = _contest_clean_path($path);
-#  $wrapper = file_stream_wrapper_get_instance_by_uri('private://');
-#
-#  if (!$path || !$wrapper) {
-#    return FALSE;
-#  }
-#  $export_dir = $wrapper->getDirectoryPath() . "/$path";
-#
-#  if (!is_dir($export_dir)) {
-#    mkdir($export_dir);
-#    @chmod($export_dir, 0777);
-#  }
-#  return is_dir($export_dir);
-#}
-#/**
-# * Generate a password from an email address.
-# *
-# * @param $email (string) The user's email address.
-# *
-# * @return (string) A password that hopefully isn't too terrible.
-# */
-#function _contest_email_to_password($email = '') {
-#  return $email? preg_replace('/@.*/', '', $email) . '-' . substr(md5(REQUEST_TIME . rand(0, 100)), 0, rand(4, 6)): substr(md5(REQUEST_TIME . rand(0, 100)), 0, rand(8, 12));
-#}
+/**
+ * Create the export directory.
+ *
+ * @param $path (string) The export directory name.
+ *
+ * @return (bool) True if the directory exists, otherwise false.
+ */
+function _contest_create_export_directory($path) {
+  $path = _contest_clean_path($path);
+  $wrapper = file_stream_wrapper_get_instance_by_uri('private://');
+
+  if (!$path || !$wrapper) {
+    return FALSE;
+  }
+  $export_dir = $wrapper->getDirectoryPath() . "/$path";
+
+  if (!is_dir($export_dir)) {
+    mkdir($export_dir);
+    @chmod($export_dir, 0777);
+  }
+  return is_dir($export_dir);
+}
+/**
+ * Generate a password from an email address.
+ *
+ * @param $email (string) The user's email address.
+ *
+ * @return (string) A password that hopefully isn't too terrible.
+ */
+function _contest_email_to_password($email = '') {
+  return $email? preg_replace('/@.*/', '', $email) . '-' . substr(md5(REQUEST_TIME . rand(0, 100)), 0, rand(4, 6)): substr(md5(REQUEST_TIME . rand(0, 100)), 0, rand(8, 12));
+}
 #/**
 # * Build the data for a contest's admin page.
 # *
@@ -1364,226 +1364,226 @@ function _contest_clean_path($path) {
 #  );
 #  return _contest_cache_set($cid, array('data' => $data));
 #}
-#/**
-# * Retrieve the block body.
-# *
-# * @param $bid (int) The block ID.
-# *
-# * @return (string) The block body.
-# */
-#function _contest_get_block_body($bid = 0) {
-#  return db_query_range("SELECT body FROM {block_custom} WHERE bid = :bid", 0, 1, array(':bid' => $bid))->fetchField();
-#}
-#/**
-# * Retrieve the block body format.
-# *
-# * @param $bid (int) The block ID.
-# *
-# * @return (string) The block body format.
-# */
-#function _contest_get_block_body_format($bid = 0) {
-#  return db_query_range("SELECT format FROM {block_custom} WHERE bid = :bid", 0, 1, array(':bid' => $bid))->fetchField();
-#}
-#/**
-# * Return true if entered in the contest during this period, (configuarble).
-# *
-# * @param $nid (int) The node ID.
-# * @param $uid (int) The user's ID.
-# * @param $period (int) The seconds allowed between entries.
-# *
-# * @return (bool) True if the user has entered the contest already durring this period.
-# */
-#function _contest_get_entered($uid, $nid, $period) {
-#  $periods = config_get('contest.settings', 'period'));
-#  $fmt = array(
-#    86400    => 'Y-m-d',
-#    604800   => 'Y-W',
-#    2592000  => 'Y-m',
-#    31536000 => 'Y',
-#  );
-#// If it's a one entry contest check for an entry and return.
-#
-#  if ($periods[$period] == 'once') {
-#    return db_query_range("SELECT 1 FROM {contest_entry} WHERE uid = :uid AND nid = :nid", 0, 1, array(':nid' => $nid, ':uid' => $uid))->fetchField();
-#  }
-#// If we can't figure out the format. We'll assume the worst and return TRUE.
-#
-#  if (empty($fmt[$period])) {
-#    return TRUE;
-#  }
-#// Determin if the user has already enter the conetest.
-#
-#  $today = date($fmt[$period], REQUEST_TIME);
-#  $entered = date($fmt[$period], db_query_range("SELECT created FROM {contest_entry} WHERE uid = :uid AND nid = :nid ORDER BY created DESC", 0, 1, array(':nid' => $nid, ':uid' => $uid))->fetchField());
-#
-#  return ($entered == $today)? TRUE: FALSE;
-#}
-#/**
-# * Build the data needed to display the blog block.
-# *
-# * @return $data (array) An array of node objects prepared for render().
-# */
-#function _contest_get_list_data($view_mode = 'teaser') {
-#  $data = array();
-#  list($cid, $cache) = _contest_cache_get(__FUNCTION__);
-#
-#  if ($cache !== FALSE) {
-#    return $cache;
-#  }
-#  $stmt = "
-#    SELECT
-#      c.nid
-#    FROM
-#      {contest} c
-#      JOIN {node} n ON n.nid = c.nid
-#    WHERE
-#      n.status = 1
-#    ORDER BY
-#      n.sticky DESC,
-#      c.end ASC,
-#      c.start DESC,
-#      n.title ASC
-#  ";
-#  $rows = db_query($stmt)->fetchAll();
-#
-#  foreach ($rows as $row) {
-#    $node = node_load($row->nid);
-#    $data[] = node_view($node, $view_mode);
-#  }
-#  return _contest_cache_set($cid, array('data' => $data));
-#}
-#/**
-# * Build the data needed to display the results.
-# *
-# * @param $node (object) A node object.
-# *
-# * @return (array) A one elemet array of data to build the results.
-# */
-#function _contest_get_results_data($node = NULL) {
-#  $states = _contest_get_states(config_get('system.date', 'default_country'));
-#  $winners = array();
-#  $data = (object) array();
-#  list($cid, $cache) = _contest_cache_get(array(__FUNCTION__, $node->nid));
-#
-#  if ($cache !== FALSE) {
-#    return $cache;
-#  }
-#  $rows = db_query("SELECT winner, uid FROM {contest_entry} WHERE nid = :nid AND winner ORDER BY winner ASC", array(':nid' => $node->nid))->fetchAllKeyed();
-#
-#  foreach ($rows as $place => $uid) {
-#    $winners[$place] = _contest_usr_load(user_load($uid));
-#
-#    if (!empty($states[$winners[$place]->state])) {
-#      $winners[$place]->state = $states[$winners[$place]->state];
-#    }
-#  }
-#  $data = (object) array(
-#    'node'    => $node,
-#    'winners' => $winners,
-#  );
-#  return _contest_cache_set($cid, array('data' => $data));
-#}
-#/**
-# * Gets the states for the selected country.
-# *
-# * @param $country (string) The ISO country code.
-# *
-# * @return (array) An ISO code to country name hash.
-# */
-#function _contest_get_states($country = 'US') {
-#  switch ($country) {
-#    case 'CA':
-#      return array(
-#        'AB' => 'Alberta',
-#        'BC' => 'British Columbia',
-#        'MB' => 'Manitoba',
-#        'NB' => 'New Brunswick',
-#        'NL' => 'Newfoundland and Labrador',
-#        'NS' => 'Nova Scotia',
-#        'ON' => 'Ontario',
-#        'PE' => 'Prince Edward Island',
-#        'QC' => 'Quebec',
-#        'SK' => 'Saskatchewan',
-#        'NT' => 'Northwest Territories',
-#        'NU' => 'Nunavut',
-#        'YT' => 'Yukon',
-#      );
-#    case 'US':
-#      return array(
-#        'AL' => 'Alabama',
-#        'AK' => 'Alaska',
-#        'AZ' => 'Arizona',
-#        'AR' => 'Arkansas',
-#        'CA' => 'California',
-#        'CO' => 'Colorado',
-#        'CT' => 'Connecticut',
-#        'DE' => 'Delaware',
-#        'DC' => 'District Of Columbia',
-#        'FL' => 'Florida',
-#        'GA' => 'Georgia',
-#        'HI' => 'Hawaii',
-#        'ID' => 'Idaho',
-#        'IL' => 'Illinois',
-#        'IN' => 'Indiana',
-#        'IA' => 'Iowa',
-#        'KS' => 'Kansas',
-#        'KY' => 'Kentucky',
-#        'LA' => 'Louisiana',
-#        'ME' => 'Maine',
-#        'MD' => 'Maryland',
-#        'MA' => 'Massachusetts',
-#        'MI' => 'Michigan',
-#        'MN' => 'Minnesota',
-#        'MS' => 'Mississippi',
-#        'MO' => 'Missouri',
-#        'MT' => 'Montana',
-#        'NE' => 'Nebraska',
-#        'NV' => 'Nevada',
-#        'NH' => 'New Hampshire',
-#        'NJ' => 'New Jersey',
-#        'NM' => 'New Mexico',
-#        'NY' => 'New York',
-#        'NC' => 'North Carolina',
-#        'ND' => 'North Dakota',
-#        'OH' => 'Ohio',
-#        'OK' => 'Oklahoma',
-#        'OR' => 'Oregon',
-#        'PA' => 'Pennsylvania',
-#        'RI' => 'Rhode Island',
-#        'SC' => 'South Carolina',
-#        'SD' => 'South Dakota',
-#        'TN' => 'Tennessee',
-#        'TX' => 'Texas',
-#        'UT' => 'Utah',
-#        'VT' => 'Vermont',
-#        'VI' => 'Virgin Islands',
-#        'VA' => 'Virginia',
-#        'WA' => 'Washington',
-#        'WV' => 'West Virginia',
-#        'WI' => 'Wisconsin',
-#        'WY' => 'Wyoming',
-#      );
-#  }
-#  return array();
-#}
-#/**
-# * Scan the theme and module directories in that order for the template and return the path to the template's directory.
-# *
-# * @param $module (string) The module name, (without the suffix).
-# * @param $template (string) The template name, (without the suffixes).
-# *
-# * @return (string) A Backdrop path to the template's directory, (defaults to .../module/templates).
-# */
-#function _contest_get_template_path($module, $template = '') {
-#  $theme_path = backdrop_get_path('theme', variable_get('theme_default', 'garland'));
-#
-#  $scan = file_scan_directory($theme_path, "/^$template\.tpl\.php$/", array('recurse' => TRUE, 'filename' => TRUE));
-#
-#  if (!count($scan)) {
-#    $scan = file_scan_directory(backdrop_get_path('module', $module), "/^$template\.tpl\.php$/", array('recurse' => TRUE, 'filename' => TRUE));
-#  }
-#  return count($scan)? preg_replace('/(\/[^\/]+)$/', '', key($scan)):  backdrop_get_path('module', $module) . '/templates';
-#}
+/**
+ * Retrieve the block body.
+ *
+ * @param $bid (int) The block ID.
+ *
+ * @return (string) The block body.
+ */
+function _contest_get_block_body($bid = 0) {
+  return db_query_range("SELECT body FROM {block_custom} WHERE bid = :bid", 0, 1, array(':bid' => $bid))->fetchField();
+}
+/**
+ * Retrieve the block body format.
+ *
+ * @param $bid (int) The block ID.
+ *
+ * @return (string) The block body format.
+ */
+function _contest_get_block_body_format($bid = 0) {
+  return db_query_range("SELECT format FROM {block_custom} WHERE bid = :bid", 0, 1, array(':bid' => $bid))->fetchField();
+}
+/**
+ * Return true if entered in the contest during this period, (configuarble).
+ *
+ * @param $nid (int) The node ID.
+ * @param $uid (int) The user's ID.
+ * @param $period (int) The seconds allowed between entries.
+ *
+ * @return (bool) True if the user has entered the contest already durring this period.
+ */
+function _contest_get_entered($uid, $nid, $period) {
+  $periods = config_get('contest.settings', 'period');
+  $fmt = array(
+    86400    => 'Y-m-d',
+    604800   => 'Y-W',
+    2592000  => 'Y-m',
+    31536000 => 'Y',
+  );
+// If it's a one entry contest check for an entry and return.
+
+  if ($periods[$period] == 'once') {
+    return db_query_range("SELECT 1 FROM {contest_entry} WHERE uid = :uid AND nid = :nid", 0, 1, array(':nid' => $nid, ':uid' => $uid))->fetchField();
+  }
+// If we can't figure out the format. We'll assume the worst and return TRUE.
+
+  if (empty($fmt[$period])) {
+    return TRUE;
+  }
+// Determin if the user has already enter the conetest.
+
+  $today = date($fmt[$period], REQUEST_TIME);
+  $entered = date($fmt[$period], db_query_range("SELECT created FROM {contest_entry} WHERE uid = :uid AND nid = :nid ORDER BY created DESC", 0, 1, array(':nid' => $nid, ':uid' => $uid))->fetchField());
+
+  return ($entered == $today)? TRUE: FALSE;
+}
+/**
+ * Build the data needed to display the blog block.
+ *
+ * @return $data (array) An array of node objects prepared for render().
+ */
+function _contest_get_list_data($view_mode = 'teaser') {
+  $data = array();
+  list($cid, $cache) = _contest_cache_get(__FUNCTION__);
+
+  if ($cache !== FALSE) {
+    return $cache;
+  }
+  $stmt = "
+    SELECT
+      c.nid
+    FROM
+      {contest} c
+      JOIN {node} n ON n.nid = c.nid
+    WHERE
+      n.status = 1
+    ORDER BY
+      n.sticky DESC,
+      c.end ASC,
+      c.start DESC,
+      n.title ASC
+  ";
+  $rows = db_query($stmt)->fetchAll();
+
+  foreach ($rows as $row) {
+    $node = node_load($row->nid);
+    $data[] = node_view($node, $view_mode);
+  }
+  return _contest_cache_set($cid, array('data' => $data));
+}
+/**
+ * Build the data needed to display the results.
+ *
+ * @param $node (object) A node object.
+ *
+ * @return (array) A one elemet array of data to build the results.
+ */
+function _contest_get_results_data($node = NULL) {
+  $states = _contest_get_states(config_get('system.date', 'default_country'));
+  $winners = array();
+  $data = (object) array();
+  list($cid, $cache) = _contest_cache_get(array(__FUNCTION__, $node->nid));
+
+  if ($cache !== FALSE) {
+    return $cache;
+  }
+  $rows = db_query("SELECT winner, uid FROM {contest_entry} WHERE nid = :nid AND winner ORDER BY winner ASC", array(':nid' => $node->nid))->fetchAllKeyed();
+
+  foreach ($rows as $place => $uid) {
+    $winners[$place] = _contest_usr_load(user_load($uid));
+
+    if (!empty($states[$winners[$place]->state])) {
+      $winners[$place]->state = $states[$winners[$place]->state];
+    }
+  }
+  $data = (object) array(
+    'node'    => $node,
+    'winners' => $winners,
+  );
+  return _contest_cache_set($cid, array('data' => $data));
+}
+/**
+ * Gets the states for the selected country.
+ *
+ * @param $country (string) The ISO country code.
+ *
+ * @return (array) An ISO code to country name hash.
+ */
+function _contest_get_states($country = 'US') {
+  switch ($country) {
+    case 'CA':
+      return array(
+        'AB' => 'Alberta',
+        'BC' => 'British Columbia',
+        'MB' => 'Manitoba',
+        'NB' => 'New Brunswick',
+        'NL' => 'Newfoundland and Labrador',
+        'NS' => 'Nova Scotia',
+        'ON' => 'Ontario',
+        'PE' => 'Prince Edward Island',
+        'QC' => 'Quebec',
+        'SK' => 'Saskatchewan',
+        'NT' => 'Northwest Territories',
+        'NU' => 'Nunavut',
+        'YT' => 'Yukon',
+      );
+    case 'US':
+      return array(
+        'AL' => 'Alabama',
+        'AK' => 'Alaska',
+        'AZ' => 'Arizona',
+        'AR' => 'Arkansas',
+        'CA' => 'California',
+        'CO' => 'Colorado',
+        'CT' => 'Connecticut',
+        'DE' => 'Delaware',
+        'DC' => 'District Of Columbia',
+        'FL' => 'Florida',
+        'GA' => 'Georgia',
+        'HI' => 'Hawaii',
+        'ID' => 'Idaho',
+        'IL' => 'Illinois',
+        'IN' => 'Indiana',
+        'IA' => 'Iowa',
+        'KS' => 'Kansas',
+        'KY' => 'Kentucky',
+        'LA' => 'Louisiana',
+        'ME' => 'Maine',
+        'MD' => 'Maryland',
+        'MA' => 'Massachusetts',
+        'MI' => 'Michigan',
+        'MN' => 'Minnesota',
+        'MS' => 'Mississippi',
+        'MO' => 'Missouri',
+        'MT' => 'Montana',
+        'NE' => 'Nebraska',
+        'NV' => 'Nevada',
+        'NH' => 'New Hampshire',
+        'NJ' => 'New Jersey',
+        'NM' => 'New Mexico',
+        'NY' => 'New York',
+        'NC' => 'North Carolina',
+        'ND' => 'North Dakota',
+        'OH' => 'Ohio',
+        'OK' => 'Oklahoma',
+        'OR' => 'Oregon',
+        'PA' => 'Pennsylvania',
+        'RI' => 'Rhode Island',
+        'SC' => 'South Carolina',
+        'SD' => 'South Dakota',
+        'TN' => 'Tennessee',
+        'TX' => 'Texas',
+        'UT' => 'Utah',
+        'VT' => 'Vermont',
+        'VI' => 'Virgin Islands',
+        'VA' => 'Virginia',
+        'WA' => 'Washington',
+        'WV' => 'West Virginia',
+        'WI' => 'Wisconsin',
+        'WY' => 'Wyoming',
+      );
+  }
+  return array();
+}
+/**
+ * Scan the theme and module directories in that order for the template and return the path to the template's directory.
+ *
+ * @param $module (string) The module name, (without the suffix).
+ * @param $template (string) The template name, (without the suffixes).
+ *
+ * @return (string) A Backdrop path to the template's directory, (defaults to .../module/templates).
+ */
+function _contest_get_template_path($module, $template = '') {
+  $theme_path = backdrop_get_path('theme', variable_get('theme_default', 'garland'));
+
+  $scan = file_scan_directory($theme_path, "/^$template\.tpl\.php$/", array('recurse' => TRUE, 'filename' => TRUE));
+
+  if (!count($scan)) {
+    $scan = file_scan_directory(backdrop_get_path('module', $module), "/^$template\.tpl\.php$/", array('recurse' => TRUE, 'filename' => TRUE));
+  }
+  return count($scan)? preg_replace('/(\/[^\/]+)$/', '', key($scan)):  backdrop_get_path('module', $module) . '/templates';
+}
 #/**
 # * Extract the contest profile value from the user object.
 # *
@@ -1624,100 +1624,100 @@ function _contest_clean_path($path) {
 #  }
 #  return FALSE;
 #}
-#/**
-# * Generate a UNIX timestamp from an array.
-# *
-# * @param $date (array) An array with day, month and year.
-# *
-# * @return (int) A UNIX timestamp.
-# */
-#function _contest_mktime($date) {
-#  if (!isset($date['day']) || !isset($date['month']) || !isset($date['year'])) {
-#    return NULL;
-#  }
-#  return mktime(0, 0, 0, intval($date['month']), intval($date['day']), intval($date['year']));
-#}
-#/**
-# * Determine if the minimum age requirement has been met.
-# *
-# * @param $age (int|array) The birthdate in either UNIX time or an array with year, month, day.
-# *
-# * @return (bool) True if the minimum age requirement is met, otherwise false.
-# */
-#function _contest_min_age($age = NULL) {
-#  $min_date = mktime(0, 0, 0, intval(date('n')), intval(date('j')), (intval(date('Y')) - config_get('contest.settings', 'min_age')));
-#
-#  if (is_int($age)) {
-#    $birthday = $age;
-#  }
-#  elseif (isset($age['day']) && isset($age['month']) && isset($age['year'])) {
-#    $birthday = mktime(0, 0, 0, intval($age['month']), intval($age['day']), intval($age['year']));
-#  }
-#  else {
-#    return FALSE;
-#  }
-#  return ($birthday <= $min_date)? TRUE: FALSE;
-#}
-#/**
-# * Generate a unique username.
-# *
-# * @param $name (string) The user's name.
-# *
-# * @return $username (string) A unique username.
-# */
-#function _contest_name_gen($name) {
-#  $min = 10;
-#  $max = 99;
-#  $username = $name;
-#
-#  for ($i = $min; $i <= $max; $i++) {
-#    $found = db_query_range("SELECT 1 FROM {users} WHERE name = :name", 0, 1, array(':name' => $username))->fetchField();
-#
-#    if (!$found) {
-#      return $username;
-#    }
-#    $username = preg_replace('/\W/', '', strtolower($name)) . '-' . rand($min, $max);
-#  }
-#  return _contest_name_gen($username);
-#}
-#/**
-# * Delete the requested files.
-# *
-# * @param $file_regx (string) A posix regex.
-# * @param $age (int) The age of the files in seconds.
-# *
-# * @return (int) The number of files deleted.
-# */
-#function _contest_purge_dir($file_regx, $age) {
-#  $count = 0;
-#  $files = glob($file_regx);
-#
-#  foreach ($files as $file) {
-#    if (is_file($file) && (REQUEST_TIME - filemtime($file)) >= $age) {
-#      @chmod($file, 0777);
-#      unlink($file);
-#      $count++;
-#    }
-#  }
-#  return $count;
-#}
-#/**
-# * Remove old contest export files.
-# *
-# * @return (int|bool) The number of files deleted.
-# */
-#function _contest_purge_exports() {
-#  $max_age = 3600;
-#  $sub_dir = config_get('contest.settings', 'export_dir');
-#  $wrapper = file_stream_wrapper_get_instance_by_uri('private://');
-#
-#  if (!$sub_dir || !$wrapper) {
-#    return FALSE;
-#  }
-#  $file_regx = $wrapper->getDirectoryPath() . "/$sub_dir/*.csv";
-#
-#  return _contest_purge_dir($file_regx, $max_age);
-#}
+/**
+ * Generate a UNIX timestamp from an array.
+ *
+ * @param $date (array) An array with day, month and year.
+ *
+ * @return (int) A UNIX timestamp.
+ */
+function _contest_mktime($date) {
+  if (!isset($date['day']) || !isset($date['month']) || !isset($date['year'])) {
+    return NULL;
+  }
+  return mktime(0, 0, 0, intval($date['month']), intval($date['day']), intval($date['year']));
+}
+/**
+ * Determine if the minimum age requirement has been met.
+ *
+ * @param $age (int|array) The birthdate in either UNIX time or an array with year, month, day.
+ *
+ * @return (bool) True if the minimum age requirement is met, otherwise false.
+ */
+function _contest_min_age($age = NULL) {
+  $min_date = mktime(0, 0, 0, intval(date('n')), intval(date('j')), (intval(date('Y')) - config_get('contest.settings', 'min_age')));
+
+  if (is_int($age)) {
+    $birthday = $age;
+  }
+  elseif (isset($age['day']) && isset($age['month']) && isset($age['year'])) {
+    $birthday = mktime(0, 0, 0, intval($age['month']), intval($age['day']), intval($age['year']));
+  }
+  else {
+    return FALSE;
+  }
+  return ($birthday <= $min_date)? TRUE: FALSE;
+}
+/**
+ * Generate a unique username.
+ *
+ * @param $name (string) The user's name.
+ *
+ * @return $username (string) A unique username.
+ */
+function _contest_name_gen($name) {
+  $min = 10;
+  $max = 99;
+  $username = $name;
+
+  for ($i = $min; $i <= $max; $i++) {
+    $found = db_query_range("SELECT 1 FROM {users} WHERE name = :name", 0, 1, array(':name' => $username))->fetchField();
+
+    if (!$found) {
+      return $username;
+    }
+    $username = preg_replace('/\W/', '', strtolower($name)) . '-' . rand($min, $max);
+  }
+  return _contest_name_gen($username);
+}
+/**
+ * Delete the requested files.
+ *
+ * @param $file_regx (string) A posix regex.
+ * @param $age (int) The age of the files in seconds.
+ *
+ * @return (int) The number of files deleted.
+ */
+function _contest_purge_dir($file_regx, $age) {
+  $count = 0;
+  $files = glob($file_regx);
+
+  foreach ($files as $file) {
+    if (is_file($file) && (REQUEST_TIME - filemtime($file)) >= $age) {
+      @chmod($file, 0777);
+      unlink($file);
+      $count++;
+    }
+  }
+  return $count;
+}
+/**
+ * Remove old contest export files.
+ *
+ * @return (int|bool) The number of files deleted.
+ */
+function _contest_purge_exports() {
+  $max_age = 3600;
+  $sub_dir = config_get('contest.settings', 'export_dir');
+  $wrapper = file_stream_wrapper_get_instance_by_uri('private://');
+
+  if (!$sub_dir || !$wrapper) {
+    return FALSE;
+  }
+  $file_regx = $wrapper->getDirectoryPath() . "/$sub_dir/*.csv";
+
+  return _contest_purge_dir($file_regx, $max_age);
+}
 #/**
 # * Set a plain text user profile value.
 # *
@@ -1740,55 +1740,55 @@ function _contest_clean_path($path) {
 #    'safe_value' => !empty($values[$field])? check_plain($values[$field]): '',
 #  );
 #}
-#/**
-# * Convert the provided string to a lowercase stroke delimited string, (uppercase converted to lower, consecutive non alpha-numeric characters converted to a stroke).
-# *
-# * @param $txt (string) The string to convert.
-# *
-# * @return (string) A lowercase stroke delimited string.
-# */
-#function _contest_stroked($txt) {
-#  return preg_replace(array('/[^a-z0-9]+/', '/^-+|-+$/'), array('-', ''), strtolower($txt));
-#}
-#/**
-# * Return a single csv line for a contest.
-# *
-# * @param $usr (object) A user object.
-# *
-# * @return $csv (string) A comma seperated list of users.
-# */
-#function _contest_to_csv($usr) {
-#  $csv  = '"'  . (preg_replace('/"/', '\"', $usr->mail)) . '"';
-#  $csv .= ',"' . (preg_replace('/"/', '\"', _contest_get_usr_val($usr, 'field_contest_name'))) . '"';
-#  $csv .= ',"' . (preg_replace('/"/', '\"', _contest_get_usr_val($usr, 'field_contest_address'))) . '"';
-#  $csv .= ',"' . (preg_replace('/"/', '\"', _contest_get_usr_val($usr, 'field_contest_city'))) . '"';
-#  $csv .= ',"' . (preg_replace('/"/', '\"', _contest_get_usr_val($usr, 'field_contest_state'))) . '"';
-#  $csv .= ',"' . (preg_replace('/"/', '\"', _contest_get_usr_val($usr, 'field_contest_zip'))) . '"';
-#  $csv .= ',"' . (preg_replace('/"/', '\"', _contest_get_usr_val($usr, 'field_contest_phone'))) . '"';
-#
-#  return "$csv\n";
-#}
-#/**
-# * Create a summary from the provided text.
-# *
-# * @param $string (string) The string to trim.
-# * @param $max (int) The target length of the string.
-# *
-# * @return $txt (string) The provided text truncated to the requested length.
-# */
-#function _contest_trim($string, $max = 150) {
-#  $chars = 0;
-#  $txt = '';
-#
-#  foreach (preg_split('/\s+/', $string) as $atom) {
-#    $length = strlen($atom);
-#    if (($length + strlen($txt) + 1) > $max) {
-#      return preg_match('/<\/p>$/', $txt)? preg_replace('/<\/p>$/', '&hellip;</p>', $txt): "$txt&hellip;</p>";
-#    }
-#    $txt .= $txt? " $atom": $atom;
-#  }
-#  return $txt;
-#}
+/**
+ * Convert the provided string to a lowercase stroke delimited string, (uppercase converted to lower, consecutive non alpha-numeric characters converted to a stroke).
+ *
+ * @param $txt (string) The string to convert.
+ *
+ * @return (string) A lowercase stroke delimited string.
+ */
+function _contest_stroked($txt) {
+  return preg_replace(array('/[^a-z0-9]+/', '/^-+|-+$/'), array('-', ''), strtolower($txt));
+}
+/**
+ * Return a single csv line for a contest.
+ *
+ * @param $usr (object) A user object.
+ *
+ * @return $csv (string) A comma seperated list of users.
+ */
+function _contest_to_csv($usr) {
+  $csv  = '"'  . (preg_replace('/"/', '\"', $usr->mail)) . '"';
+  $csv .= ',"' . (preg_replace('/"/', '\"', _contest_get_usr_val($usr, 'field_contest_name'))) . '"';
+  $csv .= ',"' . (preg_replace('/"/', '\"', _contest_get_usr_val($usr, 'field_contest_address'))) . '"';
+  $csv .= ',"' . (preg_replace('/"/', '\"', _contest_get_usr_val($usr, 'field_contest_city'))) . '"';
+  $csv .= ',"' . (preg_replace('/"/', '\"', _contest_get_usr_val($usr, 'field_contest_state'))) . '"';
+  $csv .= ',"' . (preg_replace('/"/', '\"', _contest_get_usr_val($usr, 'field_contest_zip'))) . '"';
+  $csv .= ',"' . (preg_replace('/"/', '\"', _contest_get_usr_val($usr, 'field_contest_phone'))) . '"';
+
+  return "$csv\n";
+}
+/**
+ * Create a summary from the provided text.
+ *
+ * @param $string (string) The string to trim.
+ * @param $max (int) The target length of the string.
+ *
+ * @return $txt (string) The provided text truncated to the requested length.
+ */
+function _contest_trim($string, $max = 150) {
+  $chars = 0;
+  $txt = '';
+
+  foreach (preg_split('/\s+/', $string) as $atom) {
+    $length = strlen($atom);
+    if (($length + strlen($txt) + 1) > $max) {
+      return preg_match('/<\/p>$/', $txt)? preg_replace('/<\/p>$/', '&hellip;</p>', $txt): "$txt&hellip;</p>";
+    }
+    $txt .= $txt? " $atom": $atom;
+  }
+  return $txt;
+}
 #/**
 # * Build a more friendly user object.
 # *

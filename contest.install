@@ -5,32 +5,32 @@
  * The installation file for the contest module.
  */
 
-#/**
-# * Implementation of hook_enable().
-# * Create the profile fields and export directory.
-# */
-#function contest_enable() {
-#  $enabled = FALSE;
-#
-#// Enable the field_ui module, (we don't have it as a dependency so we can remove it later if we so choose).
-#
-#  if (!module_exists('field_ui')) {
-#    if (module_enable(array('field_ui'))) {
-#      $enabled = TRUE;
-#    }
-#    else {
-#      return _contest_install_feedback('Aborting! The field_ui module must exist to enable the contest module. It\'s not set as a dependency so it can be disabled later if desired.');
-#    }
-#  }
-#// Create the profile fields.
-#
+/**
+ * Implementation of hook_enable().
+ * Create the profile fields and export directory.
+ */
+function contest_enable() {
+  $enabled = FALSE;
+
+// Enable the field_ui module, (we don't have it as a dependency so we can remove it later if we so choose).
+
+  if (!module_exists('field_ui')) {
+    if (module_enable(array('field_ui'))) {
+      $enabled = TRUE;
+    }
+    else {
+      return _contest_install_feedback('Aborting! The field_ui module must exist to enable the contest module. It\'s not set as a dependency so it can be disabled later if desired.');
+    }
+  }
+// Create the profile fields.
+
 #  _contest_install_user_fields();
-#
-#// If we enabled the field_ui module disable it so we leave the site in the same state as we found it.
-#
-#  if ($enabled) {
-#    module_disable(array('field_ui'));
-#  }
+
+// If we enabled the field_ui module disable it so we leave the site in the same state as we found it.
+
+  if ($enabled) {
+    module_disable(array('field_ui'));
+  }
 #// Create the export direcory.
 #
 #  _contest_create_export_directory(config_get('contest.settings', 'export_dir'));
@@ -47,7 +47,7 @@
 #    'weight'   => 0,
 #  );
 #  field_update_instance($instance);
-#}
+}
 /**
  * Implementation of hook_install().
  */
@@ -59,11 +59,11 @@ function contest_install() {
   $cfg->set('host_title', $user->name);
 
 #  _contest_install_type_create();
-#
-#// Build some content blocks using the block system for storage.
-#
-#  $bid = _contest_install_block_add('Contest Terms and Conditions', _contest_install_tnc());
-#  $cfg->set('block_tnc', $bid);
+
+// Build some content blocks using the block system for storage.
+
+  $bid = _contest_install_block_add('Contest Terms and Conditions', _contest_install_tnc());
+  $cfg->set('block_tnc', $bid);
 
   $cfg->save();
 }
@@ -236,24 +236,33 @@ function contest_schema() {
  * Implementation of hook_uninstall()
  */
 function contest_uninstall() {
-#  $export_dir = config_get('contest.settings', 'export_dir');
-#  $wrapper = file_stream_wrapper_get_instance_by_uri('private://');
-#
-#// Remove the export directory.
-#
-#  if ($wrapper) {
-#    $export_dir = $wrapper->getDirectoryPath() . "/$export_dir";
-#    _contest_install_purge_dir("$export_dir/*", 0);
-#    @chmod($export_dir, 0777);
-#    rmdir($export_dir);
-#  }
-#// Delete the contest nodes and their body field.
-#
-#  $rows = db_query("SELECT nid FROM {node} n WHERE n.type = :type", array(':type' => 'contest'));
-#
-#  foreach ($rows as $row) {
-#    node_delete($row->nid);
-#  }
+   $cfg = config('contest.settings');
+  $export_dir = config_get('contest.settings', 'export_dir');
+  $wrapper = file_stream_wrapper_get_instance_by_uri('private://');
+
+// kDelete the T&C block.
+
+  db_delete('block_custom')->condition('bid', $cfg->get('block_tnc'))->execute();
+
+// Delete the configuration.
+
+   $cfg->delete();
+
+// Remove the export directory.
+
+  if ($wrapper) {
+    $export_dir = $wrapper->getDirectoryPath() . "/$export_dir";
+    _contest_install_purge_dir("$export_dir/*", 0);
+    @chmod($export_dir, 0777);
+    rmdir($export_dir);
+  }
+// Delete the contest nodes and their body field.
+
+  $rows = db_query("SELECT nid FROM {node} n WHERE n.type = :type", array(':type' => 'contest'));
+
+  foreach ($rows as $row) {
+    node_delete($row->nid);
+  }
 #  $instance = array(
 #    'field_name'  => 'body',
 #    'bundle'      => 'contest',
@@ -267,33 +276,33 @@ function contest_uninstall() {
 
   menu_cache_clear_all();
 }
-#/**
-# * Build some content blocks using the block system for storage.
-# *
-# * @param $info (string) The label used on the backend.
-# * @param $body (string) The content.
-# * @param $format (string) The input format.
-# *
-# * @return (int) The block ID.
-# */
-#function _contest_install_block_add($info, $body, $format = 'full_html') {
-#  $bid = db_query_range("SELECT bid FROM {block_custom} WHERE TRIM(LOWER(info)) = TRIM(LOWER(:info))", 0, 1, array(':info' => $info))->fetchField();
-#  $formats = filter_formats();
-#
-#  if ($bid) {
-#    return $bid;
-#  }
-#  $fields = array(
-#    'body'   => $body,
-#    'info'   => $info,
-#    'format' => !empty($formats[$format])? $format: key($formats),
-#  );
-#  $bid = db_insert('block_custom')->fields($fields)->execute();
-#
-#  _contest_install_feedback("Created Block: $bid - $info");
-#
-#  return $bid;
-#}
+/**
+ * Build some content blocks using the block system for storage.
+ *
+ * @param $info (string) The label used on the backend.
+ * @param $body (string) The content.
+ * @param $format (string) The input format.
+ *
+ * @return (int) The block ID.
+ */
+function _contest_install_block_add($info, $body, $format = 'full_html') {
+  $bid = db_query_range("SELECT bid FROM {block_custom} WHERE TRIM(LOWER(info)) = TRIM(LOWER(:info))", 0, 1, array(':info' => $info))->fetchField();
+  $formats = filter_formats();
+
+  if ($bid) {
+    return $bid;
+  }
+  $fields = array(
+    'body'   => $body,
+    'info'   => $info,
+    'format' => !empty($formats[$format])? $format: key($formats),
+  );
+  $bid = db_insert('block_custom')->fields($fields)->execute();
+
+  _contest_install_feedback("Created Block: $bid - $info");
+
+  return $bid;
+}
 /**
  * Send the feedback to the appropriate place.
  *
@@ -375,9 +384,9 @@ function _contest_install_tnc() {
     </ol>
   ";
 }
-#/**
-# * Create the contest content type.
-# */
+/**
+ * Create the contest content type.
+ */
 #function _contest_install_type_create() {
 #  $contest_node_type = array(
 #    'type'        => 'contest',
@@ -398,138 +407,138 @@ function _contest_install_tnc() {
 #  variable_set('node_preview_contest', '1');
 #  variable_set('node_submitted_contest', 0);
 #}
-#/**
-# * Create the user fields used by a contest.
-# */
-#function _contest_install_user_fields() {
-#  $field_prefix = 'field_contest';
-#  $fields = array(
-#    (object) array(
-#      'label'  => 'Real Name',
-#      'name'   => 'name',
-#      'desc'   => 'Your real name for contact/legal reasons.',
-#      'type'   => 'text',
-#      'widget' => 'textfield',
-#      'length' => 50,
-#    ),
-#    (object) array(
-#      'label'  => 'Business',
-#      'name'   => 'business',
-#      'desc'   => '',
-#      'type'   => 'text',
-#      'widget' => 'textfield',
-#      'length' => 50,
-#    ),
-#    (object) array(
-#      'label'  => 'Address',
-#      'name'   => 'address',
-#      'desc'   => '',
-#      'type'   => 'text',
-#      'widget' => 'textfield',
-#      'length' => 50,
-#    ),
-#    (object) array(
-#      'label'  => 'City',
-#      'name'   => 'city',
-#      'desc'   => '',
-#      'type'   => 'text',
-#      'widget' => 'textfield',
-#      'length' => 50,
-#    ),
-#    (object) array(
-#      'label'  => 'State',
-#      'name'   => 'state',
-#      'desc'   => '',
-#      'type'   => 'text',
-#      'widget' => 'textfield',
-#      'length' => 50,
-#    ),
-#    (object) array(
-#      'label'  => 'Zip',
-#      'name'   => 'zip',
-#      'desc'   => '',
-#      'type'   => 'text',
-#      'widget' => 'textfield',
-#      'length' => 10,
-#    ),
-#    (object) array(
-#      'label'  => 'Birthday',
-#      'name'   => 'birthdate',
-#      'desc'   => '',
-#      'type'   => 'datestamp',
-#      'widget' => 'select',
-#      'length' => 1,
-#    ),
-#    (object) array(
-#      'label'  => 'Phone',
-#      'name'   => 'phone',
-#      'desc'   => '',
-#      'type'   => 'text',
-#      'widget' => 'textfield',
-#      'length' => 20,
-#    ),
-#    (object) array(
-#      'label'  => 'Opt In',
-#      'name'   => 'optin',
-#      'desc'   => 'I would like to receive promotional efforts from the contest sponsors and promoters.',
-#      'type'   => 'list_boolean',
-#      'widget' => 'options_onoff',
-#      'length' => 1,
-#    ),
-#  );
-#  $weight = (count($fields) + 1) * -10;
-#
-#  foreach ($fields as $index => $field) {
-#    if (field_info_field("{$field_prefix}_{$field->name}")) {
-#      continue;
-#    }
-#    $prototype = array(
-#      'field_name' => "{$field_prefix}_{$field->name}",
-#      'type'       => $field->type,
-#      'settings'   => array('max_length' => $field->length),
-#    );
-#    if ($field->type == 'list_boolean') {
-#      $prototype['settings']['display_label'] = 1;
-#      $prototype['settings']['allowed_values'] = array(
-#        '0' => 'No',
-#        '1' => $field->label,
-#      );
-#    }
-#    elseif ($field->type == 'datestamp') {
-#      $prototype['settings']['granularity'] = array(
-#        'month'  => 'month',
-#        'day'    => 'day',
-#        'year'   => 'year',
-#        'hour'   => 0,
-#        'minute' => 0,
-#        'second' => 0,
-#      );
-#    }
-#    field_create_field($prototype);
-#
-#    $instance = array(
-#      'field_name'  => "{$field_prefix}_{$field->name}",
-#      'entity_type' => 'user',
-#      'label'       => $field->label,
-#      'bundle'      => 'user',
-#      'required'    => FALSE,
-#      'settings'    => array('user_register_form' => 0),
-#      'widget'      => array(
-#        'type'   => $field->widget,
-#        'weight' => $weight + ($index * 10),
-#      ),
-#    );
-#    if ($field->type == 'list_boolean') {
-#      $instance['settings']['allowed_values'] = array(
-#        '0' => 'No',
-#        '1' => $field->label,
-#      );
-#      $instance['widget']['settings']['display_label'] = 1;
-#      $instance['display']['default']['type'] = 'inline';
-#    }
-#    elseif ($field->type == 'datestamp') {
-#      $instance['widget']['settings']['year_range'] = '-100:+0';
-#    }
-#    field_create_instance($instance);
-#  }
-#}
+/**
+ * Create the user fields used by a contest.
+ */
+function _contest_install_user_fields() {
+  $field_prefix = 'field_contest';
+  $fields = array(
+    (object) array(
+      'label'  => 'Real Name',
+      'name'   => 'name',
+      'desc'   => 'Your real name for contact/legal reasons.',
+      'type'   => 'text',
+      'widget' => 'textfield',
+      'length' => 50,
+    ),
+    (object) array(
+      'label'  => 'Business',
+      'name'   => 'business',
+      'desc'   => '',
+      'type'   => 'text',
+      'widget' => 'textfield',
+      'length' => 50,
+    ),
+    (object) array(
+      'label'  => 'Address',
+      'name'   => 'address',
+      'desc'   => '',
+      'type'   => 'text',
+      'widget' => 'textfield',
+      'length' => 50,
+    ),
+    (object) array(
+      'label'  => 'City',
+      'name'   => 'city',
+      'desc'   => '',
+      'type'   => 'text',
+      'widget' => 'textfield',
+      'length' => 50,
+    ),
+    (object) array(
+      'label'  => 'State',
+      'name'   => 'state',
+      'desc'   => '',
+      'type'   => 'text',
+      'widget' => 'textfield',
+      'length' => 50,
+    ),
+    (object) array(
+      'label'  => 'Zip',
+      'name'   => 'zip',
+      'desc'   => '',
+      'type'   => 'text',
+      'widget' => 'textfield',
+      'length' => 10,
+    ),
+    (object) array(
+      'label'  => 'Birthday',
+      'name'   => 'birthdate',
+      'desc'   => '',
+      'type'   => 'datestamp',
+      'widget' => 'select',
+      'length' => 1,
+    ),
+    (object) array(
+      'label'  => 'Phone',
+      'name'   => 'phone',
+      'desc'   => '',
+      'type'   => 'text',
+      'widget' => 'textfield',
+      'length' => 20,
+    ),
+    (object) array(
+      'label'  => 'Opt In',
+      'name'   => 'optin',
+      'desc'   => 'I would like to receive promotional efforts from the contest sponsors and promoters.',
+      'type'   => 'list_boolean',
+      'widget' => 'options_onoff',
+      'length' => 1,
+    ),
+  );
+  $weight = (count($fields) + 1) * -10;
+
+  foreach ($fields as $index => $field) {
+    if (field_info_field("{$field_prefix}_{$field->name}")) {
+      continue;
+    }
+    $prototype = array(
+      'field_name' => "{$field_prefix}_{$field->name}",
+      'type'       => $field->type,
+      'settings'   => array('max_length' => $field->length),
+    );
+    if ($field->type == 'list_boolean') {
+      $prototype['settings']['display_label'] = 1;
+      $prototype['settings']['allowed_values'] = array(
+        '0' => 'No',
+        '1' => $field->label,
+      );
+    }
+    elseif ($field->type == 'datestamp') {
+      $prototype['settings']['granularity'] = array(
+        'month'  => 'month',
+        'day'    => 'day',
+        'year'   => 'year',
+        'hour'   => 0,
+        'minute' => 0,
+        'second' => 0,
+      );
+    }
+    field_create_field($prototype);
+
+    $instance = array(
+      'field_name'  => "{$field_prefix}_{$field->name}",
+      'entity_type' => 'user',
+      'label'       => $field->label,
+      'bundle'      => 'user',
+      'required'    => FALSE,
+      'settings'    => array('user_register_form' => 0),
+      'widget'      => array(
+        'type'   => $field->widget,
+        'weight' => $weight + ($index * 10),
+      ),
+    );
+    if ($field->type == 'list_boolean') {
+      $instance['settings']['allowed_values'] = array(
+        '0' => 'No',
+        '1' => $field->label,
+      );
+      $instance['widget']['settings']['display_label'] = 1;
+      $instance['display']['default']['type'] = 'inline';
+    }
+    elseif ($field->type == 'datestamp') {
+      $instance['widget']['settings']['year_range'] = '-100:+0';
+    }
+    field_create_instance($instance);
+  }
+}

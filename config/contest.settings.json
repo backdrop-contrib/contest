@@ -1,6 +1,7 @@
 {
   "_config_name": "contest.settings",
   "_config_static": false,
+  "block_tnc": 0,
   "export_dir": "contest_export",
   "hog_days": 89,
   "host_title": "admin",
