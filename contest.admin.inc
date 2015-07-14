@@ -86,28 +86,27 @@ function contest_settings_form() {
     '#required'      => TRUE,
     '#weight'        => 50,
   );
-#  $form['tnc'] = array(
-#    '#title'       => t('Terms & Conditions'),
-#    '#description' => t("The contest's terms and conditions."),
-#    '#type'        => 'fieldset',
-#    '#collapsible' => TRUE,
-#    '#collapsed'   => TRUE,
-#    '#weight'      => 60,
-#  );
-#  $form['tnc']['contest_block_tnc_content'] = array(
-#    '#type'          => 'text_format',
-#    '#description'   => t($token_description),
-#    '#default_value' => _contest_get_block_body($cfg->get('block_tnc')),
-#    '#format'        => _contest_get_block_body_format($cfg->get('block_tnc')),
-#    '#required'      => FALSE,
-#  );
+  $form['tnc'] = array(
+    '#title'       => t('Terms & Conditions'),
+    '#description' => t("The contest's terms and conditions."),
+    '#type'        => 'fieldset',
+    '#collapsible' => TRUE,
+    '#collapsed'   => TRUE,
+    '#weight'      => 60,
+  );
+  $form['tnc']['contest_block_tnc_content'] = array(
+    '#type'          => 'text_format',
+    '#description'   => t($token_description),
+    '#default_value' => _contest_get_block_body($cfg->get('block_tnc')),
+    '#format'        => _contest_get_block_body_format($cfg->get('block_tnc')),
+    '#required'      => FALSE,
+  );
   $form['submit'] = array(
     '#type'   => 'submit',
     '#value'  => t('Save'),
     '#weight' => 100,
   );
   return $form;
-  #return system_settings_form($form);
 }
 /**
  * Custom submit function for the contest setting form.
@@ -131,11 +130,11 @@ function contest_settings_form_submit($form, &$form_state) {
   }
 // Update the T&C content.
 
-#  $fields = array(
-#    'body'   => $form_state['values']['contest_block_tnc_content']['value'],
-#    'format' => $form_state['values']['contest_block_tnc_content']['format'],
-#  );
-#  db_update('block_custom')->fields($fields)->condition('bid', config_get('contest.settings', 'block_tnc'))->execute();
+  $fields = array(
+    'body'   => $form_state['values']['contest_block_tnc_content']['value'],
+    'format' => $form_state['values']['contest_block_tnc_content']['format'],
+  );
+  db_update('block_custom')->fields($fields)->condition('bid', config_get('contest.settings', 'block_tnc'))->execute();
 
 // .
 
@@ -153,11 +152,11 @@ function contest_settings_form_submit($form, &$form_state) {
     backdrop_set_message("Backdrop's file system private path needs to be configured. Please go to !link to configure.", array('!link' => l('File System', 'admin/config/media/file-system', array('target' => '_blank'))));
   }
   $old_dir = $wrapper->getDirectoryPath() . '/' . config_get('contest.settings', 'export_dir');
-#  _contest_purge_dir("$old_dir/*", 0);
-#  @chmod($old_dir, 0777);
-#  rmdir($old_dir);
+  _contest_purge_dir("$old_dir/*", 0);
+  @chmod($old_dir, 0777);
+  rmdir($old_dir);
 
-#  _contest_create_export_directory($path);
+  _contest_create_export_directory($path);
 
   $cfg->set('export_dir', $path);
 
@@ -167,37 +166,37 @@ function contest_settings_form_submit($form, &$form_state) {
  * Custom validation function for the contest setting form.
  */
 function contest_settings_form_validate($form, &$form_state) {
-#
-#// Directory name doesn't match requirements.
-#
-#  if (!preg_match('/^\w[\w\/]*\w$/', $form_state['values']['export_dir'])) {
-#    form_set_error('export_dir', t('The export directory can contain alpha-numeric characters, hyphens and slashes and must start and end with a alpha-numeric character.'));
-#  }
-#  if ($form_state['values']['export_dir'] !== config_get('contest.settings', 'export_dir')) {
-#    $wrapper = file_stream_wrapper_get_instance_by_uri('private://');
-#
-#// Private system path not configured.
-#
-#    if (!$wrapper) {
-#      form_set_error('export_dir', t("Backdrop's file system path needs to be configured. Please go to !link to configure.", array('!link' => l('File System', 'admin/config/media/file-system', array('target' => '_blank')))));
-#    }
-#    $path = $wrapper->getDirectoryPath() . '/' . _contest_clean_path($form_state['values']['export_dir']);
-#
-#// Directory already in use.
-#
-#    if (is_dir($path) || is_file($path)) {
-#      form_set_error('export_dir', t('That export directory is already in use.'));
-#    }
-#  }
-#// Non-existent contest host.
-#
-#  $host = user_load_by_name($form_state['values']['host']);
-#
-#  if (empty($host->uid)) {
-#    form_set_error('host', t('No user with that name: @name.', array('@name' => $form_state['values']['host'])));
-#  }
-#// Non-existent contest host.
-#
+
+// Directory name doesn't match requirements.
+
+  if (!preg_match('/^\w[\w\/]*\w$/', $form_state['values']['export_dir'])) {
+    form_set_error('export_dir', t('The export directory can contain alpha-numeric characters, hyphens and slashes and must start and end with a alpha-numeric character.'));
+  }
+  if ($form_state['values']['export_dir'] !== config_get('contest.settings', 'export_dir')) {
+    $wrapper = file_stream_wrapper_get_instance_by_uri('private://');
+
+// Private system path not configured.
+
+    if (!$wrapper) {
+      form_set_error('export_dir', t("Backdrop's file system path needs to be configured. Please go to !link to configure.", array('!link' => l('File System', 'admin/config/media/file-system', array('target' => '_blank')))));
+    }
+    $path = $wrapper->getDirectoryPath() . '/' . _contest_clean_path($form_state['values']['export_dir']);
+
+// Directory already in use.
+
+    if (is_dir($path) || is_file($path)) {
+      form_set_error('export_dir', t('That export directory is already in use.'));
+    }
+  }
+// Non-existent contest host.
+
+  $host = user_load_by_name($form_state['values']['host']);
+
+  if (empty($host->uid)) {
+    form_set_error('host', t('No user with that name: @name.', array('@name' => $form_state['values']['host'])));
+  }
+// Non-existent contest host.
+
 #  if (!_contest_has_complete_profile($host, 'host')) {
 #    form_set_error('host', t('@name has an incomplete profile. If you have permission, you can click !link to edit.', array('@name' => $form_state['values']['host'], '!link' => l('here', "user/$host->uid/edit", array('attributes' => array('target' => '_blank'))))));
 #  }
