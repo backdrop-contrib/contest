@@ -247,13 +247,6 @@ function contest_uninstall() {
 #    @chmod($export_dir, 0777);
 #    rmdir($export_dir);
 #  }
-#// Delete the variables.
-#
-#  $rows = db_query("SELECT name FROM {variable} WHERE name LIKE :name", array(':name' => 'contest\_%'))->fetchAll();
-#
-#  foreach ($rows as $row) {
-#    variable_del($row->name);
-#  }
 #// Delete the contest nodes and their body field.
 #
 #  $rows = db_query("SELECT nid FROM {node} n WHERE n.type = :type", array(':type' => 'contest'));
