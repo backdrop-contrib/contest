@@ -38,33 +38,33 @@ function contest_block_view($delta = '') {
   }
   return array();
 }
-#/**
-# * Clear an individual winner of a contest.
-# *
-# * @param $nid (int) The node ID.
-# * @param uid (int) The user's ID.
-# */
-#function contest_clear_winners($nid, $uid = NULL) {
-#  $published = db_query_range("SELECT publish_winners FROM {contest} WHERE nid = :nid", 0, 1, array(':nid' => $nid))->fetchField();
-#
-#  if ($published) {
-#    backdrop_set_message('You must unpublish contest winners before clearing a winner.', 'error');
-#  }
-#  elseif ($uid) {
-#    db_update('contest_entry')
-#      ->fields(array('winner' => 0))
-#      ->condition('nid', $nid)
-#      ->condition('uid', $uid)
-#      ->execute();
-#  }
-#  else {
-#    db_update('contest_entry')
-#      ->fields(array('winner' => 0))
-#      ->condition('nid', $nid)
-#      ->execute();
-#  }
-#  backdrop_goto("node/$nid/contest-admin");
-#}
+/**
+ * Clear an individual winner of a contest.
+ *
+ * @param $nid (int) The node ID.
+ * @param uid (int) The user's ID.
+ */
+function contest_clear_winners($nid, $uid = NULL) {
+  $published = db_query_range("SELECT publish_winners FROM {contest} WHERE nid = :nid", 0, 1, array(':nid' => $nid))->fetchField();
+
+  if ($published) {
+    backdrop_set_message('You must unpublish contest winners before clearing a winner.', 'error');
+  }
+  elseif ($uid) {
+    db_update('contest_entry')
+      ->fields(array('winner' => 0))
+      ->condition('nid', $nid)
+      ->condition('uid', $uid)
+      ->execute();
+  }
+  else {
+    db_update('contest_entry')
+      ->fields(array('winner' => 0))
+      ->condition('nid', $nid)
+      ->execute();
+  }
+  backdrop_goto("node/$nid/contest-admin");
+}
 /**
  * Implimentation of hook_cron().
  * Rebuild the custom taxonomy paths.
@@ -72,39 +72,39 @@ function contest_block_view($delta = '') {
 function contest_cron() {
   _contest_purge_exports();
 }
-#/**
-# * Implements hook_date_format_types().
-# */
-#function contest_date_format_types() {
-#  return array(
-#    'contest_date' => t('Month Day Year'),
-#  );
-#}
-#/**
-# * Implementation of hook_date_formats().
-# * We want a simple date only format.
-# */
-#function contest_date_formats() {
-#  $formats = array(
-#    0 => array(
-#      'label' => 'Contest Date',
-#      'pattern' => 'F j Y',
-#    ),
-#  );
-#  foreach ($formats as $format) {
-#     config_set('system.date', 'formats.contest_date', $format);
-#  }
-#  return $formats;
-#}
-#/**
-# * Implementation of hook_entity_info_alter().
-# */
-#function contest_entity_info_alter(&$entity_info) {
-#  $entity_info['node']['view modes']['block'] = array(
-#    'label'           => t('Block View'),
-#    'custom settings' => TRUE,
-#  );
-#}
+/**
+ * Implements hook_date_format_types().
+ */
+function contest_date_format_types() {
+  return array(
+    'contest_date' => t('Month Day Year'),
+  );
+}
+/**
+ * Implementation of hook_date_formats().
+ * We want a simple date only format.
+ */
+function contest_date_formats() {
+  $formats = array(
+    0 => array(
+      'label' => 'Contest Date',
+      'pattern' => 'F j Y',
+    ),
+  );
+  foreach ($formats as $format) {
+     config_set('system.date', 'formats.contest_date', $format);
+  }
+  return $formats;
+}
+/**
+ * Implementation of hook_entity_info_alter().
+ */
+function contest_entity_info_alter(&$entity_info) {
+  $entity_info['node']['view modes']['block'] = array(
+    'label'           => t('Block View'),
+    'custom settings' => TRUE,
+  );
+}
 #/**
 # * Contest entry form.
 # *
@@ -412,97 +412,97 @@ function contest_export_unique($node) {
   header('Pragma: no-cache');
   readfile("$file_dir/$export_dir/$file_name");
 }
-#/**
-# * Implements hook_field_extra_fields().
-# */
-#function contest_field_extra_fields() {
-#  $extra['node']['contest'] = array(
-#    'display' => array(
-#      'contest_entry_form' => array(
-#        'label'       => t('Contest Entry Form'),
-#        'description' => t('Allows a user to enter a contest.'),
-#        'weight'      => 1,
-#        'display' => array(
-#          'default' => array(
-#            'weight'  => 1,
-#            'visible' => TRUE,
-#          ),
-#          'full' => array(
-#            'weight'  => 1,
-#            'visible' => TRUE,
-#          ),
-#          'teaser' => array(
-#            'weight'  => 1,
-#            'visible' => FALSE,
-#          ),
-#          'block' => array(
-#            'weight'  => 1,
-#            'visible' => FALSE,
-#          ),
-#          'rss' => array(
-#            'weight'  => 1,
-#            'visible' => FALSE,
-#          ),
-#        ),
-#      ),
-#      'contest_results' => array(
-#        'label'       => t('Contest Results'),
-#        'description' => t('Displays the contest results.'),
-#        'weight'      => 2,
-#        'display' => array(
-#          'default' => array(
-#            'weight'  => 2,
-#            'visible' => TRUE,
-#          ),
-#          'full' => array(
-#            'weight'  => 2,
-#            'visible' => TRUE,
-#          ),
-#          'teaser' => array(
-#            'weight'  => 2,
-#            'visible' => FALSE,
-#          ),
-#          'block' => array(
-#            'weight'  => 2,
-#            'visible' => FALSE,
-#          ),
-#          'rss' => array(
-#            'weight'  => 2,
-#            'visible' => FALSE,
-#          ),
-#        ),
-#      ),
-#      'contest_tnc' => array(
-#        'label'       => t('Contest T&C'),
-#        'description' => t("The contest's terms and conditions."),
-#        'weight'      => 3,
-#        'display' => array(
-#          'default' => array(
-#            'weight'  => 3,
-#            'visible' => TRUE,
-#          ),
-#          'full' => array(
-#            'weight'  => 3,
-#            'visible' => TRUE,
-#          ),
-#          'teaser' => array(
-#            'weight'  => 3,
-#            'visible' => FALSE,
-#          ),
-#          'block' => array(
-#            'weight'  => 3,
-#            'visible' => FALSE,
-#          ),
-#          'rss' => array(
-#            'weight'  => 3,
-#            'visible' => FALSE,
-#          ),
-#        ),
-#      ),
-#    ),
-#  );
-#  return $extra;
-#}
+/**
+ * Implements hook_field_extra_fields().
+ */
+function contest_field_extra_fields() {
+  $extra['node']['contest'] = array(
+    'display' => array(
+      'contest_entry_form' => array(
+        'label'       => t('Contest Entry Form'),
+        'description' => t('Allows a user to enter a contest.'),
+        'weight'      => 1,
+        'display' => array(
+          'default' => array(
+            'weight'  => 1,
+            'visible' => TRUE,
+          ),
+          'full' => array(
+            'weight'  => 1,
+            'visible' => TRUE,
+          ),
+          'teaser' => array(
+            'weight'  => 1,
+            'visible' => FALSE,
+          ),
+          'block' => array(
+            'weight'  => 1,
+            'visible' => FALSE,
+          ),
+          'rss' => array(
+            'weight'  => 1,
+            'visible' => FALSE,
+          ),
+        ),
+      ),
+      'contest_results' => array(
+        'label'       => t('Contest Results'),
+        'description' => t('Displays the contest results.'),
+        'weight'      => 2,
+        'display' => array(
+          'default' => array(
+            'weight'  => 2,
+            'visible' => TRUE,
+          ),
+          'full' => array(
+            'weight'  => 2,
+            'visible' => TRUE,
+          ),
+          'teaser' => array(
+            'weight'  => 2,
+            'visible' => FALSE,
+          ),
+          'block' => array(
+            'weight'  => 2,
+            'visible' => FALSE,
+          ),
+          'rss' => array(
+            'weight'  => 2,
+            'visible' => FALSE,
+          ),
+        ),
+      ),
+      'contest_tnc' => array(
+        'label'       => t('Contest T&C'),
+        'description' => t("The contest's terms and conditions."),
+        'weight'      => 3,
+        'display' => array(
+          'default' => array(
+            'weight'  => 3,
+            'visible' => TRUE,
+          ),
+          'full' => array(
+            'weight'  => 3,
+            'visible' => TRUE,
+          ),
+          'teaser' => array(
+            'weight'  => 3,
+            'visible' => FALSE,
+          ),
+          'block' => array(
+            'weight'  => 3,
+            'visible' => FALSE,
+          ),
+          'rss' => array(
+            'weight'  => 3,
+            'visible' => FALSE,
+          ),
+        ),
+      ),
+    ),
+  );
+  return $extra;
+}
 /**
  * Implimentation of hook_flush_caches().
  */
@@ -818,23 +818,23 @@ function contest_menu() {
 #  );
   return $items;
 }
-#/**
-# * Implementation of hook_node_info().
-# */
-#function contest_node_info() {
-#  return array(
-#    'contest' => array(
-#      'name'        => t('Contest'),
-#      'description' => t('A <em>contest</em> is a content type that allows a user to enter to win prizes via a random selection.'),
-#      'base'        => 'contest',
-#      'has_body'    => TRUE,
-#      'has_title'   => TRUE,
-#      'title_label' => t('Title'),
-#      'help'        => '',
-#      'locked'      => TRUE,
-#    ),
-#  );
-#}
+/**
+ * Implementation of hook_node_info().
+ */
+function contest_node_info() {
+  return array(
+    'contest' => array(
+      'name'        => t('Contest'),
+      'description' => t('A <em>contest</em> is a content type that allows a user to enter to win prizes via a random selection.'),
+      'base'        => 'contest',
+      'has_body'    => TRUE,
+      'has_title'   => TRUE,
+      'title_label' => t('Title'),
+      'help'        => '',
+      'locked'      => TRUE,
+    ),
+  );
+}
 /**
  * Implementation of hook_permission().
  */
@@ -985,15 +985,15 @@ function contest_theme() {
     ),
   );
 }
-#/**
-# * Unpublish the winners of a contest.
-# *
-# * @param $nid (int) The node ID.
-# */
-#function contest_unpublish_winners($node) {
-#  db_update('contest')->fields(array('publish_winners' => 0))->condition('nid', $node->nid)->execute();
-#  backdrop_goto("node/$node->nid/contest-admin");
-#}
+/**
+ * Unpublish the winners of a contest.
+ *
+ * @param $nid (int) The node ID.
+ */
+function contest_unpublish_winners($node) {
+  db_update('contest')->fields(array('publish_winners' => 0))->condition('nid', $node->nid)->execute();
+  backdrop_goto("node/$node->nid/contest-admin");
+}
 #/**
 # * Implementation of hook_update().
 # */
@@ -1082,44 +1082,44 @@ function contest_usr_autocomplete($name = '') {
 #  );
 #  return $form;
 #}
-#/**
-# * Laod or add a user and return their ID.
-# *
-# * @param $name (string) The user name.
-# * @param $email (string) The user email.
-# *
-# * @return (int) The user's ID.
-# *
-# */
-#function _contest_add_usr($name, $email) {
-#  $email = strtolower(trim($email));
-#
-#  if (!$name || !$email) {
-#    return NULL;
-#  }
-#// Try to load the user.
-#
-#  $usr = user_load_by_mail($email);
-#
-#  if (empty($usr->uid)) {
-#    $usr = user_load_by_name($name);
-#  }
-#// If they don't exist, create them.
-#
-#  if (empty($usr->uid)) {
-#    $args = array(
-#      'mail'   => $email,
-#      'name'   => _contest_name_gen($name),
-#      'pass'   => _contest_email_to_password($email),
-#      'roles'  => array(2 => 'authenticated user'),
-#      'status' => 1,
-#    );
-#    $usr = user_save($usr, $args);
-#  }
-#// Return the user's id.
-#
-#  return $usr->uid;
-#}
+/**
+ * Load or add a user and return their ID.
+ *
+ * @param $name (string) The user name.
+ * @param $email (string) The user email.
+ *
+ * @return (int) The user's ID.
+ *
+ */
+function _contest_add_usr($name, $email) {
+  $email = strtolower(trim($email));
+
+  if (!$name || !$email) {
+    return NULL;
+  }
+// Try to load the user.
+
+  $usr = user_load_by_mail($email);
+
+  if (empty($usr->uid)) {
+    $usr = user_load_by_name($name);
+  }
+// If they don't exist, create them.
+
+  if (empty($usr->uid)) {
+    $args = array(
+      'mail'   => $email,
+      'name'   => _contest_name_gen($name),
+      'pass'   => _contest_email_to_password($email),
+      'roles'  => array(2 => 'authenticated user'),
+      'status' => 1,
+    );
+    $usr = user_save($usr, $args);
+  }
+// Return the user's id.
+
+  return $usr->uid;
+}
 /**
  * Build and return a cache ID and resoectuve cached data.
  *

@@ -24,29 +24,29 @@ function contest_enable() {
   }
 // Create the profile fields.
 
-#  _contest_install_user_fields();
+  _contest_install_user_fields();
 
 // If we enabled the field_ui module disable it so we leave the site in the same state as we found it.
 
   if ($enabled) {
     module_disable(array('field_ui'));
   }
-#// Create the export direcory.
-#
-#  _contest_create_export_directory(config_get('contest.settings', 'export_dir'));
-#
-#// Set the display settings for the "block" view mode.
-#
-#  $instance = field_read_instance('node', 'body', 'contest');
-#
-#  $instance['display']['block'] = array(
-#    'label'    => 'hidden',
-#    'type'     => 'text_summary_or_trimmed',
-#    'settings' => array('trim_length' => 100),
-#    'module'   => 'text',
-#    'weight'   => 0,
-#  );
-#  field_update_instance($instance);
+// Create the export direcory.
+
+  _contest_create_export_directory(config_get('contest.settings', 'export_dir'));
+
+// Set the display settings for the "block" view mode.
+
+  $instance = field_read_instance('node', 'body', 'contest');
+
+  $instance['display']['block'] = array(
+    'label'    => 'hidden',
+    'type'     => 'text_summary_or_trimmed',
+    'settings' => array('trim_length' => 100),
+    'module'   => 'text',
+    'weight'   => 0,
+  );
+  field_update_instance($instance);
 }
 /**
  * Implementation of hook_install().
@@ -58,7 +58,7 @@ function contest_install() {
   $user = user_load(1);
   $cfg->set('host_title', $user->name);
 
-#  _contest_install_type_create();
+  _contest_install_type_create();
 
 // Build some content blocks using the block system for storage.
 
@@ -240,7 +240,7 @@ function contest_uninstall() {
   $export_dir = config_get('contest.settings', 'export_dir');
   $wrapper = file_stream_wrapper_get_instance_by_uri('private://');
 
-// kDelete the T&C block.
+// Delete the T&C block.
 
   db_delete('block_custom')->condition('bid', $cfg->get('block_tnc'))->execute();
 
@@ -263,13 +263,13 @@ function contest_uninstall() {
   foreach ($rows as $row) {
     node_delete($row->nid);
   }
-#  $instance = array(
-#    'field_name'  => 'body',
-#    'bundle'      => 'contest',
-#    'entity_type' => 'node',
-#  );
-#  field_delete_instance($instance);
-#
+  $instance = array(
+    'field_name'  => 'body',
+    'bundle'      => 'contest',
+    'entity_type' => 'node',
+  );
+  field_delete_instance($instance);
+
 // Delete menu links.
 
   db_delete('menu_links')->condition('module', 'contest')->execute();
@@ -387,26 +387,26 @@ function _contest_install_tnc() {
 /**
  * Create the contest content type.
  */
-#function _contest_install_type_create() {
-#  $contest_node_type = array(
-#    'type'        => 'contest',
-#    'name'        => t('Contest'),
-#    'base'        => 'contest',
-#    'description' => t('A <em>contest</em> is a content type that allows a user to enter to win prizes via a random selection.'),
-#    'custom'      => FALSE,
-#    'modified'    => FALSE,
-#    'locked'      => TRUE,
-#  );
-#  $contest_node_type = node_type_set_defaults($contest_node_type);
-#
-#  node_add_body_field($contest_node_type);
-#
-#  node_type_save($contest_node_type);
-#
-#  variable_set('node_options_contest', array('status'));
-#  variable_set('node_preview_contest', '1');
-#  variable_set('node_submitted_contest', 0);
-#}
+function _contest_install_type_create() {
+  $contest_node_type = array(
+    'type'        => 'contest',
+    'name'        => t('Contest'),
+    'base'        => 'contest',
+    'description' => t('A <em>contest</em> is a content type that allows a user to enter to win prizes via a random selection.'),
+    'custom'      => FALSE,
+    'modified'    => FALSE,
+    'locked'      => TRUE,
+  );
+  $contest_node_type = node_type_set_defaults($contest_node_type);
+
+  node_add_body_field($contest_node_type);
+
+  node_type_save($contest_node_type);
+
+  variable_set('node_options_contest', array('status'));
+  variable_set('node_preview_contest', '1');
+  variable_set('node_submitted_contest', 0);
+}
 /**
  * Create the user fields used by a contest.
  */
