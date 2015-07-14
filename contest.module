@@ -622,8 +622,9 @@ function contest_form_submit($form, &$form_state) {
  * Implementation of hook_form_alter().
  */
 function contest_form_user_profile_form_alter(&$form, &$form_state) {
+  $birthdate = !empty($form['field_contest_birthdate'][LANGUAGE_NONE][0]['#default_value']['value'])? $form['field_contest_birthdate'][LANGUAGE_NONE][0]['#default_value']['value']: REQUEST_TIME;
   $states = _contest_get_states(config_get('system.date', 'default_country'));
-dpm(array($states, $form, $form_state));
+
   if (!empty($states)) {
     $form['field_contest_state'][LANGUAGE_NONE][0]['value']['#type'] = 'select';
     $form['field_contest_state'][LANGUAGE_NONE][0]['value']['#options'] = array_merge(array('' => t(' -Select- ')), $states);
@@ -633,6 +634,19 @@ dpm(array($states, $form, $form_state));
     $form['field_contest_state'][LANGUAGE_NONE][0]['value']['#access'] = FALSE;
     $form['field_contest_state'][LANGUAGE_NONE][0]['value']['#required'] = FALSE;
   }
+  $form['field_contest_birthdate'][LANGUAGE_NONE][0]['#type'] = 'date';
+  $form['field_contest_birthdate'][LANGUAGE_NONE][0]['#default_value'] = array(
+    'month' => format_date($birthdate, 'custom', 'n'),
+    'day'   => format_date($birthdate, 'custom', 'j'),
+    'year'  => format_date($birthdate, 'custom', 'Y'),
+  );
+  array_unshift($form['#submit'], 'contest_profile_form_submit');
+}
+/**
+ * .
+ */
+function contest_profile_form_submit($form, &$form_state) {
+  $form_state['values']['field_contest_birthdate'][LANGUAGE_NONE][0]['value'] = _contest_mktime($form_state['input']['field_contest_birthdate'][LANGUAGE_NONE][0]);
 }
 /**
  * Custom validation function.
