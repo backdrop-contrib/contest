@@ -1,10 +1,10 @@
 <?php
 
-#/**
-# * @file
-# * The installation file for the contest module.
-# */
-#
+/**
+ * @file
+ * The installation file for the contest module.
+ */
+
 #/**
 # * Implementation of hook_enable().
 # * Create the profile fields and export directory.
@@ -67,174 +67,175 @@ function contest_install() {
 
   $cfg->save();
 }
-#/**
-# * Implementation of hook_requirements().
-# * We need the private path, country and timezone configured.
-# */
-#function contest_requirements($phase) {
-#  $reqs = array();
-#
-#  switch ($phase) {
-#    case 'install':
-#      if (!file_stream_wrapper_get_instance_by_uri('private://')) {
-#        $reqs['system'] = array(
-#          'title'       => 'File System',
-#          'value'       => t("Private file system path isn't configured."),
-#          'severity'    => REQUIREMENT_ERROR,
-#          'description' => t("Aborting! Backdrop's file system path needs to be configured. Please go to !link to configure.<br />\n", array('!link' => l('file system', 'admin/config/media/file-system', array('attributes' => array('target' => '_blank'))))),
-#        );
-#      }
-#      if (!variable_get('site_default_country', NULL)) {
-#        $reqs['system'] = array(
-#          'title'       => 'Default Country',
-#          'value'       => t("The default country isn't configured."),
-#          'severity'    => REQUIREMENT_ERROR,
-#          'description' => t("Aborting! The default country needs to be configured. Please go to !link to configure.<br />\n", array('!link' => l('regional settings', 'admin/config/regional/settings', array('attributes' => array('target' => '_blank'))))),
-#        );
-#      }
-#      if (!variable_get('date_default_timezone', NULL)) {
-#        $reqs['system'] = array(
-#          'title'       => 'Default Timezone',
-#          'value'       => t("The default timezone isn't configured."),
-#          'severity'    => REQUIREMENT_ERROR,
-#          'description' => t("Aborting! Thedefault timezone needs to be configured. Please go to !link to configure.<br />\n", array('!link' => l('regional settings', 'admin/config/regional/settings', array('attributes' => array('target' => '_blank'))))),
-#        );
-#      }
-#      break;
-#  }
-#  return $reqs;
-#}
-#/**
-# * Implementation of hook_schema().
-# */
-#function contest_schema() {
-#  $schema['contest'] = array(
-#    'description' => 'Stores contest-specific information for contest nodes.',
-#    'fields' => array(
-#      'nid' => array(
-#        'description' => "The contest's {node}.nid.",
-#        'type'        => 'int',
-#        'unsigned'    => TRUE,
-#        'not null'    => TRUE,
-#        'default'     => 0,
-#      ),
-#      'vid' => array(
-#        'description' => "The contest's {node}.vid.",
-#        'type'        => 'int',
-#        'unsigned'    => TRUE,
-#        'not null'    => TRUE,
-#        'default'     => 0,
-#      ),
-#      'sponsor_uid' => array(
-#        'description' => "The sponsor's {user}.uid.",
-#        'type'        => 'int',
-#        'unsigned'    => TRUE,
-#        'not null'    => TRUE,
-#        'default'     => 0,
-#      ),
-#      'sponsor_url' => array(
-#        'description' => "The sponsor's URL",
-#        'type'        => 'varchar',
-#        'length'      => 100,
-#        'not null'    => TRUE,
-#        'default'     => '',
-#      ),
-#      'start' => array(
-#        'description' => 'The contest start date.',
-#        'type'        => 'int',
-#        'unsigned'    => TRUE,
-#        'not null'    => TRUE,
-#        'default'     => 0,
-#      ),
-#      'end' => array(
-#        'description' => 'The contest end date.',
-#        'type'        => 'int',
-#        'unsigned'    => TRUE,
-#        'not null'    => TRUE,
-#        'default'     => 0,
-#      ),
-#      'places' => array(
-#        'description' => 'The number of places in the contest.',
-#        'type'        => 'int',
-#        'size'        => 'tiny',
-#        'unsigned'    => TRUE,
-#        'not null'    => TRUE,
-#        'default'     => 0,
-#      ),
-#      'period' => array(
-#        'description' => 'The length of time the contest will run.',
-#        'type'        => 'int',
-#        'unsigned'    => TRUE,
-#        'not null'    => TRUE,
-#        'default'     => 0,
-#      ),
-#      'publish_winners' => array(
-#        'description' => 'A flag to determine if the winners should be displayed.',
-#        'type'        => 'int',
-#        'size'        => 'tiny',
-#        'unsigned'    => TRUE,
-#        'not null'    => TRUE,
-#        'default'     => 0,
-#      ),
-#    ),
-#    'indexes' => array(
-#      'start' => array('start'),
-#      'end'   => array('end'),
-#    ),
-#    'primary key' => array('nid'),
-#  );
-#  $schema['contest_entry'] = array(
-#    'description' => 'Stores contest entries.',
-#    'fields' => array(
-#      'nid' => array(
-#        'description' => "The contest's {node}.nid.",
-#        'type'        => 'int',
-#        'unsigned'    => TRUE,
-#        'not null'    => TRUE,
-#        'default'     => 0,
-#      ),
-#      'uid' => array(
-#        'description' => "The entrants's {user}.uid.",
-#        'type'        => 'int',
-#        'unsigned'    => TRUE,
-#        'not null'    => TRUE,
-#        'default'     => 0,
-#      ),
-#      'created' => array(
-#        'description' => 'The date of the contest entry.',
-#        'type'        => 'int',
-#        'unsigned'    => TRUE,
-#        'not null'    => TRUE,
-#        'default'     => 0,
-#      ),
-#      'ip' => array(
-#        'description' => "The entrant's IP address.",
-#        'type'        => 'varchar',
-#        'length'      => 16,
-#        'not null'    => TRUE,
-#        'default'     => '',
-#      ),
-#      'winner' => array(
-#        'description' => 'A flag to determine if the winners should be displayed.',
-#        'type'        => 'int',
-#        'size'        => 'tiny',
-#        'unsigned'    => TRUE,
-#        'not null'    => TRUE,
-#        'default'     => 0,
-#      ),
-#    ),
-#    'indexes' => array(
-#      'nid' => array('nid'),
-#      'uid' => array('uid'),
-#    ),
-#    'primary key' => array('nid', 'uid', 'created'),
-#  );
-#  return $schema;
-#}
-#/**
-# * Implementation of hook_uninstall()
-# */
-#function contest_uninstall () {
+/**
+ * Implementation of hook_requirements().
+ * We need the private path, country and timezone configured.
+ */
+function contest_requirements($phase) {
+  $cfg = config('system.date');
+  $reqs = array();
+
+  switch ($phase) {
+    case 'install':
+      if (!file_stream_wrapper_get_instance_by_uri('private://')) {
+        $reqs['system'] = array(
+          'title'       => 'File System',
+          'value'       => t("Private file system path isn't configured."),
+          'severity'    => REQUIREMENT_ERROR,
+          'description' => t("Aborting! Backdrop's file system path needs to be configured. Please go to !link to configure.<br />\n", array('!link' => l('file system', 'admin/config/media/file-system', array('attributes' => array('target' => '_blank'))))),
+        );
+      }
+      if (!$cfg->get('default_country')) {
+        $reqs['system'] = array(
+          'title'       => 'Default Country',
+          'value'       => t("The default country isn't configured."),
+          'severity'    => REQUIREMENT_ERROR,
+          'description' => t("Aborting! The default country needs to be configured. Please go to !link to configure.<br />\n", array('!link' => l('regional settings', 'admin/config/regional/settings', array('attributes' => array('target' => '_blank'))))),
+        );
+      }
+      if (!$cfg->get('default_timezone')) {
+        $reqs['system'] = array(
+          'title'       => 'Default Timezone',
+          'value'       => t("The default timezone isn't configured."),
+          'severity'    => REQUIREMENT_ERROR,
+          'description' => t("Aborting! The default timezone needs to be configured. Please go to !link to configure.<br />\n", array('!link' => l('regional settings', 'admin/config/regional/settings', array('attributes' => array('target' => '_blank'))))),
+        );
+      }
+      break;
+  }
+  return $reqs;
+}
+/**
+ * Implementation of hook_schema().
+ */
+function contest_schema() {
+  $schema['contest'] = array(
+    'description' => 'Stores contest-specific information for contest nodes.',
+    'fields' => array(
+      'nid' => array(
+        'description' => "The contest's {node}.nid.",
+        'type'        => 'int',
+        'unsigned'    => TRUE,
+        'not null'    => TRUE,
+        'default'     => 0,
+      ),
+      'vid' => array(
+        'description' => "The contest's {node}.vid.",
+        'type'        => 'int',
+        'unsigned'    => TRUE,
+        'not null'    => TRUE,
+        'default'     => 0,
+      ),
+      'sponsor_uid' => array(
+        'description' => "The sponsor's {user}.uid.",
+        'type'        => 'int',
+        'unsigned'    => TRUE,
+        'not null'    => TRUE,
+        'default'     => 0,
+      ),
+      'sponsor_url' => array(
+        'description' => "The sponsor's URL",
+        'type'        => 'varchar',
+        'length'      => 100,
+        'not null'    => TRUE,
+        'default'     => '',
+      ),
+      'start' => array(
+        'description' => 'The contest start date.',
+        'type'        => 'int',
+        'unsigned'    => TRUE,
+        'not null'    => TRUE,
+        'default'     => 0,
+      ),
+      'end' => array(
+        'description' => 'The contest end date.',
+        'type'        => 'int',
+        'unsigned'    => TRUE,
+        'not null'    => TRUE,
+        'default'     => 0,
+      ),
+      'places' => array(
+        'description' => 'The number of places in the contest.',
+        'type'        => 'int',
+        'size'        => 'tiny',
+        'unsigned'    => TRUE,
+        'not null'    => TRUE,
+        'default'     => 0,
+      ),
+      'period' => array(
+        'description' => 'The length of time the contest will run.',
+        'type'        => 'int',
+        'unsigned'    => TRUE,
+        'not null'    => TRUE,
+        'default'     => 0,
+      ),
+      'publish_winners' => array(
+        'description' => 'A flag to determine if the winners should be displayed.',
+        'type'        => 'int',
+        'size'        => 'tiny',
+        'unsigned'    => TRUE,
+        'not null'    => TRUE,
+        'default'     => 0,
+      ),
+    ),
+    'indexes' => array(
+      'start' => array('start'),
+      'end'   => array('end'),
+    ),
+    'primary key' => array('nid'),
+  );
+  $schema['contest_entry'] = array(
+    'description' => 'Stores contest entries.',
+    'fields' => array(
+      'nid' => array(
+        'description' => "The contest's {node}.nid.",
+        'type'        => 'int',
+        'unsigned'    => TRUE,
+        'not null'    => TRUE,
+        'default'     => 0,
+      ),
+      'uid' => array(
+        'description' => "The entrants's {user}.uid.",
+        'type'        => 'int',
+        'unsigned'    => TRUE,
+        'not null'    => TRUE,
+        'default'     => 0,
+      ),
+      'created' => array(
+        'description' => 'The date of the contest entry.',
+        'type'        => 'int',
+        'unsigned'    => TRUE,
+        'not null'    => TRUE,
+        'default'     => 0,
+      ),
+      'ip' => array(
+        'description' => "The entrant's IP address.",
+        'type'        => 'varchar',
+        'length'      => 16,
+        'not null'    => TRUE,
+        'default'     => '',
+      ),
+      'winner' => array(
+        'description' => 'A flag to determine if the winners should be displayed.',
+        'type'        => 'int',
+        'size'        => 'tiny',
+        'unsigned'    => TRUE,
+        'not null'    => TRUE,
+        'default'     => 0,
+      ),
+    ),
+    'indexes' => array(
+      'nid' => array('nid'),
+      'uid' => array('uid'),
+    ),
+    'primary key' => array('nid', 'uid', 'created'),
+  );
+  return $schema;
+}
+/**
+ * Implementation of hook_uninstall()
+ */
+function contest_uninstall() {
 #  $export_dir = config_get('contest.settings', 'export_dir');
 #  $wrapper = file_stream_wrapper_get_instance_by_uri('private://');
 #
@@ -267,12 +268,12 @@ function contest_install() {
 #  );
 #  field_delete_instance($instance);
 #
-#// Delete menu links.
-#
-#  db_delete('menu_links')->condition('module', 'contest')->execute();
-#
-#  menu_cache_clear_all();
-#}
+// Delete menu links.
+
+  db_delete('menu_links')->condition('module', 'contest')->execute();
+
+  menu_cache_clear_all();
+}
 #/**
 # * Build some content blocks using the block system for storage.
 # *
@@ -300,40 +301,40 @@ function contest_install() {
 #
 #  return $bid;
 #}
-#/**
-# * Send the feedback to the appropriate place.
-# *
-# * @param $txt (string) The string to print.
-# */
-#function _contest_install_feedback($txt) {
-#  if (defined('STDIN')) {
-#    print "$txt\n";
-#  }
-#  else {
-#    backdrop_set_message($txt);
-#  }
-#}
-#/**
-# * Delete the requested files.
-# *
-# * @param $file_regx (string) A posix regex.
-# * @param $age (int) The age of the files in seconds.
-# *
-# * @return (int) The number of files deleted.
-# */
-#function _contest_install_purge_dir($file_regx, $age) {
-#  $count = 0;
-#  $files = glob($file_regx);
-#
-#  foreach ($files as $file) {
-#    if (is_file($file) && (REQUEST_TIME - filemtime($file)) >= $age) {
-#      @chmod($file, 0777);
-#      unlink($file);
-#      $count++;
-#    }
-#  }
-#  return $count;
-#}
+/**
+ * Send the feedback to the appropriate place.
+ *
+ * @param $txt (string) The string to print.
+ */
+function _contest_install_feedback($txt) {
+  if (defined('STDIN')) {
+    print "$txt\n";
+  }
+  else {
+    backdrop_set_message($txt);
+  }
+}
+/**
+ * Delete the requested files.
+ *
+ * @param $file_regx (string) A posix regex.
+ * @param $age (int) The age of the files in seconds.
+ *
+ * @return (int) The number of files deleted.
+ */
+function _contest_install_purge_dir($file_regx, $age) {
+  $count = 0;
+  $files = glob($file_regx);
+
+  foreach ($files as $file) {
+    if (is_file($file) && (REQUEST_TIME - filemtime($file)) >= $age) {
+      @chmod($file, 0777);
+      unlink($file);
+      $count++;
+    }
+  }
+  return $count;
+}
 /**
  * The contest's terms and conditions.
  *

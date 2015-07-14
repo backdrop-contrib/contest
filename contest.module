@@ -112,7 +112,7 @@
 # */
 #function contest_entry_form() {
 #  global $user;
-#  $states = _contest_get_states(variable_get('site_default_country', ''));
+#  $states = _contest_get_states(config_get('system.date', 'default_country'));
 #
 #// Add the JavaScript and CSS.
 #
@@ -629,7 +629,7 @@
 # * Implementation of hook_form_alter().
 # */
 #function contest_form_user_profile_form_alter(&$form, &$form_state) {
-#  $states = _contest_get_states(variable_get('site_default_country', ''));
+#  $states = _contest_get_states(config_get('system.date', 'default_country'));
 #
 #  if (!empty($states)) {
 #    $form['field_contest_state'][LANGUAGE_NONE][0]['value']['#type'] = 'select';
@@ -1055,7 +1055,7 @@ function contest_menu() {
 #    '!host_link'     => l($_SERVER['HTTP_HOST'], "http://{$_SERVER['HTTP_HOST']}"),
 #    '!server_link'   => l($_SERVER['SERVER_NAME'], "http://{$_SERVER['SERVER_NAME']}"),
 #    '!sponsor'       => !empty($node->contest->sponsor_url)? l($node->contest->sponsor, $node->contest->sponsor_url, array('absolute' => TRUE)): $node->contest->sponsor,
-#    '@country'        => variable_get('site_default_country', ''),
+#    '@country'       => config_get('system.date', 'default_country'),
 #    '@date_end'      => format_date($node->contest->end, 'contest_date'),
 #    '@date_notify'   => format_date(($node->contest->end + (60 * 60 * 24 * 31)), 'contest_date'),
 #    '@date_start'    => format_date($node->contest->start, 'contest_date'),
@@ -1229,7 +1229,7 @@ function _contest_clean_path($path) {
 #    'pass'     => _contest_email_to_password($form_state['values']['mail']),
 #    'roles'    => array(2 => 'authenticated user'),
 #    'status'   => 1,
-#    'timezone' => variable_get('date_default_timezone', 'America/New_York'),
+#    'timezone' => config_get('system.date', 'default_timezone'),
 #  );
 #// Save the new user.
 #
@@ -1460,7 +1460,7 @@ function _contest_clean_path($path) {
 # * @return (array) A one elemet array of data to build the results.
 # */
 #function _contest_get_results_data($node = NULL) {
-#  $states = _contest_get_states(variable_get('site_default_country', ''));
+#  $states = _contest_get_states(config_get('system.date', 'default_country'));
 #  $winners = array();
 #  $data = (object) array();
 #  list($cid, $cache) = _contest_cache_get(array(__FUNCTION__, $node->nid));
