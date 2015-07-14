@@ -10,7 +10,6 @@
  */
 function contest_settings_form() {
   $cfg = config('contest.settings');
-dpm($cfg->get());
   $periods = array(
     2147483646    => t('Can only win once.'),
     (7 * 86400)   => t('One week between wins.'),
@@ -104,56 +103,64 @@ dpm($cfg->get());
 #  );
   return system_settings_form($form);
 }
-#/**
-# * Custom submit function for the contest setting form.
-# * Create the export directory.
-# */
-#function contest_settings_form_submit($form, &$form_state) {
-#  $path = _contest_clean_path($form_state['values']['export_dir']);
-#  $wrapper = file_stream_wrapper_get_instance_by_uri('private://');
-#
-#// Convert the username to uid and save it and delete it's remnants from the form, (not sure if it matters but...).
-#
-#  $uid = db_query_range("SELECT uid FROM {users} WHERE name = :name", 0, 1, array(':name' => $form_state['values']['host']))->fetchField();
-#
-#  unset($form_state['input']['host']);
-#  unset($form_state['values']['host']);
-#
-#  if ($uid) {
-#     config_set('contest.settings', 'host_uid', $uid);
-#  }
-#// Update the T&C content.
-#
+/**
+ * Custom submit function for the contest setting form.
+ * Create the export directory.
+ */
+function contest_settings_form_submit($form, &$form_state) {
+  $cfg = config('contest.settings');
+  $path = _contest_clean_path($form_state['values']['export_dir']);
+  $wrapper = file_stream_wrapper_get_instance_by_uri('private://');
+  $fields = array(
+    'hog_days',
+    'host_title',
+    'min_age',
+  );
+// Convert the username to uid and save it and delete it's remnants from the form, (not sure if it matters but...).
+
+  $uid = db_query_range("SELECT uid FROM {users} WHERE name = :name", 0, 1, array(':name' => $form_state['values']['host']))->fetchField();
+
+  if ($uid) {
+     $cfg->set('host_uid', $uid);
+  }
+// Update the T&C content.
+
 #  $fields = array(
 #    'body'   => $form_state['values']['contest_block_tnc_content']['value'],
 #    'format' => $form_state['values']['contest_block_tnc_content']['format'],
 #  );
 #  db_update('block_custom')->fields($fields)->condition('bid', config_get('contest.settings', 'block_tnc'))->execute();
-#
-#  unset($form_state['values']['contest_block_tnc_content']);
-#
-#// Change the export directory if we need to.
-#
-#  if ($path && $path === config_get('contest.settings', 'export_dir')) {
-#    return;
-#  }
-#  if (!$wrapper) {
-#    backdrop_set_message("Backdrop's file system private path needs to be configured. Please go to !link to configure.", array('!link' => l('File System', 'admin/config/media/file-system', array('target' => '_blank'))));
-#  }
-#  $old_dir = $wrapper->getDirectoryPath() . '/' . config_get('contest.settings', 'export_dir');
+
+// .
+
+  foreach ($fields as $field) {
+    if (isset($form_state['values'][$field])) {
+      $cfg->set($field, $form_state['values'][$field]);
+    }
+  }
+// Change the export directory if we need to.
+
+  if ($path && $path === config_get('contest.settings', 'export_dir')) {
+    return $cfg->save();
+  }
+  if (!$wrapper) {
+    backdrop_set_message("Backdrop's file system private path needs to be configured. Please go to !link to configure.", array('!link' => l('File System', 'admin/config/media/file-system', array('target' => '_blank'))));
+  }
+  $old_dir = $wrapper->getDirectoryPath() . '/' . config_get('contest.settings', 'export_dir');
 #  _contest_purge_dir("$old_dir/*", 0);
 #  @chmod($old_dir, 0777);
 #  rmdir($old_dir);
-#
+
 #  _contest_create_export_directory($path);
-#
-#  $form_state['input']['export_dir'] = $path;
-#  $form_state['values']['export_dir'] = $path;
-#}
-#/**
-# * Custom validation function for the contest setting form.
-# */
-#function contest_settings_form_validate($form, &$form_state) {
+
+  $cfg->set('export_dir', $path);
+
+  $cfg->save();
+}
+/**
+ * Custom validation function for the contest setting form.
+ */
+function contest_settings_form_validate($form, &$form_state) {
 #
 #// Directory name doesn't match requirements.
 #
@@ -188,4 +195,4 @@ dpm($cfg->get());
 #  if (!_contest_has_complete_profile($host, 'host')) {
 #    form_set_error('host', t('@name has an incomplete profile. If you have permission, you can click !link to edit.', array('@name' => $form_state['values']['host'], '!link' => l('here', "user/$host->uid/edit", array('attributes' => array('target' => '_blank'))))));
 #  }
-#}
+}

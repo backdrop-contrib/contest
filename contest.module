@@ -1175,22 +1175,22 @@ function contest_menu() {
 #  }
 #  return ($cid && strlen($cid) < 255)? _contest_stroked($cid): 'contest-' . md5($cid);
 #}
-#/**
-# * Process the path into a OS safe string.
-# *
-# * @param $path (string) A directory name.
-# *
-# * @return (string) An OS safe string.
-# */
-#function _contest_clean_path($path) {
-#  $regx = array(
-#    '/[[:^print:]]/s' => '',
-#    '/\W+/s'          => '_',
-#    '/__+/'           => '_',
-#    '/^_+|_+$/'       => '',
-#  );
-#  return preg_replace(array_keys($regx), array_values($regx), strtolower($path));
-#}
+/**
+ * Process the path into a OS safe string.
+ *
+ * @param $path (string) A directory name.
+ *
+ * @return (string) An OS safe string.
+ */
+function _contest_clean_path($path) {
+  $regx = array(
+    '/[[:^print:]]/s' => '',
+    '/\W+/s'          => '_',
+    '/__+/'           => '_',
+    '/^_+|_+$/'       => '',
+  );
+  return preg_replace(array_keys($regx), array_values($regx), strtolower($path));
+}
 #/**
 # * Find or add a contestant then return the uid.
 # *
