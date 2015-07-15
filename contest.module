@@ -287,7 +287,7 @@ function contest_entry_form_submit($form, &$form_state) {
 
 // If they're not logged in, are already a user and have an incomplete profile give them the explanation and redirect them to the login page.
 
-  if ($user->uid != $usr->uid && (empty($usr->field_contest_name) || empty($usr->field_contest_address) || empty($usr->field_contest_city) || empty($usr->field_contest_state) || empty($usr->field_contest_zip))) {
+  if ($user->uid != $usr->uid && (!_contest_get_usr_val($usr, 'field_contest_name') || !_contest_get_usr_val($usr, 'field_contest_address') || !_contest_get_usr_val($usr, 'field_contest_city') || !_contest_get_usr_val($usr, 'field_contest_state') || !_contest_get_usr_val($usr, 'field_contest_zip'))) {
     backdrop_set_message('You already have an account with an incomplete profile. The easiest way to enter the contest is to log in and come back and enter the contest.', 'error');
     backdrop_set_message('Once your profile is complete you won\'t have to do this again.');
     backdrop_set_message('If you have problems logging in click the "Request new password" link and a login link will be sent to your email.');
@@ -295,7 +295,7 @@ function contest_entry_form_submit($form, &$form_state) {
   }
 // I don't think this should ever get used, but...
 
-  elseif (empty($usr->field_contest_name) || empty($usr->field_contest_address) || empty($usr->field_contest_city) || empty($usr->field_contest_state) || empty($usr->field_contest_zip)) {
+  elseif (!_contest_get_usr_val($usr, 'field_contest_name') || !_contest_get_usr_val($usr, 'field_contest_address') || !_contest_get_usr_val($usr, 'field_contest_city') || !_contest_get_usr_val($usr, 'field_contest_state') || !_contest_get_usr_val($usr, 'field_contest_zip')) {
     backdrop_set_message('You must have a complete profile to enter a contest.', 'error');
     return "user/$usr->uid/edit/Contest";
   }
@@ -1209,14 +1209,16 @@ function _contest_clean_path($path) {
 function _contest_contestant($form_state) {
   global $base_url;
   global $user;
-  $from = variable_get('site_mail', 'webmaster@' . preg_replace('/(\w+\.[a-z]+)$/', "$1", $base_url));
+  $cfg = config('system.core');
+  
+  $from = $cfg->get('site_mail')? $cfg->get('site_mail'):'webmaster@' . preg_replace('/(\w+\.[a-z]+)$/', "$1", $base_url);
 
 // Try to get the user by uid or email.
 
-  $usr = user_load($form_state['values']['uid']);
+  $usr = user_load_by_mail($form_state['values']['mail']);
 
   if (empty($usr->uid)) {
-    $usr = user_load_by_mail($form_state['values']['mail']);
+    $usr = user_load($form_state['values']['uid']);
   }
 // If we have them and the match the global user, (should be superfluos) update their information.
 
@@ -1249,7 +1251,7 @@ function _contest_contestant($form_state) {
 
   $tokens = array(
     '@password'  => $args['pass'],
-    '@site_name' => variable_get('site_name', 'Contest Host'),
+    '@site_name' => $cfg->get('site_name'),
     '@username'  => $usr->name,
   );
   backdrop_set_message(t("You have been added to the @site_name website. Below is your login information.<br>Username: @username<br>Password: @password.<br>Please keep this information for you records. If you have a problem logging in, use the password recovery tool located at the top of the user's login page.", $tokens));
@@ -1583,7 +1585,7 @@ function _contest_get_states($country = 'US') {
  * @return (string) A Backdrop path to the template's directory, (defaults to .../module/templates).
  */
 function _contest_get_template_path($module, $template = '') {
-  $theme_path = backdrop_get_path('theme', variable_get('theme_default', 'garland'));
+  $theme_path = backdrop_get_path('theme', config_get('system.core', 'theme_default'));
 
   $scan = file_scan_directory($theme_path, "/^$template\.tpl\.php$/", array('recurse' => TRUE, 'filename' => TRUE));
 
