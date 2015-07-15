@@ -1084,7 +1084,7 @@ function theme_contest_tnc($args) {
     '#collapsed'   => TRUE,
   );
   $form['wrapper']['tnc'] = array(
-    'type'    => 'markup',
+    '#type'   => 'markup',
     '#markup' => t($tnc, $tokens),
   );
   return $form;
