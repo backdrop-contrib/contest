@@ -48,7 +48,7 @@ function contest_clear_winners($nid, $uid = NULL) {
   $published = db_query_range("SELECT publish_winners FROM {contest} WHERE nid = :nid", 0, 1, array(':nid' => $nid))->fetchField();
 
   if ($published) {
-    backdrop_set_message('You must unpublish contest winners before clearing a winner.', 'error');
+    backdrop_set_message('You must unpublish contest winners before clearing a winner.', 'warning');
   }
   elseif ($uid) {
     db_update('contest_entry')
@@ -288,7 +288,7 @@ function contest_entry_form_submit($form, &$form_state) {
 // If they're not logged in, are already a user and have an incomplete profile give them the explanation and redirect them to the login page.
 
   if ($user->uid != $usr->uid && (!_contest_get_usr_val($usr, 'field_contest_name') || !_contest_get_usr_val($usr, 'field_contest_address') || !_contest_get_usr_val($usr, 'field_contest_city') || !_contest_get_usr_val($usr, 'field_contest_state') || !_contest_get_usr_val($usr, 'field_contest_zip'))) {
-    backdrop_set_message('You already have an account with an incomplete profile. The easiest way to enter the contest is to log in and come back and enter the contest.', 'error');
+    backdrop_set_message('You already have an account with an incomplete profile. The easiest way to enter the contest is to log in and come back and enter the contest.', 'warning');
     backdrop_set_message('Once your profile is complete you won\'t have to do this again.');
     backdrop_set_message('If you have problems logging in click the "Request new password" link and a login link will be sent to your email.');
     return 'user';
@@ -296,7 +296,7 @@ function contest_entry_form_submit($form, &$form_state) {
 // I don't think this should ever get used, but...
 
   elseif (!_contest_get_usr_val($usr, 'field_contest_name') || !_contest_get_usr_val($usr, 'field_contest_address') || !_contest_get_usr_val($usr, 'field_contest_city') || !_contest_get_usr_val($usr, 'field_contest_state') || !_contest_get_usr_val($usr, 'field_contest_zip')) {
-    backdrop_set_message('You must have a complete profile to enter a contest.', 'error');
+    backdrop_set_message('You must have a complete profile to enter a contest.', 'warning');
     return "user/$usr->uid/edit/Contest";
   }
 // We'll check to see if the contest is running by getting the entry period.
@@ -309,7 +309,7 @@ function contest_entry_form_submit($form, &$form_state) {
   $period = db_query_range("SELECT period FROM {contest} WHERE nid = :nid AND start < :start AND :end < end", 0, 1, $values)->fetchField();
 
   if (!$period) {
-    backdrop_set_message('This contest is closed.', 'error');
+    backdrop_set_message('This contest is closed.', 'warning');
     return 'contest';
   }
 // Check to see if they've entered today.
@@ -317,7 +317,7 @@ function contest_entry_form_submit($form, &$form_state) {
   $entered = _contest_get_entered($form_state['values']['uid'], $form_state['values']['nid'], $period);
 
   if ($entered) {
-    backdrop_set_message("You can enter the contest {$periods[$period]}. We already have an entry for you during this period.", 'error');
+    backdrop_set_message("You can enter the contest {$periods[$period]}. We already have an entry for you during this period.", 'warning');
     return "node/{$form_state['values']['nid']}";
   }
 // Enter them into the contest.
@@ -866,13 +866,13 @@ function contest_pick_winner($nid, $uid = FALSE) {
   $dq = $row->end - ($hog_days * 60 * 60 * 24);
 
   if ($row->publish_winners) {
-    backdrop_set_message('You must unpublish a contest before editing results.', 'error');
+    backdrop_set_message('You must unpublish a contest before editing results.', 'warning');
     backdrop_goto("node/$nid/contest-admin");
   }
 // We don't allow the winner to be picked when the contest is still open.
 
   if (REQUEST_TIME < $row->end) {
-    backdrop_set_message('You can\'t select a contest winner before the contest ends.', 'error');
+    backdrop_set_message('You can\'t select a contest winner before the contest ends.', 'warning');
     backdrop_goto("node/$nid/contest-admin");
   }
 // Check to see if there are any more winners allowed..
@@ -880,7 +880,7 @@ function contest_pick_winner($nid, $uid = FALSE) {
   $winners = db_query_range("SELECT COUNT(uid) FROM {contest_entry} WHERE nid = :nid AND winner", 0, 1, array(':nid' => $nid))->fetchField();
 
   if ($winners >= $row->places) {
-    backdrop_set_message("The contest allows " . (($row->places == 1)? 'one winner. ': "$row->places places") . 'Currently their ' . (($row->places == 1)? 'is one.': "are $row->places."), 'error');
+    backdrop_set_message("The contest allows " . (($row->places == 1)? 'one winner. ': "$row->places places") . 'Currently their ' . (($row->places == 1)? 'is one.': "are $row->places."), 'warning');
     backdrop_goto("node/$nid/contest-admin");
   }
 // Build a comma seperated string of the disqualified users ID's that will be used in a "IN" sql list.
@@ -889,7 +889,7 @@ function contest_pick_winner($nid, $uid = FALSE) {
 
   foreach ($rows as $row) {
     if ($uid && $row->uid == $uid) {
-      backdrop_set_message('This person has already won something in the last ' . (($hog_days == 1)? 'day.': "$hog_days days."), 'error');
+      backdrop_set_message('This person has already won something in the last ' . (($hog_days == 1)? 'day.': "$hog_days days."), 'warning');
       backdrop_goto("node/$nid/contest-admin");
     }
     $wids[] = $row->uid;
@@ -955,7 +955,7 @@ function contest_publish_winners($node) {
   $winners = db_query_range("SELECT COUNT(uid) FROM {contest_entry} WHERE nid = :nid AND winner", 0, 1, array(':nid' => $node->nid))->fetchField();
 
   if ($winners != $node->contest->places) {
-    backdrop_set_message("You can't publish winners before they've all been selected.", 'error');
+    backdrop_set_message("You can't publish winners before they've all been selected.", 'warning');
     backdrop_goto("node/$node->nid/contest-admin");
   }
   db_update('contest')->fields(array('publish_winners' => 1))->condition('nid', $node->nid)->execute();
