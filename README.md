@@ -9,7 +9,7 @@ Requirements
 This module requires the following modules:
 -------------------------------------------
 - Block (core)
-- Date (https://github.com/backdrop-contrib/date)
+- Date (https://github.com/backdrop-contrib/date_basic)
 - List (core)
 - Text (core)
 
@@ -27,7 +27,7 @@ Installation
 
 5. Flush the cache.
 
-3. Go to /admin/settings/contest and configure the contest settings.
+3. Go to /admin/config/contest and configure the contest settings.
 
 6. Complete a profile for the contest host, (defaults to user 1). This
    information is used in the contest view, (particularly the rules fieldset).
@@ -41,7 +41,7 @@ MAINTAINERS
 ===========
 Current maintainers:
 --------------------
-- Bill Kelly (bkelly) - https://drupal.org/user/265918
+- Bill Kelly (spot-the-cat) - https://github.com/spot-the-cat
 
 *Much of the 7.x-1.x Contest module development was sponsored by:*
 **WEYMOUTH DESIGN**

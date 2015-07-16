@@ -9,4 +9,4 @@ dependencies[] = date
 dependencies[] = list
 dependencies[] = text
 
-configure = admin/config/content/contest
+configure = admin/config/contest

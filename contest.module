@@ -592,12 +592,11 @@ function contest_form($node, $form_state) {
  * Implementation of hook_form_FORM_ID_alter().
  */
 function contest_form_field_ui_display_overview_form_alter(&$form, &$form_state) {
-  if ($form['#view_mode'] != 'block' && $form['#view_mode'] != 'teaser') {
-    return;
+  if ($form['#view_mode'] == 'block' || $form['#view_mode'] == 'teaser') {
+    unset($form['fields']['contest_entry_form']);
+    unset($form['fields']['contest_results']);
+    unset($form['fields']['contest_tnc']);
   }
-  unset($form['fields']['contest_entry_form']);
-  unset($form['fields']['contest_results']);
-  unset($form['fields']['contest_tnc']);
 }
 /**
  * Custom submit function.
