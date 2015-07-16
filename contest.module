@@ -101,7 +101,7 @@ function contest_date_formats() {
  */
 function contest_entity_info_alter(&$entity_info) {
   $entity_info['node']['view modes']['block'] = array(
-    'label'           => t('Block View'),
+    'label'           => t('Block'),
     'custom settings' => TRUE,
   );
 }
@@ -589,6 +589,17 @@ function contest_form($node, $form_state) {
   return $form;
 }
 /**
+ * Implementation of hook_form_FORM_ID_alter().
+ */
+function contest_form_field_ui_display_overview_form_alter(&$form, &$form_state) {
+  if ($form['#view_mode'] != 'block' && $form['#view_mode'] != 'teaser') {
+    return;
+  }
+  unset($form['fields']['contest_entry_form']);
+  unset($form['fields']['contest_results']);
+  unset($form['fields']['contest_tnc']);
+}
+/**
  * Custom submit function.
  */
 function contest_form_submit($form, &$form_state) {
@@ -617,7 +628,7 @@ function contest_form_submit($form, &$form_state) {
   }
 }
 /**
- * Implementation of hook_form_alter().
+ * Implementation of hook_form_FORM_ID_alter().
  */
 function contest_form_user_profile_form_alter(&$form, &$form_state) {
   $birthdate = !empty($form['field_contest_birthdate'][LANGUAGE_NONE][0]['#default_value']['value'])? $form['field_contest_birthdate'][LANGUAGE_NONE][0]['#default_value']['value']: REQUEST_TIME;
@@ -639,12 +650,6 @@ function contest_form_user_profile_form_alter(&$form, &$form_state) {
     'year'  => format_date($birthdate, 'custom', 'Y'),
   );
   array_unshift($form['#submit'], 'contest_profile_form_submit');
-}
-/**
- * .
- */
-function contest_profile_form_submit($form, &$form_state) {
-  $form_state['values']['field_contest_birthdate'][LANGUAGE_NONE][0]['value'] = _contest_mktime($form_state['input']['field_contest_birthdate'][LANGUAGE_NONE][0]);
 }
 /**
  * Custom validation function.
@@ -949,6 +954,13 @@ function contest_pick_winner($nid, $uid = FALSE) {
   backdrop_goto("node/$nid/contest-admin");
 }
 /**
+ * Custom submit function.
+ * Convert the three date fields to a UNIX timestamp.
+ */
+function contest_profile_form_submit($form, &$form_state) {
+  $form_state['values']['field_contest_birthdate'][LANGUAGE_NONE][0]['value'] = _contest_mktime($form_state['input']['field_contest_birthdate'][LANGUAGE_NONE][0]);
+}
+/**
  * Publish the winners of a contest.
  *
  * @param $nid (int) The node ID.
@@ -1034,12 +1046,23 @@ function contest_view($node, $view_mode) {
   backdrop_add_library('system', 'drupal.collapse');
   backdrop_add_css(backdrop_get_path('module', 'contest') . '/css/contest.css');
 
+// If this isn't the full view we don't need the form, results or T&C so we'll short-circuit.
+
+  if ($view_mode != 'full') {
+    return $node;
+  }
+// Add the form if the contest is running.
+
   if ($node->contest->start < REQUEST_TIME && REQUEST_TIME < $node->contest->end) {
     $node->content['contest_entry_form'] = backdrop_get_form('contest_entry_form', $node);
   }
+// Add the reslults if the contest is over.
+
   else {
     $node->content['contest_results'] = array('#markup' => theme('contest_results', _contest_get_results_data($node)));
   }
+// Always add the T&C on the full page view.
+
   $node->content['contest_tnc'] = theme('contest_tnc', array('node' => $node, 'tnc' => _contest_get_block_body(config_get('contest.settings', 'block_tnc'))));
 
   return $node;

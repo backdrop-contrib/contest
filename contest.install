@@ -392,20 +392,34 @@ function _contest_install_type_create() {
     'type'        => 'contest',
     'name'        => t('Contest'),
     'base'        => 'contest',
+    'module'      => 'contest',
     'description' => t('A <em>contest</em> is a content type that allows a user to enter to win prizes via a random selection.'),
+    'help'        => '',
     'custom'      => FALSE,
     'modified'    => FALSE,
+    'disabled'    => FALSE,
     'locked'      => TRUE,
+    'has_title'   => TRUE,
+    'title_label' => 'Title',
+    'settings'    => array(
+      'status_default'    => TRUE,
+      'sticky_enabled'    => TRUE,
+      'sticky_default'    => FALSE,
+      'promote_enabled'   => TRUE,
+      'promote_default'   => FALSE,
+      'revision_enabled'  => TRUE,
+      'revision_default'  => FALSE,
+      'node_preview'      => BACKDROP_OPTIONAL,
+      'node_submitted'    => FALSE,
+      'node_user_picture' => FALSE,
+      'language'          => LANGUAGE_NONE,
+    ),
   );
   $contest_node_type = node_type_set_defaults($contest_node_type);
 
   node_add_body_field($contest_node_type);
 
   node_type_save($contest_node_type);
-
-  variable_set('node_options_contest', array('status'));
-  variable_set('node_preview_contest', '1');
-  variable_set('node_submitted_contest', 0);
 }
 /**
  * Create the user fields used by a contest.

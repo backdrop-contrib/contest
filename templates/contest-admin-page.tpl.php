@@ -176,6 +176,9 @@
       <?php $index++; ?>
 
       <?php if (($index % 50) === 0): ?>
+      
+<!-- Print the header every 50 rows. --->
+
       <tr>
         <th><?php print t('Name'); ?></th>
         <th><?php print t('Email'); ?></th>
