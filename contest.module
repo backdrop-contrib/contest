@@ -1233,15 +1233,7 @@ function _contest_contestant($form_state) {
   }
 // If they don't exist, create them.
 
-  $usr = new User();
-  $usr->mail = $form_state['values']['mail'];
-  $usr->init = $form_state['values']['mail'];
-  $usr->name = _contest_name_gen($form_state['values']['contest_name']);
-  $usr->pass = _contest_email_to_password($form_state['values']['mail']);
-  $usr->roles = array(2 => 'authenticated user');
-  $usr->timezone = config_get('system.date', 'default_timezone');
-  $usr->created = REQUEST_TIME;
-  $usr->save();
+  $usr = user_load(_contest_add_usr($form_state['values']['contest_name'], $form_state['values']['mail']));
 
 // Build the message variables, send out the welcome email and set the welcome message.
 
