@@ -1114,7 +1114,7 @@ function _contest_add_usr($name, $email) {
 // If they don't exist, create them.
 
   if (empty($usr->uid)) {
-    $usr = new User();    
+    $usr = new User();
     $usr->mail = $email;
     $usr->init = $email;
     $usr->name = _contest_name_gen($name);
@@ -1210,7 +1210,7 @@ function _contest_contestant($form_state) {
   global $base_url;
   global $user;
   $cfg = config('system.core');
-  
+
   $from = $cfg->get('site_mail')? $cfg->get('site_mail'):'webmaster@' . preg_replace('/(\w+\.[a-z]+)$/', "$1", $base_url);
 
 // Try to get the user by uid or email.
@@ -1233,17 +1233,15 @@ function _contest_contestant($form_state) {
   }
 // If they don't exist, create them.
 
-  $args = array(
-    'name'     => _contest_name_gen($form_state['values']['contest_name']),
-    'mail'     => $form_state['values']['mail'],
-    'pass'     => _contest_email_to_password($form_state['values']['mail']),
-    'roles'    => array(2 => 'authenticated user'),
-    'status'   => 1,
-    'timezone' => config_get('system.date', 'default_timezone'),
-  );
-// Save the new user.
-
-  $usr = _contest_usr_save(user_save($usr, $args), $form_state);
+  $usr = new User();
+  $usr->mail = $form_state['values']['mail'];
+  $usr->init = $form_state['values']['mail'];
+  $usr->name = _contest_name_gen($form_state['values']['contest_name']);
+  $usr->pass = _contest_email_to_password($form_state['values']['mail']);
+  $usr->roles = array(2 => 'authenticated user');
+  $usr->timezone = config_get('system.date', 'default_timezone');
+  $usr->created = REQUEST_TIME;
+  $usr->save();
 
 // Build the message variables, send out the welcome email and set the welcome message.
 
@@ -1834,7 +1832,7 @@ function _contest_usr_save($usr = NULL, $form_state = array()) {
     return user_load(0);
   }
   if (empty($form_state)) {
-    return $usr;
+    return user_load($usr->uid);
   }
   _contest_set_usr_txt_val($usr, $form_state['values'], 'contest_name');
   _contest_set_usr_txt_val($usr, $form_state['values'], 'contest_address');
@@ -1845,5 +1843,5 @@ function _contest_usr_save($usr = NULL, $form_state = array()) {
   _contest_set_usr_txt_val($usr, array('contest_birthdate' => _contest_mktime($form_state['values']['contest_birthdate'])), 'contest_birthdate');
   $usr->field_contest_optin[LANGUAGE_NONE][0] = array('value' => intval($form_state['values']['contest_optin']));
 
-  return user_save($usr);
+  return user_load($usr->uid);
 }
