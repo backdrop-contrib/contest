@@ -328,13 +328,9 @@ function contest_entry_form_submit($form, &$form_state) {
     'created' => REQUEST_TIME,
     'ip'      => ip_address(),
   );
-  return db_insert('contest_entry')->fields($fields)->execute();
+  db_insert('contest_entry')->fields($fields)->execute();
 
   backdrop_set_message('You have been entered into the contest.');
-
-// Redirect to the contest page.
-
-  return 'node/' . $form_state['values']['nid'];
 }
 /**
  * Custom submit function for the contest entry form.
@@ -1108,9 +1104,6 @@ function _contest_add_usr($name, $email) {
 
   $usr = user_load_by_mail($email);
 
-  if (empty($usr->uid)) {
-    $usr = user_load_by_name($name);
-  }
 // If they don't exist, create them.
 
   if (empty($usr->uid)) {
