@@ -297,7 +297,7 @@ function contest_entry_form_submit($form, &$form_state) {
 
   elseif (!_contest_get_usr_val($usr, 'field_contest_name') || !_contest_get_usr_val($usr, 'field_contest_address') || !_contest_get_usr_val($usr, 'field_contest_city') || !_contest_get_usr_val($usr, 'field_contest_state') || !_contest_get_usr_val($usr, 'field_contest_zip')) {
     backdrop_set_message('You must have a complete profile to enter a contest.', 'warning');
-    return "user/$usr->uid/edit/Contest";
+    return "user/$usr->uid/edit";
   }
 // We'll check to see if the contest is running by getting the entry period.
 
@@ -375,6 +375,7 @@ function contest_export_entries($node) {
   header("Content-Disposition: attachment; filename=$file_name");
   header('Pragma: no-cache');
   readfile("$file_dir/$export_dir/$file_name");
+  exit();
 }
 /**
  * Export a list of unique entrants.
@@ -407,6 +408,7 @@ function contest_export_unique($node) {
   header("Content-Disposition: attachment; filename=$file_name");
   header('Pragma: no-cache');
   readfile("$file_dir/$export_dir/$file_name");
+  exit();
 }
 /**
  * Implements hook_field_extra_fields().
@@ -1129,11 +1131,10 @@ function _contest_add_usr($name, $email) {
  * @return (array) A two element ordered array of: cache ID, cached data.
  */
 function _contest_cache_get($seeds = array()) {
-  global $conf;
   $cid = FALSE;
   $seeds = (array) $seeds;
 
-  if (empty($conf['core_devel'])) {
+  if (!user_access('administer contest')) {
     $cid = _contest_cid($seeds);
 
     $cache = $cid? cache_get($cid): FALSE;
@@ -1153,9 +1154,7 @@ function _contest_cache_get($seeds = array()) {
  * @return $data (mixed) The submitted, (and cached) data.
  */
 function _contest_cache_set($cid, $data) {
-  global $conf;
-
-  if (empty($conf['core_devel']) && !empty($cid)) {
+  if (!user_access('administer contest') && !empty($cid)) {
     cache_set($cid, $data, 'cache', CACHE_TEMPORARY);
   }
   return $data;
